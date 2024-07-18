@@ -38,6 +38,7 @@ GAMES_FOLDER=games
 
 This would result in an initial layout like this.
 
+```
 .
 ├── minus_games_server      # Main executable
 ├── .env                    # Server configuration file
@@ -47,6 +48,7 @@ This would result in an initial layout like this.
     ├── ...               
 ├── data                    # Folder for the games metadata (created by the finder or the server)
 ├── users                   # Folder for the user configuration
+```
 
 After setting up the games and the config you simply can run the server with ./minus_games_server (or .\minus_games_server.exe under windows).
 
@@ -72,6 +74,7 @@ CLIENT_FOLDER=client_data
 
 This setup will result in a client folder layout like this:
 
+```
 .
 ├── minus_games_client      # Main executable
 ├── .env                    # Client configuration file
@@ -80,6 +83,7 @@ This setup will result in a client folder layout like this:
     ├── Game 2              
     ├── ...               
 ├── client_data             # Folder for the games metadata (created by the finder or the server)
+```
 
 To run the client make sure the server is running and that the server points at the server. The client can run downloaded games offline, but it will not be possible to sync saves or download games.
 
