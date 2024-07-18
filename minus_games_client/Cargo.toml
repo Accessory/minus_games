@@ -1,0 +1,26 @@
+[package]
+name = "minus_games_client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7.3", features = ["codec"] }
+reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream"] }
+clap = { version = "4", features = ["derive", "env"] }
+dotenvy = "0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+csv = "1"
+tracing = "0"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+strum = "0"
+walkdir = "2"
+dialoguer = "0"
+indicatif = "0"
+mime = "0"
+minus_games_utils = { path = "../minus_games_utils" }
+minus_games_models = { path = "../minus_games_models" }
+chrono = "0"
+dirs = "5"
+base64 = "0"

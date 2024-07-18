@@ -1,0 +1,12 @@
+[package]
+name = "minus_games_utils"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+home = "0"
+clap = { version = "4" }
+walkdir = "2"
+filetime = "0"
+argon2 = { version = "0" }
+rand_core = { version = "0", features = ["getrandom"] }

@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+    "minus_games_server",
+    "minus_games_client",
+    "minus_games_finder",
+    "minus_games_utils",
+    "minus_games_models",
+    "minus_games_updater",
+]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
