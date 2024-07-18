@@ -1,14 +1,3 @@
----
-title: Minus Games Quick Start
-shortTitle: Minus Games basic setup
-intro: 'This should help you to set up a server and download a game with the client.'
-type: quick_start
-topics:
-  - <topic> # One or more from list of allowed topics: https://github.com/github/docs/blob/main/data/allowed-topics.js
-versions:
-  - <version>
----
-
 ## Introduction
 
 Minus Games consists of 5 main applications
