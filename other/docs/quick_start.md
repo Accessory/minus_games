@@ -48,7 +48,7 @@ To add a game copy the main folder of the game into the games folder. After that
 
 ## Step 2: Set up the client
 
-The client can be set up in the nealy the same way as the server. The easiest way to configure the client is by adding a **.env** file. 
+The client can be set up in the nealy the same way as the server. The easiest way to configure the client is by adding a **.env** file.
 
 Example **.env** file:
 ```

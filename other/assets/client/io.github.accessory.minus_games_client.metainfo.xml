@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+    <id>io.github.accessory.minus_games_client</id>
+    <url type="homepage">https://github.com/Accessory/minus_games</url>
+    <name>Minus Games Client</name>
+    <summary>Download, sync and run a game managed by a Minus Games Server instance</summary>
+
+    <metadata_license>MIT</metadata_license>
+    <project_license>MIT</project_license>
+
+    <description>
+        <p>
+            Using the Minus Games Client, you can download, synchronize, and run your games efficiently. The client manages your game files, ensuring they are always up-to-date with the latest patches and updates. Synchronization across devices allows you to continue your progress seamlessly. This setup provides a reliable and straightforward way to manage your gaming experience.
+        </p>
+    </description>
+
+    <icon type="stock">io.github.accessory.minus_games_client</icon>
+
+    <categories>
+        <category>Game</category>
+        <category>Utility</category>
+    </categories>
+
+    <provides>
+        <binary>run.sh</binary>
+    </provides>
+</component>

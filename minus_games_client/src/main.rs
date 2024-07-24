@@ -30,6 +30,14 @@ mod utils;
 async fn main() {
     dotenvy::dotenv().ok();
     // Configuration
+
+    if let Some(config_dir) = dirs::config_local_dir() {
+        let config_path = config_dir.join("minus_games_client").join("config");
+        if config_path.exists() {
+            dotenvy::from_filename(config_path).ok();
+        }
+    }
+
     if CONFIG.action != ClientActions::ListJson {
         println!("Config:");
         println!("{}", CONFIG.deref());
