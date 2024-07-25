@@ -2,6 +2,6 @@
 Name=Minus Games Client
 Exec=run.sh
 Type=Application
-Icon=de.accessory.minus_games_client
+Icon=io.github.accessory.minus_games_client
 Categories=Game
 Terminal=true
