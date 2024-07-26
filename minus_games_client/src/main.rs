@@ -30,7 +30,7 @@ async fn main() {
     if let Some(config_dir) = dirs::config_local_dir() {
         let config_path = config_dir.join("minus_games_client").join("config");
         if config_path.exists() {
-            dotenvy::from_filename(config_path).ok();
+            dotenvy::from_filename_override(config_path).ok();
         }
     }
 
