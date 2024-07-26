@@ -7,14 +7,10 @@ x-gl-merge-dirs: &gl-merge-dirs vulkan/icd.d;glvnd/egl_vendor.d;OpenCL/vendors;l
 sdk: org.freedesktop.Sdk
 command: run.sh
 separate-locales: false
-build-options:
-  build-args:
-    - --share=network
-
 sdk-extensions:
   - org.freedesktop.Sdk.Compat.i386
   - org.freedesktop.Sdk.Extension.toolchain-i386
-  - org.freedesktop.Sdk.Extension.rust-nightly
+  - org.freedesktop.Sdk.Extension.rust-stable
 
 finish-args:
   - --allow=devel
@@ -23,7 +19,6 @@ finish-args:
   - --allow=bluetooth
   - --allow=per-app-dev-shm
   - --env=PATH=/app/bin:/app/utils/bin:/usr/bin:/usr/lib/extensions/vulkan/MangoHud/bin:/usr/lib/extensions/vulkan/gamescope/bin:/usr/lib/extensions/vulkan/OBSVkCapture/bin
-  - --filesystem=xdg-data/lutris:rw
   - --filesystem=xdg-data/Steam:rw
   - --filesystem=xdg-data/applications:rw
   - --filesystem=~/.steam:rw
@@ -154,18 +149,24 @@ modules:
   - name: minus_games_client
     buildsystem: simple
     build-options:
-      append-path: /usr/lib/sdk/rust-nightly/extra/sdk/rust-nightly/bin
+      append-path: /usr/lib/sdk/rust-stable/bin
+      env:
+        "CARGO_HOME" : "/run/build/minus_games_client/cargo"
     build-commands:
-      - sed -i '1i \#![feature(lazy_cell)]' minus_games_client/src/main.rs
-      - cargo build --release --bin minus_games_client
+      - cargo --offline fetch --manifest-path Cargo.toml --verbose
+      - cargo --offline build --release --verbose --bin minus_games_client
       - install -Dm755 target/release/minus_games_client /app/bin/minus_games_client
       - install -Dm644 other/assets/client/io.github.accessory.minus_games_client.svg /app/share/icons/hicolor/scalable/apps/io.github.accessory.minus_games_client.svg
       - install -Dm644 other/assets/client/io.github.accessory.minus_games_client.desktop /app/share/applications/io.github.accessory.minus_games_client.desktop
       - install -Dm644 other/assets/client/io.github.accessory.minus_games_client.metainfo.xml /app/share/metainfo/io.github.accessory.minus_games_client.metainfo.xml
     sources:
       - type: git
-        path: ../..
+#        path: ../..
+        url: https://github.com/Accessory/minus_games/
         branch: main
+      - type: dir
+        path: .
+      - generated-sources.json
   - name: start_script
     buildsystem: simple
     build-commands:
@@ -178,12 +179,32 @@ modules:
           - export GAMEID=umu-minus_games_client
           - export PROTONPATH=GE-Proton
           - export WINE_EXE=/app/bin/umu-run
-          - export SERVER_URL="http://server:8415"
+          - export SERVER_URL="http://localhost:8415"
           - export CLIENT_GAMES_FOLDER="$XDG_DATA_HOME/minus_games_client/games"
           - export CLIENT_FOLDER="$XDG_DATA_HOME/minus_games_client/client"
           - export WINE_PREFIX=$XDG_DATA_HOME/minus_games_client/wine/
           - /app/bin/minus_games_client menu
 
+  # GameMode
+  - name: gamemode
+    buildsystem: meson
+    config-opts:
+      - -Dwith-examples=false
+      - -Dwith-util=false
+      - -Dwith-sd-bus-provider=no-daemon
+    post-install:
+      - install -Dm0775 -t /app/bin ../data/gamemoderun
+    sources:
+      - type: archive
+        url: https://github.com/FeralInteractive/gamemode/releases/download/1.7/gamemode-1.7.tar.xz
+        sha256: c1860f76f1d4c0d6e3965e52de21c824f24791049946da728da50f0c63748389
+        x-checker-data:
+          type: anitya
+          project-id: 17410
+          stable-only: true
+          url-template: https://github.com/FeralInteractive/gamemode/releases/download/$version/gamemode-$version.tar.xz
+      - type: patch
+        path: patches/379.patch
 
   # Umu Launcher
   - name: platform-bootstrap

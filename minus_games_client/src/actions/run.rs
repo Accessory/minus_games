@@ -80,23 +80,60 @@ pub fn run_windows_game_on_linux(infos: GameInfos) {
     if CONFIG.wine_exe.is_none() || CONFIG.wine_prefix.is_none() {
         panic!("Wine not configured");
     }
-    let path = infos
-        .get_windows_exe(CONFIG.client_games_folder.as_path())
-        .unwrap();
-    let path_str = path.as_os_str().to_str().unwrap();
-    let prefix = CONFIG.wine_prefix.as_ref().unwrap().to_str().unwrap();
-    let exe = CONFIG.wine_exe.as_ref().unwrap().to_str().unwrap();
-    let cwd = CONFIG
-        .get_game_path(infos.folder_name.as_str())
-        .to_str()
-        .unwrap()
-        .to_string();
-    Command::new(exe)
-        .current_dir(&cwd)
-        .arg(path_str)
-        .env("WINEPREFIX", prefix)
-        .output()
-        .unwrap_or_else(|_| panic!("Failed to run {path_str}"));
+
+    if has_gamemoderun() {
+        let path = infos
+            .get_windows_exe(CONFIG.client_games_folder.as_path())
+            .unwrap();
+        let path_str = path.as_os_str().to_str().unwrap();
+        let prefix = CONFIG.wine_prefix.as_ref().unwrap().to_str().unwrap();
+        let exe = CONFIG.wine_exe.as_ref().unwrap().to_str().unwrap();
+        let cwd = CONFIG
+            .get_game_path(infos.folder_name.as_str())
+            .to_str()
+            .unwrap()
+            .to_string();
+        Command::new("gamemoderun")
+            .current_dir(&cwd)
+            .arg(exe)
+            .arg(path_str)
+            .env("WINEPREFIX", prefix)
+            .output()
+            .unwrap_or_else(|_| panic!("Failed to run {path_str}"));
+    } else {
+        let path = infos
+            .get_windows_exe(CONFIG.client_games_folder.as_path())
+            .unwrap();
+        let path_str = path.as_os_str().to_str().unwrap();
+        let prefix = CONFIG.wine_prefix.as_ref().unwrap().to_str().unwrap();
+        let exe = CONFIG.wine_exe.as_ref().unwrap().to_str().unwrap();
+        let cwd = CONFIG
+            .get_game_path(infos.folder_name.as_str())
+            .to_str()
+            .unwrap()
+            .to_string();
+        Command::new(exe)
+            .current_dir(&cwd)
+            .arg(path_str)
+            .env("WINEPREFIX", prefix)
+            .output()
+            .unwrap_or_else(|_| panic!("Failed to run {path_str}"));
+    }
+}
+
+#[cfg(target_family = "unix")]
+fn has_gamemoderun() -> bool {
+    if let Some(path) = std::env::var_os("PATH") {
+        let paths = std::env::split_paths(&path);
+        for path in paths {
+            if path.join("gamemoderun").exists() {
+                info!("Use gamemoderun");
+                return true;
+            }
+        }
+    }
+    info!("gamemoderun not found");
+    false
 }
 
 #[cfg(target_family = "unix")]

@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 use clap::Parser;
 
 use minus_games_finder::configuration::Configuration;

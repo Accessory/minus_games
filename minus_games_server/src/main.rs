@@ -1,6 +1,3 @@
-#![feature(os_str_display)]
-#![feature(duration_constructors)]
-
 use crate::app_state::AppState;
 use crate::auth::auth_layer::AuthLayer;
 use crate::auth::session_manager::SessionManager;

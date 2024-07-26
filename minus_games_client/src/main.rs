@@ -1,9 +1,3 @@
-#![feature(async_closure)]
-#![feature(future_join)]
-
-use crate::configuration::ClientActions;
-use std::ops::Deref;
-
 use crate::actions::delete::delete_game;
 use crate::actions::download::download;
 use crate::actions::menu::{
@@ -13,9 +7,11 @@ use crate::actions::other::{list, list_json};
 use crate::actions::repair::repair_game;
 use crate::actions::run::{run_game, sync_run_game};
 use crate::actions::sync::{download_syncs, sync_infos_for_all_games, upload_syncs};
+use crate::configuration::ClientActions;
 use crate::runtime::CONFIG;
 use actions::run::run_game_synced;
 use actions::sync::download_sync_for_game;
+use std::ops::Deref;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
 

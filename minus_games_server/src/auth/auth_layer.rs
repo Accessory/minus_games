@@ -139,7 +139,7 @@ where
                     .write()
                     .await
                     .replace(tokio::task::spawn(async move {
-                        tokio::time::sleep(Duration::from_mins(10)).await;
+                        tokio::time::sleep(Duration::from_secs(10 * 60)).await;
                         trace!("Clear all sessions");
                         session_manager.write().await.sessions.clear();
                     }))

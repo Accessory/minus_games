@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 use crate::configuration::Configuration;
 use crate::engine_descriptions::engine_description::{EngineDescription, PlatformDescription};
 use crate::engine_descriptions::get_game_description_for_engine;

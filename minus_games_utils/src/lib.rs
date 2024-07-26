@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use clap::builder::OsStr;
@@ -103,13 +101,13 @@ pub fn create_file_list(folder: &Path) -> Vec<PathBuf> {
     let mut rtn = Vec::new();
     let iterator = WalkDir::new(folder);
 
-    for item in iterator {
-        if let Ok(dir_entry) = item
-            && dir_entry.path().is_file()
-        {
-            let file_path = std::path::absolute(dir_entry.path()).unwrap();
-            // trace!("Filepath: {}", file_path.display());
-            rtn.push(file_path);
+    for dir_entry in iterator.into_iter().flatten() {
+        if dir_entry.path().is_file() {
+            {
+                let file_path = std::path::absolute(dir_entry.path()).unwrap();
+                // trace!("Filepath: {}", file_path.display());
+                rtn.push(file_path);
+            }
         }
     }
 
