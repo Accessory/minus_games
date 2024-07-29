@@ -19,8 +19,10 @@ walkdir = "2"
 dialoguer = "0"
 indicatif = "0"
 mime = "0"
-minus_games_utils = { path = "../minus_games_utils" }
-minus_games_models = { path = "../minus_games_models" }
 chrono = "0"
 dirs = "5"
 base64 = "0"
+minus_games_utils = { path = "../minus_games_utils" }
+minus_games_models = { path = "../minus_games_models" }
+minus_games_finder = { path = "../minus_games_finder" }
+

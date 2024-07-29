@@ -34,6 +34,7 @@ pub enum ClientActions {
     DownloadSyncs,
     DownloadSync { game: String },
     UploadSyncs,
+    ScanForGames,
 }
 
 #[derive(Parser, Debug, Serialize, Deserialize)]

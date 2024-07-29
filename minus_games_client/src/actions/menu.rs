@@ -2,6 +2,7 @@ use super::run::run_game_synced;
 use crate::actions::download::download_game;
 use crate::actions::other::get_installed_games;
 use crate::actions::repair::repair_game;
+use crate::actions::scan::scan_for_games;
 use crate::actions::sync::{download_sync_for_game, sync_game_infos, upload_sync_for_game};
 use crate::runtime::{CLIENT, CONFIG};
 use crate::{delete_game, run_game};
@@ -10,7 +11,7 @@ use dialoguer::Select;
 use tracing::info;
 
 pub async fn start_menu() {
-    const MENU_ITEMS: [&str; 8] = [
+    const MENU_ITEMS: [&str; 9] = [
         "Sync & Start",
         "Start",
         "Download",
@@ -18,6 +19,7 @@ pub async fn start_menu() {
         "Repair",
         "Upload Saves",
         "Download Saves",
+        "Scan for Games",
         "Quit",
     ];
 
@@ -36,7 +38,8 @@ pub async fn start_menu() {
         Some(4) => select_repair().await,
         Some(5) => select_upload_saves().await,
         Some(6) => select_download_saves().await,
-        Some(7) => {
+        Some(7) => scan_for_games(),
+        Some(8) => {
             info!("Quitting now.")
         }
         _ => info!("Nothing selected - Quitting now."),

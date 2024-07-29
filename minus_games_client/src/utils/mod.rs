@@ -1,5 +1,6 @@
 #[cfg(target_family = "unix")]
 use std::ffi::OsStr;
+use std::ffi::OsString;
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::PermissionsExt;
 #[cfg(target_family = "unix")]
@@ -81,4 +82,13 @@ fn is_not_filtered(path: &Path) -> bool {
 
 pub fn encode_questinmark(text: &str) -> String {
     text.replace('?', "%3F")
+}
+
+pub fn get_folders_in_path(path: &Path) -> Vec<OsString> {
+    path.read_dir()
+        .expect("Failed to read game folder")
+        .map(|rd| rd.unwrap().path())
+        .filter(|i| i.is_dir())
+        .map(|i| i.file_name().unwrap().to_os_string())
+        .collect()
 }

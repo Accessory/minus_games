@@ -6,3 +6,5 @@ pub mod repair;
 pub mod download;
 pub mod run;
 pub mod sync;
+
+pub mod scan;

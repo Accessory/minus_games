@@ -6,6 +6,7 @@ use crate::actions::menu::{
 use crate::actions::other::{list, list_json};
 use crate::actions::repair::repair_game;
 use crate::actions::run::{run_game, sync_run_game};
+use crate::actions::scan::scan_for_games;
 use crate::actions::sync::{download_syncs, sync_infos_for_all_games, upload_syncs};
 use crate::configuration::ClientActions;
 use crate::runtime::CONFIG;
@@ -76,5 +77,6 @@ async fn main() {
         ClientActions::DownloadSyncs => download_syncs().await,
         ClientActions::DownloadSync { game } => download_sync_for_game(game).await,
         ClientActions::UploadSyncs => upload_syncs().await,
+        ClientActions::ScanForGames => scan_for_games(),
     }
 }

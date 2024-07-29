@@ -1286,6 +1286,7 @@ dependencies = [
  "dotenvy",
  "indicatif",
  "mime",
+ "minus_games_finder",
  "minus_games_models",
  "minus_games_utils",
  "reqwest",

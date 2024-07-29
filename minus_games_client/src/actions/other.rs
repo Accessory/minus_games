@@ -1,4 +1,5 @@
 use crate::runtime::{CLIENT, CONFIG};
+use crate::utils::get_folders_in_path;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use tracing::info;
@@ -21,14 +22,7 @@ pub fn get_installed_games() -> Vec<String> {
         return Vec::new();
     }
 
-    let games: Vec<OsString> = CONFIG
-        .client_games_folder
-        .read_dir()
-        .expect("Failed to read game folder")
-        .map(|rd| rd.unwrap().path())
-        .filter(|i| i.is_dir())
-        .map(|i| i.file_name().unwrap().to_os_string())
-        .collect();
+    let games: Vec<OsString> = get_folders_in_path(&CONFIG.client_games_folder);
 
     let configs: Vec<PathBuf> = CONFIG
         .client_folder
