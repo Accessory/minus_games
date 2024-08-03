@@ -3,7 +3,6 @@ use std::ffi::OsStr;
 use std::ffi::OsString;
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::PermissionsExt;
-#[cfg(target_family = "unix")]
 use std::path::Path;
 use std::path::PathBuf;
 #[cfg(target_family = "unix")]
