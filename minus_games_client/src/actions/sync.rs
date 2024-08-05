@@ -1,12 +1,15 @@
 use super::download::download_all_files;
 use crate::actions::delete::delete_game_info_files;
 use crate::actions::other::get_installed_games;
+use crate::offline_to_return;
 use crate::runtime::{CLIENT, CONFIG};
+use crate::OFFLINE;
 use chrono::{DateTime, Utc};
 use minus_games_models::game_infos::GameInfos;
 use minus_games_models::sync_file_info::SyncFileInfo;
 use minus_games_utils::{create_file_list, create_hash_from_string, set_file_modified_time};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::Ordering::Relaxed;
 use std::time::SystemTime;
 use tracing::{debug, trace, warn};
 
@@ -34,6 +37,7 @@ pub async fn sync_infos_for_all_games() {
 }
 
 pub async fn sync_all_game_files(game: &str) {
+    offline_to_return!();
     let has_new_game_infos = CLIENT.download_game_infos_if_modified(game).await;
     let has_new_game_files = CLIENT.download_game_files_if_modified(game).await;
 
@@ -58,6 +62,7 @@ async fn sync_game_files_and_download(game: &str) {
 }
 
 pub async fn download_sync_for_game(game: &str) {
+    offline_to_return!();
     let game_infos = match CONFIG.get_game_infos(game) {
         Some(infos) => infos,
         None => {
@@ -108,6 +113,7 @@ fn download_necessary(path: &Path, last_modified: DateTime<Utc>) -> bool {
 }
 
 pub async fn upload_sync_for_game(game: &str) {
+    offline_to_return!();
     let game_infos = match CONFIG.get_game_infos(game) {
         Some(infos) => infos,
         None => {

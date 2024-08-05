@@ -51,7 +51,7 @@ pub async fn run_game_synced(game: &str) {
     download_sync_for_game(game).await;
     info!("Run Game {game}");
     run_game(game);
-    info!("Uplaod Saves.");
+    info!("Upload Saves.");
     upload_sync_for_game(game).await;
 }
 

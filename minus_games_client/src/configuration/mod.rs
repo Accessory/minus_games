@@ -35,6 +35,7 @@ pub enum ClientActions {
     DownloadSync { game: String },
     UploadSyncs,
     ScanForGames,
+    SelectGameToPlay,
 }
 
 #[derive(Parser, Debug, Serialize, Deserialize)]
@@ -50,6 +51,8 @@ pub struct Configuration {
     pub wine_prefix: Option<PathBuf>,
     #[arg(short, long, default_value = "false", env)]
     pub verbose: bool,
+    #[arg(short, long, default_value = "false", env)]
+    pub offline: bool,
     #[arg(long, default_value = CurrentDir {}, env)]
     pub client_games_folder: PathBuf,
     #[arg(long, env = "MINUS_GAMES_USERNAME")]

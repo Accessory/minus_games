@@ -1,7 +1,8 @@
 use crate::actions::delete::delete_game;
 use crate::actions::download::download;
 use crate::actions::menu::{
-    select_download, select_game, select_game_to_delete, select_repair, start_menu,
+    select_download, select_game, select_game_to_delete, select_game_to_play, select_repair,
+    start_menu,
 };
 use crate::actions::other::{list, list_json};
 use crate::actions::repair::repair_game;
@@ -9,10 +10,11 @@ use crate::actions::run::{run_game, sync_run_game};
 use crate::actions::scan::scan_for_games;
 use crate::actions::sync::{download_syncs, sync_infos_for_all_games, upload_syncs};
 use crate::configuration::ClientActions;
-use crate::runtime::CONFIG;
+use crate::runtime::{CONFIG, OFFLINE};
 use actions::run::run_game_synced;
 use actions::sync::download_sync_for_game;
 use std::ops::Deref;
+use std::sync::atomic::Ordering;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
@@ -52,6 +54,9 @@ async fn main() {
     };
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
+    // Offline
+    OFFLINE.store(CONFIG.offline, Ordering::Relaxed);
+
     // Main
     match &CONFIG.action {
         ClientActions::List => {
@@ -78,5 +83,6 @@ async fn main() {
         ClientActions::DownloadSync { game } => download_sync_for_game(game).await,
         ClientActions::UploadSyncs => upload_syncs().await,
         ClientActions::ScanForGames => scan_for_games(),
+        ClientActions::SelectGameToPlay => select_game_to_play().await,
     }
 }

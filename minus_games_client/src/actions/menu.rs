@@ -5,12 +5,57 @@ use crate::actions::repair::repair_game;
 use crate::actions::scan::scan_for_games;
 use crate::actions::sync::{download_sync_for_game, sync_game_infos, upload_sync_for_game};
 use crate::runtime::{CLIENT, CONFIG};
+use crate::utils::make_executable_from_path;
 use crate::{delete_game, run_game};
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
 use tracing::info;
 
-pub async fn start_menu() {
+pub(crate) async fn select_game_to_play() {
+    let mut installed_games = get_installed_games();
+    let games = CLIENT.get_games_list().await.unwrap_or_default();
+
+    for game in games {
+        if !installed_games.contains(&game) {
+            installed_games.push(game);
+        }
+    }
+
+    if installed_games.is_empty() {
+        info!("No games found!");
+        return;
+    }
+
+    let selection = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Select Game:")
+        .default(0)
+        .items(installed_games.as_slice())
+        .interact_opt()
+        .unwrap();
+
+    if let Some(selection) = selection {
+        let game = installed_games
+            .get(selection)
+            .expect("Selection out of range");
+        let mut to = dirs::cache_dir().unwrap().join("minus_games_client");
+        std::fs::create_dir_all(&to).unwrap();
+        to.push("run_in_term.sh");
+        info!("Write run file to: {}", to.display());
+        std::fs::write(
+            &to,
+            format!(
+                "#!/bin/sh\nexec {} run-game-synced \"{game}\"",
+                std::env::current_exe().unwrap().to_str().unwrap()
+            ),
+        )
+        .unwrap();
+        make_executable_from_path(&to);
+    } else {
+        info!("Nothing selected!");
+    }
+}
+
+pub(crate) async fn start_menu() {
     const MENU_ITEMS: [&str; 9] = [
         "Sync & Start",
         "Start",
@@ -46,7 +91,7 @@ pub async fn start_menu() {
     }
 }
 
-pub async fn select_upload_saves() {
+pub(crate) async fn select_upload_saves() {
     let installed_games = get_installed_games();
 
     if installed_games.is_empty() {
@@ -68,7 +113,7 @@ pub async fn select_upload_saves() {
         info!("Nothing selected!")
     }
 }
-pub async fn select_download_saves() {
+pub(crate) async fn select_download_saves() {
     let installed_games = get_installed_games();
 
     if installed_games.is_empty() {
@@ -90,7 +135,7 @@ pub async fn select_download_saves() {
         info!("Nothing selected!")
     }
 }
-pub async fn select_repair() {
+pub(crate) async fn select_repair() {
     let installed_games = get_installed_games();
 
     if installed_games.is_empty() {
@@ -113,7 +158,7 @@ pub async fn select_repair() {
     }
 }
 
-pub fn select_game_to_delete(purge: bool) {
+pub(crate) fn select_game_to_delete(purge: bool) {
     let installed_games = get_installed_games();
 
     if installed_games.is_empty() {
@@ -136,7 +181,7 @@ pub fn select_game_to_delete(purge: bool) {
     }
 }
 
-pub async fn select_game_to_download() {
+pub(crate) async fn select_game_to_download() {
     let mut games = CLIENT.get_games_list().await.unwrap_or_default();
     if games.is_empty() {
         info!("No games found!");
@@ -173,7 +218,7 @@ pub async fn select_game_to_download() {
     }
 }
 
-pub async fn select_game_to_run_synced() {
+pub(crate) async fn select_game_to_run_synced() {
     let mut installed_games = get_installed_games();
     let games = CLIENT.get_games_list().await.unwrap_or_default();
 
@@ -205,7 +250,7 @@ pub async fn select_game_to_run_synced() {
     }
 }
 
-pub async fn select_game() {
+pub(crate) async fn select_game() {
     let mut installed_games = get_installed_games();
     let games = CLIENT.get_games_list().await.unwrap_or_default();
 
@@ -241,7 +286,7 @@ pub async fn select_game() {
     }
 }
 
-pub async fn select_download() {
+pub(crate) async fn select_download() {
     println!("Select Game:");
     let games = CLIENT.get_games_list().await.unwrap_or_default();
     for (idx, game) in games.iter().enumerate() {

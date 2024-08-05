@@ -1,5 +1,6 @@
 use crate::download_manager::download_loop;
-use crate::runtime::CONFIG;
+use crate::offline_to_none;
+use crate::runtime::{CONFIG, OFFLINE};
 use crate::utils::{encode_questinmark, get_csv_name, get_json_name};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -8,6 +9,7 @@ use minus_games_models::sync_file_info::SyncFileInfo;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, IF_MODIFIED_SINCE};
 use reqwest::{multipart, Body, Client, Response, StatusCode, Url};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::Ordering::Relaxed;
 use std::time::SystemTime;
 use tokio_util::codec::{BytesCodec, FramedRead};
 use tracing::{debug, warn};
@@ -262,8 +264,15 @@ impl MinusGamesClient {
     }
 
     pub async fn get_games_list(&self) -> Option<Vec<String>> {
+        offline_to_none!();
         let url = self.url.join("/games/list").unwrap();
-        let result = self.client.get(url).send().await.ok()?;
+        let result = match self.client.get(url).send().await {
+            Ok(response) => response,
+            Err(_) => {
+                OFFLINE.store(true, Relaxed);
+                return None;
+            }
+        };
 
         if !result.status().is_success() {
             warn!(
