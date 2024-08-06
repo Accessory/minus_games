@@ -4,4 +4,3 @@ Exec=run.sh
 Type=Application
 Icon=io.github.accessory.minus_games_client
 Categories=Game
-Terminal=true

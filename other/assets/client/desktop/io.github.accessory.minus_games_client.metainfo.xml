@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component type="console-application">
+<!-- Copyright 2024 Accessory -->
+<component type="desktop-application">
     <id>io.github.accessory.minus_games_client</id>
     <url type="homepage">https://github.com/Accessory/minus_games</url>
     <url type="faq">https://github.com/Accessory/minus_games/blob/main/other/docs/quick_start.md</url>
     <name>Minus Games Client</name>
     <summary>Download, sync and run a game</summary>
+    <launchable type="desktop-id">io.github.accessory.minus_games_client.desktop</launchable>
     <content_rating type="oars-1.0" />
 
     <metadata_license>MIT</metadata_license>
@@ -20,6 +22,13 @@
             experience.
         </p>
     </description>
+
+    <screenshots>
+        <screenshot type="default">
+            <image>https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/client/common/screenshot.png</image>
+            <caption>Main Application</caption>
+        </screenshot>
+    </screenshots>
 
     <icon type="stock">io.github.accessory.minus_games_client</icon>
 
