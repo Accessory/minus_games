@@ -1,7 +1,7 @@
 use crate::download_manager::download_loop;
 use crate::offline_to_none;
 use crate::runtime::{CONFIG, OFFLINE};
-use crate::utils::{encode_questinmark, get_csv_name, get_json_name};
+use crate::utils::{encode_problem_chars, get_csv_name, get_json_name};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use chrono::{DateTime, Utc};
@@ -102,7 +102,7 @@ impl MinusGamesClient {
             .url
             .join("/games/data/")
             .unwrap()
-            .join(&encode_questinmark(json_name.as_str()))
+            .join(&encode_problem_chars(json_name.as_str()))
             .unwrap();
         let to = CONFIG.get_json_path(json_name.as_str());
         self.download_file_if_modified(from, to.as_path()).await
@@ -114,7 +114,7 @@ impl MinusGamesClient {
             .url
             .join("/games/data/")
             .unwrap()
-            .join(&encode_questinmark(csv_name.as_str()))
+            .join(&encode_problem_chars(csv_name.as_str()))
             .unwrap();
         let to = CONFIG.get_csv_path(csv_name.as_str());
         self.download_file_if_modified(from, to.as_path()).await
@@ -138,7 +138,7 @@ impl MinusGamesClient {
             .url
             .join("/games/data/")
             .unwrap()
-            .join(&encode_questinmark(json_name.as_str()))
+            .join(&encode_problem_chars(json_name.as_str()))
             .unwrap();
         let to = CONFIG.get_json_path(json_name.as_str());
         let handle_info = self.download_file_if_not_exists(from, to);
@@ -147,7 +147,7 @@ impl MinusGamesClient {
             .url
             .join("/games/data/")
             .unwrap()
-            .join(&encode_questinmark(csv_name.as_str()))
+            .join(&encode_problem_chars(csv_name.as_str()))
             .unwrap();
         let to = CONFIG.get_csv_path(csv_name.as_str());
         let handle_files = self.download_file_if_not_exists(from, to);
@@ -165,7 +165,7 @@ impl MinusGamesClient {
             .url
             .join("/sync/")
             .unwrap()
-            .join(&format!("{}/{folder_hash}/", encode_questinmark(game)))
+            .join(&format!("{}/{folder_hash}/", encode_problem_chars(game)))
             .unwrap()
             .join(file_path)
             .unwrap();
@@ -196,7 +196,13 @@ impl MinusGamesClient {
                     return false;
                 }
             },
-            None => self.client.get(from).send().await.unwrap(),
+            None => match self.client.get(from.as_str()).send().await {
+                Ok(response) => response,
+                Err(_) => {
+                    warn!("Failed to get from url: {from}");
+                    return false;
+                }
+            },
         };
 
         if response.status() == StatusCode::NOT_MODIFIED {

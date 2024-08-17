@@ -3,14 +3,16 @@ use crate::actions::download::download_game;
 use crate::actions::other::get_installed_games;
 use crate::actions::repair::repair_game;
 use crate::actions::scan::scan_for_games;
-use crate::actions::sync::{download_sync_for_game, sync_game_infos, upload_sync_for_game};
+use crate::actions::sync::{download_sync_for_game, sync_all_game_files, sync_game_infos, upload_sync_for_game};
 use crate::runtime::{CLIENT, CONFIG};
+#[cfg(target_family = "unix")]
 use crate::utils::make_executable_from_path;
 use crate::{delete_game, run_game};
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
 use tracing::info;
 
+#[cfg(target_family = "unix")]
 pub(crate) async fn select_game_to_play() {
     let mut installed_games = get_installed_games();
     let games = CLIENT.get_games_list().await.unwrap_or_default();
@@ -37,6 +39,12 @@ pub(crate) async fn select_game_to_play() {
         let game = installed_games
             .get(selection)
             .expect("Selection out of range");
+
+        info!("Sync game files.");
+        sync_all_game_files(game).await;
+        info!("Download Saves.");
+        download_sync_for_game(game).await;
+
         let mut to = dirs::cache_dir().unwrap().join("minus_games_client");
         std::fs::create_dir_all(&to).unwrap();
         to.push("run_in_term.sh");

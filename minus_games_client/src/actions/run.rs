@@ -151,7 +151,16 @@ pub fn run_linux_game_on_linux(infos: GameInfos) {
         .unwrap()
         .to_string();
 
-    let mode = path.metadata().unwrap().permissions().mode();
+    let mode = match path.metadata() {
+        Ok(metadata) => metadata.permissions().mode(),
+        Err(err) => {
+            warn!(
+                "The game installation of '{}' is corrupt. Error: {}.",
+                infos.name, err
+            );
+            return;
+        }
+    };
     let exe_stem = path.file_stem().unwrap();
     if is_not_executable(mode) {
         make_executable(path.as_path(), mode);

@@ -17,6 +17,7 @@ use utoipa::{Modify, OpenApi};
         controller::finder_controller::post_rerun_finder,
         controller::finder_controller::post_rerun_finder_all,
         controller::finder_controller::post_rerun_finder_for,
+        controller::finder_controller::post_rerun_finder_for_game,
         controller::download_controller::download_service,
         controller::sync_controller::get_sync_files_for_folder,
         controller::sync_controller::post_sync_file_for_folder,
@@ -34,6 +35,7 @@ use utoipa::{Modify, OpenApi};
         controller::sync_controller::UploadSyncFile,
         controller::game_controller::UploadFiles,
         controller::game_controller::UploadFile,
+        controller::finder_controller::RerunFinderForGame,
         auth::user::User
     )),
     modifiers(&SecurityAddon)

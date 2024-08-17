@@ -136,20 +136,20 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
 
             current_name.as_ref()?;
 
-            if current_supported_platforms.unwrap().windows {
+            if current_supported_platforms?.windows {
                 if let Some(name) = engine_functions.get_windows_exe(game_path) {
                     current_windows_exe = Some(name);
-                } else {
-                    return None;
                 }
             }
 
-            if current_supported_platforms.unwrap().linux {
+            if current_supported_platforms?.linux {
                 if let Some(name) = engine_functions.get_linux_exe(game_path) {
                     current_linux_exe = Some(name);
-                } else {
-                    return None;
                 }
+            }
+
+            if current_windows_exe.is_none() && current_linux_exe.is_none() {
+                return None;
             }
 
             current_sync_folders = engine_functions.get_sync_folders(game_path);
@@ -166,23 +166,22 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
         }
     }
 
-    if current_name.is_none() || (current_linux_exe.is_none() && current_windows_exe.is_none()) {
+    let name = current_name?;
+
+    if current_linux_exe.is_none() && current_windows_exe.is_none() {
         return None;
     }
 
-    let folder_name = game_path
-        .iter()
-        .last()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_string();
+    let folder_name = game_path.iter().last()?.to_str()?.to_string();
 
     Some(GameInfos {
-        name: current_name.unwrap(),
+        name,
         folder_name,
-        engine: current_engine_description.unwrap().engine_type,
-        supported_platforms: current_supported_platforms.unwrap(),
+        engine: current_engine_description?.engine_type,
+        supported_platforms: SupportedPlatforms {
+            windows: current_windows_exe.is_some(),
+            linux: current_linux_exe.is_some(),
+        },
         linux_exe: current_linux_exe,
         windows_exe: current_windows_exe,
         sync_folders: current_sync_folders,

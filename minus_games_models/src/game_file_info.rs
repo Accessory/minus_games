@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::path::PathBuf;
-use url::Url;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
@@ -17,13 +16,7 @@ pub struct GameFileInfo {
 
 impl GameFileInfo {
     pub fn generate_download_link(&self, base_url: &str) -> String {
-        Url::parse(base_url)
-            .unwrap()
-            .join("/download/")
-            .unwrap()
-            .join(self.file_path.as_str())
-            .unwrap()
-            .to_string()
+        format!("{base_url}/download/{}", self.file_path)
     }
 
     pub fn csv_headers() -> &'static [&'static str] {

@@ -79,8 +79,8 @@ fn is_not_filtered(path: &Path) -> bool {
     true
 }
 
-pub fn encode_questinmark(text: &str) -> String {
-    text.replace('?', "%3F")
+pub fn encode_problem_chars(text: &str) -> String {
+    text.replace('?', "%3F").replace(':', "%3A")
 }
 
 pub fn get_folders_in_path(path: &Path) -> Vec<OsString> {

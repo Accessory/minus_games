@@ -74,14 +74,11 @@ impl std::fmt::Display for Configuration {
                 .unwrap()
         )?;
         writeln!(f, "Keep existing files: {}", self.keep_existing_configs)?;
-        match &self.filter {
-            Some(value) => {
-                write!(f, "Filter: {}", value)?;
-            }
-            None => {}
+        if let Some(value) = &self.filter {
+            write!(f, "Filter: {}", value)?;
         };
         match &self.filter {
-            Some(value) => write!(f, "Cleanup data folder: {}", value),
+            Some(value) => write!(f, " Cleanup data folder: {}", value),
             None => write!(f, ""),
         }
     }

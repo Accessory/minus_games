@@ -2,6 +2,7 @@ use crate::engine_descriptions::engine_description::{
     EngineDescription, Platform, PlatformDescription,
 };
 use minus_games_models::GameEngine;
+use std::convert::Into;
 use std::sync::LazyLock;
 
 pub mod engine_description;

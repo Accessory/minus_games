@@ -22,19 +22,35 @@ pub enum ClientActions {
     Download(DownloadArgs),
     Sync,
     SelectDownload,
-    RunGame { game: String },
-    RunGameSynced { game: String },
-    SyncRunGame { game: String },
+    RunGame {
+        game: String,
+    },
+    RunGameSynced {
+        game: String,
+    },
+    SyncRunGame {
+        game: String,
+    },
     SelectGame,
-    DeleteGame { game: String, purge: Option<bool> },
-    SelectDeleteGame { purge: Option<bool> },
+    DeleteGame {
+        game: String,
+        purge: Option<bool>,
+    },
+    SelectDeleteGame {
+        purge: Option<bool>,
+    },
     Menu,
-    Repair { game: String },
+    Repair {
+        game: String,
+    },
     SelectRepair,
     DownloadSyncs,
-    DownloadSync { game: String },
+    DownloadSync {
+        game: String,
+    },
     UploadSyncs,
     ScanForGames,
+    #[cfg(target_family = "unix")]
     SelectGameToPlay,
 }
 

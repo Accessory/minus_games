@@ -1,8 +1,9 @@
 use crate::actions::delete::delete_game;
 use crate::actions::download::download;
+#[cfg(target_family = "unix")]
+use crate::actions::menu::select_game_to_play;
 use crate::actions::menu::{
-    select_download, select_game, select_game_to_delete, select_game_to_play, select_repair,
-    start_menu,
+    select_download, select_game, select_game_to_delete, select_repair, start_menu,
 };
 use crate::actions::other::{list, list_json};
 use crate::actions::repair::repair_game;
@@ -83,6 +84,7 @@ async fn main() {
         ClientActions::DownloadSync { game } => download_sync_for_game(game).await,
         ClientActions::UploadSyncs => upload_syncs().await,
         ClientActions::ScanForGames => scan_for_games(),
+        #[cfg(target_family = "unix")]
         ClientActions::SelectGameToPlay => select_game_to_play().await,
     }
 }
