@@ -4,12 +4,16 @@ use crate::actions::sync::sync_game_infos;
 use crate::runtime::{get_config, send_event, MinusGamesClientEvents};
 #[cfg(target_family = "unix")]
 use crate::utils::{add_permissions, is_not_executable, make_executable};
+#[cfg(target_family = "unix")]
+use convert_case::{Case, Casing};
 use minus_games_models::game_infos::GameInfos;
 use std::env::consts::OS;
+use std::error::Error;
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::PermissionsExt;
 #[cfg(target_family = "unix")]
 use std::path::Path;
+use std::process::Output;
 use tokio::process::Command;
 #[cfg(target_family = "unix")]
 use tracing::debug;
@@ -78,11 +82,10 @@ pub async fn run_windows_game_on_windows(infos: GameInfos) {
         .to_str()
         .unwrap()
         .to_string();
-    Command::new(path_str)
-        .current_dir(&cwd)
-        .output()
-        .await
-        .unwrap_or_else(|err| panic!("Failed to run {path_str} - {err}"));
+    handle_command_output(
+        Command::new(path_str).current_dir(&cwd).output().await,
+        &infos.name,
+    )
 }
 
 #[cfg(target_family = "unix")]
@@ -104,14 +107,21 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
             .to_str()
             .unwrap()
             .to_string();
-        Command::new("gamemoderun")
-            .current_dir(&cwd)
-            .arg(exe)
-            .arg(path_str)
-            .env("WINEPREFIX", prefix)
-            .output()
-            .await
-            .unwrap_or_else(|_| panic!("Failed to run {path_str}"));
+
+        handle_command_output(
+            Command::new("gamemoderun")
+                .current_dir(&cwd)
+                .arg(exe)
+                .arg(path_str)
+                .env("WINEPREFIX", prefix)
+                .env(
+                    "GAMEID",
+                    format!("umu-{}", &infos.name).to_case(Case::Title),
+                )
+                .output()
+                .await,
+            &infos.name,
+        )
     } else {
         send_event("Running game via wine on linux without gamemode".into()).await;
         let path = infos
@@ -125,13 +135,20 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
             .to_str()
             .unwrap()
             .to_string();
-        Command::new(exe)
-            .current_dir(&cwd)
-            .arg(path_str)
-            .env("WINEPREFIX", prefix)
-            .output()
-            .await
-            .unwrap_or_else(|_| panic!("Failed to run {path_str}"));
+
+        handle_command_output(
+            Command::new(exe)
+                .current_dir(&cwd)
+                .arg(path_str)
+                .env("WINEPREFIX", prefix)
+                .env(
+                    "GAMEID",
+                    format!("umu-{}", &infos.name).to_case(Case::Title),
+                )
+                .output()
+                .await,
+            &infos.name,
+        )
     }
 }
 
@@ -181,8 +198,32 @@ pub async fn run_linux_game_on_linux(infos: GameInfos) {
         add_permissions(cwd_path, exe_stem);
     }
 
-    match Command::new(path_str).current_dir(&cwd).output().await {
-        Ok(_) => {}
-        Err(err) => panic!("Failed to run {path_str} with error: {}", err),
-    };
+    handle_command_output(
+        Command::new(path_str).current_dir(&cwd).output().await,
+        &infos.name,
+    )
+}
+
+fn handle_command_output(output: Result<Output, impl Error>, game: &str) {
+    match output {
+        Ok(output) => {
+            if get_config().verbose {
+                debug!("Exit with status: {}", output.status);
+                debug!(
+                    "Stdout:\n{}",
+                    String::from_utf8(output.stdout).unwrap_or_default()
+                );
+                debug!(
+                    "Stdin:\n{}",
+                    String::from_utf8(output.stderr).unwrap_or_default()
+                );
+            }
+        }
+        Err(err) => {
+            warn!(
+                "The installation of game '{}' is corrupt. Error: {}.",
+                game, err
+            );
+        }
+    }
 }

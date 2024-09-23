@@ -22,6 +22,7 @@ mime = "0"
 chrono = "0"
 dirs = "5"
 base64 = "0"
+convert_case = "0"
 minus_games_utils = { path = "../minus_games_utils" }
 minus_games_models = { path = "../minus_games_models" }
 minus_games_finder = { path = "../minus_games_finder" }

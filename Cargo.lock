@@ -2723,6 +2723,7 @@ dependencies = [
  "base64 0.21.7",
  "chrono",
  "clap",
+ "convert_case",
  "csv",
  "dialoguer",
  "dirs 5.0.1",
