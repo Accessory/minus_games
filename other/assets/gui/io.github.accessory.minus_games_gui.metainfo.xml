@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2024 Accessory -->
-<component type="console-application">
-    <id>io.github.accessory.minus_games_client</id>
+<component type="desktop-application">
+    <id>io.github.accessory.minus_games_gui</id>
     <url type="homepage">https://github.com/Accessory/minus_games</url>
     <url type="faq">https://github.com/Accessory/minus_games/blob/main/other/docs/quick_start.md</url>
-    <name>Minus Games Client</name>
+    <name>Minus Games Gui</name>
     <summary>Download, sync and run a game</summary>
+    <launchable type="desktop-id">io.github.accessory.minus_games_gui.desktop</launchable>
     <content_rating type="oars-1.0" />
 
     <metadata_license>MIT</metadata_license>
@@ -13,7 +14,7 @@
 
     <description>
         <p>
-            The Minus Games Client offers an efficient solution for downloading, synchronizing, and
+            The Minus Games Gui offers an efficient solution for downloading, synchronizing, and
             running your games. It keeps your game files managed and up-to-date with the latest
             patches and updates from a Minus Games Server Instance. With seamless synchronization
             across devices, you can effortlessly continue your progress no matter where you are.
@@ -22,7 +23,14 @@
         </p>
     </description>
 
-    <icon type="stock">io.github.accessory.minus_games_client</icon>
+    <screenshots>
+        <screenshot type="default">
+            <image>https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/gui/common/screenshot.png</image>
+            <caption>Main Application</caption>
+        </screenshot>
+    </screenshots>
+
+    <icon type="stock">io.github.accessory.minus_games_gui</icon>
 
     <categories>
         <category>Game</category>

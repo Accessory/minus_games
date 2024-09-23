@@ -1,7 +1,6 @@
 [Desktop Entry]
-Name=Minus Games Client
+Name=Minus Games Gui
 Exec=minus_games_gui
 Type=Application
-Icon=io.github.accessory.minus_games_client
+Icon=io.github.accessory.minus_games_gui
 Categories=Game
-Terminal=true
