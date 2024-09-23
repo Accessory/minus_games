@@ -45,19 +45,31 @@ pub struct Configuration {
 impl Display for Configuration {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Server Url: {}", self.server_url.as_str())?;
-        writeln!(f, "Update To: {}", self.get_client_to().display())?;
+        writeln!(f, "Update Client To: {}", self.get_client_to().display())?;
+        writeln!(f, "Update Gui To: {}", self.get_gui_to().display())?;
         writeln!(f, "OS: {}", self.for_os)
     }
 }
 
 impl Configuration {
     pub fn get_client_to(&self) -> PathBuf {
+        let name = match self.for_os {
+            OS::Windows => "minus_games_client.exe",
+            OS::Linux => "minus_games_client",
+        };
         match self.to.as_ref() {
-            Some(to) => to.clone(),
-            None => match self.for_os {
-                OS::Windows => PathBuf::from("minus_games_client.exe"),
-                OS::Linux => PathBuf::from("minus_games_client"),
-            },
+            Some(to) => to.join(name),
+            None => PathBuf::from(name),
+        }
+    }
+    pub fn get_gui_to(&self) -> PathBuf {
+        let name = match self.for_os {
+            OS::Windows => "minus_games_gui.exe",
+            OS::Linux => "minus_games_gui",
+        };
+        match self.to.as_ref() {
+            Some(to) => to.join(name),
+            None => PathBuf::from(name),
         }
     }
 }

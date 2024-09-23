@@ -1,6 +1,7 @@
 #[cfg(target_family = "unix")]
 use std::ffi::OsStr;
 use std::ffi::OsString;
+use std::fmt::Display;
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -50,6 +51,18 @@ pub fn is_or_none_string(object: &Option<String>) -> &str {
     match object.as_ref() {
         None => "None",
         Some(value) => value.as_str(),
+    }
+}
+
+pub fn is_or_none<T>(object: Option<&T>) -> String
+where
+    T: Display,
+{
+    match object {
+        None => "None".into(),
+        Some(content) => {
+            format!("{content}")
+        }
     }
 }
 

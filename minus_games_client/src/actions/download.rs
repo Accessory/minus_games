@@ -1,6 +1,6 @@
 use crate::actions::sync::sync_game_infos;
 use crate::download_manager::{DownloadConfig, DownloadManager};
-use crate::runtime::{CLIENT, CONFIG};
+use crate::runtime::{get_config, CLIENT};
 use tracing::{info, warn};
 
 pub async fn download(game: &Option<String>) {
@@ -12,7 +12,7 @@ pub async fn download(game: &Option<String>) {
 
 pub async fn download_game(game: &str) {
     info!("Start Syncing: {game}");
-    if !CONFIG.get_csv_path_for_game(game).as_path().is_file() {
+    if !get_config().get_csv_path_for_game(game).as_path().is_file() {
         sync_game_infos(game).await;
     }
     download_all_files(game).await;
@@ -27,7 +27,7 @@ async fn download_all() {
 }
 
 pub async fn download_all_files(game: &str) {
-    let file_list_option = CONFIG.get_game_file_list(game);
+    let file_list_option = get_config().get_game_file_list(game);
 
     match file_list_option {
         None => warn!("Game \"{game}\" not found."),
@@ -35,7 +35,7 @@ pub async fn download_all_files(game: &str) {
             let mut download_configs = Vec::with_capacity(file_list.len());
             for file in file_list {
                 let dc = DownloadConfig::new(
-                    file.generate_download_link(CONFIG.server_url.as_str()),
+                    file.generate_download_link(get_config().server_url.as_str()),
                     file.file_path.clone(),
                 );
                 download_configs.push(dc);
@@ -44,7 +44,7 @@ pub async fn download_all_files(game: &str) {
             let mut download_manager = DownloadManager::with(download_configs);
 
             download_manager
-                .download_all_to(CONFIG.client_games_folder.as_path())
+                .download_all_to(get_config().client_games_folder.as_path())
                 .await;
         }
     }

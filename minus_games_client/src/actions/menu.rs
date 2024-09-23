@@ -1,29 +1,23 @@
-use super::run::run_game_synced;
+use super::run::{run_game, run_game_synced};
+use crate::actions::delete::delete_game;
 use crate::actions::download::download_game;
-use crate::actions::other::get_installed_games;
 use crate::actions::repair::repair_game;
 use crate::actions::scan::scan_for_games;
-use crate::actions::sync::{download_sync_for_game, sync_all_game_files, sync_game_infos, upload_sync_for_game};
-use crate::runtime::{CLIENT, CONFIG};
+#[cfg(target_family = "unix")]
+use crate::actions::sync::sync_all_game_files;
+use crate::actions::sync::{download_sync_for_game, sync_game_infos, upload_sync_for_game};
+use crate::runtime::{get_all_games, get_config, get_installed_games, send_event, CLIENT};
 #[cfg(target_family = "unix")]
 use crate::utils::make_executable_from_path;
-use crate::{delete_game, run_game};
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
 use tracing::info;
 
 #[cfg(target_family = "unix")]
-pub(crate) async fn select_game_to_play() {
-    let mut installed_games = get_installed_games();
-    let games = CLIENT.get_games_list().await.unwrap_or_default();
+pub async fn select_game_to_play() {
+    let games = get_all_games().await;
 
-    for game in games {
-        if !installed_games.contains(&game) {
-            installed_games.push(game);
-        }
-    }
-
-    if installed_games.is_empty() {
+    if games.is_empty() {
         info!("No games found!");
         return;
     }
@@ -31,14 +25,12 @@ pub(crate) async fn select_game_to_play() {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Select Game:")
         .default(0)
-        .items(installed_games.as_slice())
+        .items(games.as_slice())
         .interact_opt()
         .unwrap();
 
     if let Some(selection) = selection {
-        let game = installed_games
-            .get(selection)
-            .expect("Selection out of range");
+        let game = games.get(selection).expect("Selection out of range");
 
         info!("Sync game files.");
         sync_all_game_files(game).await;
@@ -63,7 +55,7 @@ pub(crate) async fn select_game_to_play() {
     }
 }
 
-pub(crate) async fn start_menu() {
+pub async fn start_menu() {
     const MENU_ITEMS: [&str; 9] = [
         "Sync & Start",
         "Start",
@@ -99,7 +91,7 @@ pub(crate) async fn start_menu() {
     }
 }
 
-pub(crate) async fn select_upload_saves() {
+pub async fn select_upload_saves() {
     let installed_games = get_installed_games();
 
     if installed_games.is_empty() {
@@ -121,7 +113,7 @@ pub(crate) async fn select_upload_saves() {
         info!("Nothing selected!")
     }
 }
-pub(crate) async fn select_download_saves() {
+pub async fn select_download_saves() {
     let installed_games = get_installed_games();
 
     if installed_games.is_empty() {
@@ -143,7 +135,7 @@ pub(crate) async fn select_download_saves() {
         info!("Nothing selected!")
     }
 }
-pub(crate) async fn select_repair() {
+pub async fn select_repair() {
     let installed_games = get_installed_games();
 
     if installed_games.is_empty() {
@@ -166,7 +158,7 @@ pub(crate) async fn select_repair() {
     }
 }
 
-pub(crate) fn select_game_to_delete(purge: bool) {
+pub fn select_game_to_delete(purge: bool) {
     let installed_games = get_installed_games();
 
     if installed_games.is_empty() {
@@ -189,7 +181,7 @@ pub(crate) fn select_game_to_delete(purge: bool) {
     }
 }
 
-pub(crate) async fn select_game_to_download() {
+pub async fn select_game_to_download() {
     let mut games = CLIENT.get_games_list().await.unwrap_or_default();
     if games.is_empty() {
         info!("No games found!");
@@ -214,29 +206,25 @@ pub(crate) async fn select_game_to_download() {
 
     if let Some(selection) = selection {
         let game = games.get(selection).unwrap();
-        if !CONFIG.get_json_path_from_game(game).as_path().is_file() {
+        if !get_config()
+            .get_json_path_from_game(game)
+            .as_path()
+            .is_file()
+        {
             sync_game_infos(game).await;
         }
-        if !CONFIG.get_game_path(game).is_dir() {
+        if !get_config().get_game_path(game).is_dir() {
             download_game(game).await;
-            info!("Game \"{game}\" downloaded successfully!");
+            send_event(format!("Game \"{game}\" downloaded successfully!").into()).await;
         }
     } else {
         info!("Nothing selected!");
     }
 }
 
-pub(crate) async fn select_game_to_run_synced() {
-    let mut installed_games = get_installed_games();
-    let games = CLIENT.get_games_list().await.unwrap_or_default();
-
-    for game in games {
-        if !installed_games.contains(&game) {
-            installed_games.push(game);
-        }
-    }
-
-    if installed_games.is_empty() {
+pub async fn select_game_to_run_synced() {
+    let games = get_all_games().await;
+    if games.is_empty() {
         info!("No games found!");
         return;
     }
@@ -244,21 +232,19 @@ pub(crate) async fn select_game_to_run_synced() {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Select Game to sync and play:")
         .default(0)
-        .items(installed_games.as_slice())
+        .items(games.as_slice())
         .interact_opt()
         .unwrap();
 
     if let Some(selection) = selection {
-        let game = installed_games
-            .get(selection)
-            .expect("Selection out of range");
+        let game = games.get(selection).expect("Selection out of range");
         run_game_synced(game).await;
     } else {
         info!("Nothing selected!");
     }
 }
 
-pub(crate) async fn select_game() {
+pub async fn select_game() {
     let mut installed_games = get_installed_games();
     let games = CLIENT.get_games_list().await.unwrap_or_default();
 
@@ -282,19 +268,23 @@ pub(crate) async fn select_game() {
 
     if let Some(selection) = selection {
         let game = installed_games.get(selection).unwrap();
-        if !CONFIG.get_json_path_from_game(game).as_path().is_file() {
+        if !get_config()
+            .get_json_path_from_game(game)
+            .as_path()
+            .is_file()
+        {
             sync_game_infos(game).await;
         }
-        if !CONFIG.get_game_path(game).is_dir() {
+        if !get_config().get_game_path(game).is_dir() {
             download_game(game).await;
         }
-        run_game(game);
+        run_game(game).await;
     } else {
         info!("Nothing selected!");
     }
 }
 
-pub(crate) async fn select_download() {
+pub async fn select_download() {
     println!("Select Game:");
     let games = CLIENT.get_games_list().await.unwrap_or_default();
     for (idx, game) in games.iter().enumerate() {

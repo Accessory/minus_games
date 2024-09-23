@@ -1,4 +1,6 @@
-use crate::utils::{get_csv_name, get_json_name, is_or_none_path_buf, is_or_none_string};
+use crate::utils::{
+    get_csv_name, get_json_name, is_or_none, is_or_none_path_buf, is_or_none_string,
+};
 use clap::{command, Parser, Subcommand};
 use minus_games_models::game_file_info::GameFileInfo;
 use minus_games_models::game_infos::GameInfos;
@@ -10,12 +12,13 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 
-#[derive(Debug, clap::Args, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, clap::Args, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct DownloadArgs {
     #[arg()]
     pub game: Option<String>,
 }
-#[derive(Debug, Subcommand, Serialize, Deserialize, strum::Display, Eq, PartialEq)]
+
+#[derive(Debug, Subcommand, Serialize, Deserialize, strum::Display, Eq, PartialEq, Clone)]
 pub enum ClientActions {
     List,
     ListJson,
@@ -52,9 +55,10 @@ pub enum ClientActions {
     ScanForGames,
     #[cfg(target_family = "unix")]
     SelectGameToPlay,
+    Gui,
 }
 
-#[derive(Parser, Debug, Serialize, Deserialize)]
+#[derive(Parser, Debug, Serialize, Deserialize, Clone)]
 #[command(author, version, about, long_about = None)]
 pub struct Configuration {
     #[arg(long, default_value = "http://127.0.0.1:8415", env)]
@@ -76,7 +80,7 @@ pub struct Configuration {
     #[arg(long, env = "MINUS_GAMES_PASSWORD")]
     pub password: Option<String>,
     #[command(subcommand)]
-    pub action: ClientActions,
+    pub action: Option<ClientActions>,
 }
 
 impl Configuration {
@@ -132,6 +136,6 @@ impl Display for Configuration {
         writeln!(f, "Wine Exe: {}", is_or_none_path_buf(&self.wine_exe))?;
         writeln!(f, "Wine Prefix: {}", is_or_none_path_buf(&self.wine_prefix))?;
         writeln!(f, "Username: {}", is_or_none_string(&self.username))?;
-        write!(f, "Action: {}", self.action)
+        write!(f, "Action: {}", is_or_none(self.action.as_ref()))
     }
 }

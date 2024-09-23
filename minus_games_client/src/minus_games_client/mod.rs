@@ -1,6 +1,6 @@
 use crate::download_manager::download_loop;
 use crate::offline_to_none;
-use crate::runtime::{CONFIG, OFFLINE};
+use crate::runtime::{get_config, OFFLINE};
 use crate::utils::{encode_problem_chars, get_csv_name, get_json_name};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -39,7 +39,13 @@ impl MinusGamesClient {
             .join(&format!("{game}/{folder_hash}"))
             .unwrap();
 
-        let to_upload = tokio::fs::File::open(upload_file_path).await.unwrap();
+        let to_upload = match tokio::fs::File::open(upload_file_path).await {
+            Ok(to_upload) => to_upload,
+            Err(err) => {
+                warn!("Failed Uploading Sync Files with: {err}");
+                return;
+            }
+        };
         let stream = FramedRead::new(to_upload, BytesCodec::new());
         let file_body = Body::wrap_stream(stream);
         let file_stream = multipart::Part::stream(file_body)
@@ -104,7 +110,7 @@ impl MinusGamesClient {
             .unwrap()
             .join(&encode_problem_chars(json_name.as_str()))
             .unwrap();
-        let to = CONFIG.get_json_path(json_name.as_str());
+        let to = get_config().get_json_path(json_name.as_str());
         self.download_file_if_modified(from, to.as_path()).await
     }
 
@@ -116,7 +122,7 @@ impl MinusGamesClient {
             .unwrap()
             .join(&encode_problem_chars(csv_name.as_str()))
             .unwrap();
-        let to = CONFIG.get_csv_path(csv_name.as_str());
+        let to = get_config().get_csv_path(csv_name.as_str());
         self.download_file_if_modified(from, to.as_path()).await
     }
 
@@ -128,7 +134,7 @@ impl MinusGamesClient {
     //         .unwrap()
     //         .join(&encode_questinmark(csv_name.as_str()))
     //         .unwrap();
-    //     let to = CONFIG.get_csv_path(csv_name.as_str());
+    //     let to = get_config().get_csv_path(csv_name.as_str());
     //     self.download_file(from, to.as_path()).await;
     // }
 
@@ -140,7 +146,7 @@ impl MinusGamesClient {
             .unwrap()
             .join(&encode_problem_chars(json_name.as_str()))
             .unwrap();
-        let to = CONFIG.get_json_path(json_name.as_str());
+        let to = get_config().get_json_path(json_name.as_str());
         let handle_info = self.download_file_if_not_exists(from, to);
         let csv_name = get_csv_name(game);
         let from = self
@@ -149,7 +155,7 @@ impl MinusGamesClient {
             .unwrap()
             .join(&encode_problem_chars(csv_name.as_str()))
             .unwrap();
-        let to = CONFIG.get_csv_path(csv_name.as_str());
+        let to = get_config().get_csv_path(csv_name.as_str());
         let handle_files = self.download_file_if_not_exists(from, to);
         tokio::join!(handle_info, handle_files);
     }

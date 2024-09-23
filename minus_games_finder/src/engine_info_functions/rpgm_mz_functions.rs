@@ -1,55 +1,19 @@
 use crate::engine_info_functions::EngineInfoFunctions;
-use crate::utils::{find_closest_string, find_name_in_folder_name, get_game_exe_or_exe};
-use convert_case::{Case, Casing};
-use minus_games_models::rpgm_package::RPGMPackage;
-use std::fs::File;
-use std::io::BufReader;
+use crate::utils::get_game_exe_or_exe;
 use std::path::Path;
+
+use super::rpgm_utils::{get_rpgm_linux_exe, get_rpgm_name};
 
 #[derive(Copy, Clone)]
 pub struct RPGMMZFunctions {}
 
 impl EngineInfoFunctions for RPGMMZFunctions {
     fn get_game_name(&self, game_root: &Path) -> Option<String> {
-        let package_path = game_root.join("package.json");
-        if package_path.is_file() {
-            let mut reader = BufReader::new(File::open(package_path.as_path()).unwrap());
-            if let Ok(rpgm_package) = serde_json::from_reader::<_, RPGMPackage>(&mut reader) {
-                let mut name = rpgm_package.name;
-                name = name.to_case(Case::Title);
-                return Some(name);
-            }
-            let folder_name = game_root.iter().last().unwrap().to_str().unwrap();
-            return Some(find_name_in_folder_name(folder_name));
-        }
-        None
+        get_rpgm_name(game_root)
     }
 
     fn get_linux_exe(&self, game_root: &Path) -> Option<String> {
-        if game_root.join("Game").is_file() {
-            return Some("Game".into());
-        }
-
-        let name = self.get_game_name(game_root)?;
-        let mut files: Vec<String> = Vec::new();
-        for file_result in game_root.read_dir().unwrap() {
-            let file = file_result.unwrap();
-            let file_path = file.path();
-            if file_path.is_file()
-                && file_path.extension().is_none()
-                && file.file_name() != "chrome_crashpad_handler"
-                && file.file_name() != "crashpad_handler"
-                && file.file_name() != "CREDITS"
-            {
-                files.push(file_path.file_name().unwrap().to_str().unwrap().to_string());
-            }
-        }
-        if files.is_empty() {
-            None
-        } else {
-            let idx = find_closest_string(name.as_str(), &files);
-            Some(files.remove(idx))
-        }
+        get_rpgm_linux_exe(self, game_root)
     }
 
     fn get_windows_exe(&self, game_root: &Path) -> Option<String> {

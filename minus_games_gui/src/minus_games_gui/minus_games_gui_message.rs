@@ -1,0 +1,64 @@
+use crate::minus_games_gui::game_card::GameCard;
+use crate::minus_games_gui::views::settings_view::SettingInput;
+use iced::Event;
+use minus_games_client::runtime::MinusGamesClientEvents;
+use tracing::info;
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+pub(crate) enum MinusGamesGuiMessage {
+    Init,
+    // InitComplete(Arc<RwLock<tokio::sync::mpsc::Receiver<MinusGamesClientEvents>>>),
+    InitComplete(()),
+    Loading,
+    Created(Vec<GameCard>),
+    Settings,
+    BackFromSettings(bool),
+    ChangeSetting(SettingInput),
+    Play(String),
+    Delete(String),
+    FinishedPlay(()),
+    FinishedDelete(()),
+    SetFilesToDownload(usize),
+    FinishedDownloading,
+    SyncFileInfosComplete,
+    RunningGame(String),
+    StartGame(String),
+    CloseGame(String),
+    LogMessage(String),
+    LogStaticMessage(&'static str),
+    Fullscreen,
+    Exit,
+    Noop,
+    CloseApplication(()),
+    WindowEvent(Event),
+}
+
+impl From<MinusGamesClientEvents> for MinusGamesGuiMessage {
+    fn from(event: MinusGamesClientEvents) -> Self {
+        match event {
+            MinusGamesClientEvents::StartDownloadingFiles(files_count) => {
+                MinusGamesGuiMessage::SetFilesToDownload(files_count)
+            }
+            MinusGamesClientEvents::StartDownloadingFile => MinusGamesGuiMessage::Noop,
+            MinusGamesClientEvents::FinishedDownloadingFile => {
+                MinusGamesGuiMessage::FinishedDownloading
+            }
+            MinusGamesClientEvents::FinishedDownloadingFiles => MinusGamesGuiMessage::Noop,
+            MinusGamesClientEvents::FinishedSyncFileInfos => {
+                MinusGamesGuiMessage::SyncFileInfosComplete
+            }
+            MinusGamesClientEvents::LogInfoMessage(msg) => MinusGamesGuiMessage::LogMessage(msg),
+            MinusGamesClientEvents::StartGame(game) => MinusGamesGuiMessage::StartGame(game),
+            MinusGamesClientEvents::RunningGame(game) => MinusGamesGuiMessage::RunningGame(game),
+            MinusGamesClientEvents::LogInfoStaticMessage(msg) => {
+                MinusGamesGuiMessage::LogStaticMessage(msg)
+            }
+            MinusGamesClientEvents::Close => MinusGamesGuiMessage::Noop,
+            _ => {
+                info!("Event fired: {}", &event);
+                MinusGamesGuiMessage::Noop
+            }
+        }
+    }
+}

@@ -1,6 +1,5 @@
-use crate::runtime::CLIENT;
+use crate::runtime::{send_event, MinusGamesClientEvents, CLIENT};
 use chrono::DateTime;
-use indicatif::ProgressBar;
 use minus_games_utils::set_file_modified_time;
 use reqwest::Response;
 use std::path::{Path, PathBuf};
@@ -39,21 +38,22 @@ impl DownloadManager {
         let processes: usize = std::thread::available_parallelism().unwrap().get();
         let semaphore = Arc::new(Semaphore::new(processes));
         let mut joinings: Vec<JoinHandle<()>> = Vec::new();
-        let bar = Arc::new(tokio::sync::RwLock::new(ProgressBar::new(
-            self.download_list.len() as u64,
-        )));
+        send_event(MinusGamesClientEvents::StartDownloadingFiles(
+            self.download_list.len(),
+        ))
+        .await;
         for mut config in self.download_list.drain(0..) {
             let pass = semaphore.clone().acquire_owned().await.unwrap();
             config.to_final = Some(path.join(config.to.as_str()));
             // println!("{}", config.to_final.as_ref().unwrap().display());
-            let bar_copy = bar.clone();
             let handle = tokio::spawn(async move {
                 trace!(
                     "Currently Running Downloads: {}",
                     processes - pass.semaphore().available_permits()
                 );
+                send_event(MinusGamesClientEvents::StartDownloadingFile).await;
                 download_to(config).await;
-                bar_copy.write().await.inc(1);
+                send_event(MinusGamesClientEvents::FinishedDownloadingFile).await;
                 drop(pass);
             });
             joinings.push(handle);
@@ -62,7 +62,7 @@ impl DownloadManager {
         for join_handle in joinings.drain(0..) {
             join_handle.await.unwrap();
         }
-        bar.write().await.finish();
+        send_event(MinusGamesClientEvents::FinishedDownloadingFiles).await;
     }
 }
 
@@ -75,11 +75,13 @@ pub async fn download_to(download_config: DownloadConfig) {
     let response = CLIENT.get(&download_config.url).await;
 
     if !response.status().is_success() {
-        panic!(
-            "Download failed with: {} - {}",
+        warn!(
+            "Download {} failed with: {} - {}",
+            download_config.url,
             response.status(),
             response.text().await.unwrap()
         );
+        return;
     }
 
     download_loop(response, to.as_path()).await;
@@ -104,8 +106,9 @@ pub async fn download_loop(mut response: Response, to: &Path) {
         let read_result = response.chunk().await.unwrap();
 
         if let Some(bytes) = read_result {
-            download_file.write_all(&bytes).await.unwrap();
-            true
+            if let Err(err) = download_file.write_all(&bytes).await {
+                warn!("Download failed with: {err}");
+            }
         } else {
             break;
         };

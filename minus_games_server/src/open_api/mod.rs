@@ -26,6 +26,8 @@ use utoipa::{Modify, OpenApi};
         controller::updater_controller::get_updater_info_windows,
         controller::client_controller::get_client_info_linux,
         controller::client_controller::get_client_info_windows,
+        controller::gui_controller::get_gui_info_linux,
+        controller::gui_controller::get_gui_info_windows,
         crate::health,
         crate::me
     ),

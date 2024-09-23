@@ -7,6 +7,7 @@ members = [
     "minus_games_utils",
     "minus_games_models",
     "minus_games_updater",
+    "minus_games_gui",
 ]
 
 [profile.release]

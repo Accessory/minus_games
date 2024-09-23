@@ -5,8 +5,8 @@ use crate::auth::user::ArcUser;
 use crate::auth::user_handler::UserHandler;
 use crate::configuration::Configuration;
 use crate::controller::{
-    client_controller, download_controller, finder_controller, game_controller, sync_controller,
-    updater_controller,
+    client_controller, download_controller, finder_controller, game_controller, gui_controller,
+    sync_controller, updater_controller,
 };
 use crate::open_api::ApiDoc;
 use axum::http::header::CONTENT_TYPE;
@@ -86,6 +86,7 @@ async fn main() {
         )
         .nest("/sync", sync_controller::new_router(app_state.clone()))
         .nest("/client", client_controller::new_router(app_state.clone()))
+        .nest("/gui", gui_controller::new_router(app_state.clone()))
         .nest(
             "/updater",
             updater_controller::new_router(app_state.clone()),

@@ -1,9 +1,9 @@
-use super::download::download_all_files;
 use crate::actions::delete::delete_game_info_files;
-use crate::actions::other::get_installed_games;
+use crate::actions::download::download_all_files;
 use crate::offline_to_return;
-use crate::runtime::{CLIENT, CONFIG};
-use crate::OFFLINE;
+use crate::runtime::{
+    get_config, get_installed_games, send_event, MinusGamesClientEvents, CLIENT, OFFLINE,
+};
 use chrono::{DateTime, Utc};
 use minus_games_models::game_infos::GameInfos;
 use minus_games_models::sync_file_info::SyncFileInfo;
@@ -14,12 +14,12 @@ use std::time::SystemTime;
 use tracing::{debug, trace, warn};
 
 pub async fn sync_game_infos(game: &str) {
-    let json = CONFIG.get_json_path_from_game(game);
+    let json = get_config().get_json_path_from_game(game);
     if json.exists() {
         std::fs::remove_file(json).unwrap();
     }
 
-    let csv = CONFIG.get_csv_path_for_game(game);
+    let csv = get_config().get_csv_path_for_game(game);
     if csv.exists() {
         std::fs::remove_file(csv).unwrap();
     }
@@ -40,18 +40,18 @@ pub async fn sync_all_game_files(game: &str) {
     offline_to_return!();
     let has_new_game_infos = CLIENT.download_game_infos_if_modified(game).await;
     let has_new_game_files = CLIENT.download_game_files_if_modified(game).await;
-
+    send_event(MinusGamesClientEvents::FinishedSyncFileInfos).await;
     if has_new_game_files || has_new_game_infos {
         sync_game_files_and_download(game).await;
     }
 }
 
 async fn sync_game_files_and_download(game: &str) {
-    let game_file_infos = CONFIG
+    let game_file_infos = get_config()
         .get_game_file_list(game)
         .expect("Game File List not found");
     for info in game_file_infos {
-        let file_path = CONFIG.client_games_folder.join(info.file_path);
+        let file_path = get_config().client_games_folder.join(info.file_path);
         if let Ok(metadata) = file_path.as_path().metadata() {
             if metadata.len() != info.size && file_path.as_path().is_file() {
                 std::fs::remove_file(file_path).unwrap();
@@ -63,7 +63,8 @@ async fn sync_game_files_and_download(game: &str) {
 
 pub async fn download_sync_for_game(game: &str) {
     offline_to_return!();
-    let game_infos = match CONFIG.get_game_infos(game) {
+    send_event(MinusGamesClientEvents::DownloadSaves).await;
+    let game_infos = match get_config().get_game_infos(game) {
         Some(infos) => infos,
         None => {
             warn!("GameInfos not found for game {game}");
@@ -114,7 +115,8 @@ fn download_necessary(path: &Path, last_modified: DateTime<Utc>) -> bool {
 
 pub async fn upload_sync_for_game(game: &str) {
     offline_to_return!();
-    let game_infos = match CONFIG.get_game_infos(game) {
+    send_event(MinusGamesClientEvents::UploadSaves).await;
+    let game_infos = match get_config().get_game_infos(game) {
         Some(infos) => infos,
         None => {
             warn!("GameInfos not found for game {game}");
@@ -177,7 +179,7 @@ fn resolve_sync_path(to_resolve: &str, game_infos: &GameInfos) -> PathBuf {
     for part in resolve_path {
         let part_str = part.to_str().unwrap();
         match part_str {
-            "$GAME_ROOT" => rtn.push(CONFIG.get_game_path(game_infos.folder_name.as_str())),
+            "$GAME_ROOT" => rtn.push(get_config().get_game_path(game_infos.folder_name.as_str())),
             #[cfg(target_family = "windows")]
             "$UNITY_CONFIG" => {
                 if let Some(value) = get_local_low() {
@@ -218,7 +220,7 @@ fn get_local_low() -> Option<PathBuf> {
 fn resolve_unity_config_path(game_infos: &GameInfos) -> Option<PathBuf> {
     let is_wine = check_if_is_wine(game_infos);
     if is_wine {
-        let wine_prefix = CONFIG.wine_prefix.as_ref()?;
+        let wine_prefix = get_config().wine_prefix.as_ref()?;
         let user = std::env::var("USER").ok()?;
         let rtn = wine_prefix
             .join("drive_c")
@@ -245,7 +247,7 @@ fn resolve_unity_config_path(game_infos: &GameInfos) -> Option<PathBuf> {
 fn resolve_documents_path(game_infos: &GameInfos) -> Option<PathBuf> {
     let is_wine = check_if_is_wine(game_infos);
     if is_wine {
-        let wine_prefix = CONFIG.wine_prefix.as_ref()?;
+        let wine_prefix = get_config().wine_prefix.as_ref()?;
         let user = std::env::var("USER").ok()?;
         let rtn = wine_prefix
             .join("drive_c")
@@ -272,7 +274,7 @@ fn resolve_documents_path(_: &GameInfos) -> Option<PathBuf> {
 
 #[cfg(target_family = "unix")]
 fn resolve_unreal_config_path() -> Option<PathBuf> {
-    let wine_prefix = CONFIG.wine_prefix.as_ref()?;
+    let wine_prefix = get_config().wine_prefix.as_ref()?;
     let user = std::env::var("USER").ok()?;
     Some(
         wine_prefix

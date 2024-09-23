@@ -39,7 +39,10 @@ impl EngineInfoFunctions for OtherFunctions {
                     _ => {}
                 }
             } else {
-                potentials.push(dir_entry.path().file_name().unwrap().to_str()?.to_string());
+                let file_name = path.file_name()?.to_ascii_lowercase();
+                if file_name != "version" || file_name != "readme" || file_name != "notes" {
+                    potentials.push(dir_entry.path().file_name().unwrap().to_str()?.to_string());
+                }
             }
         }
         let name = self.get_game_name(game_root)?;

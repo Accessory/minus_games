@@ -18,6 +18,7 @@ mod other_functions;
 mod ren_py_functions;
 mod rpgm_functions;
 mod rpgm_mz_functions;
+mod rpgm_utils;
 mod unity_functions;
 mod unreal_functions;
 mod wolf_rpg_engine_functions;

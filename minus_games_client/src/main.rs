@@ -1,65 +1,103 @@
-use crate::actions::delete::delete_game;
-use crate::actions::download::download;
+use indicatif::ProgressBar;
+use minus_games_client::actions::delete::delete_game;
+use minus_games_client::actions::download::download;
 #[cfg(target_family = "unix")]
-use crate::actions::menu::select_game_to_play;
-use crate::actions::menu::{
+use minus_games_client::actions::menu::select_game_to_play;
+use minus_games_client::actions::menu::{
     select_download, select_game, select_game_to_delete, select_repair, start_menu,
 };
-use crate::actions::other::{list, list_json};
-use crate::actions::repair::repair_game;
-use crate::actions::run::{run_game, sync_run_game};
-use crate::actions::scan::scan_for_games;
-use crate::actions::sync::{download_syncs, sync_infos_for_all_games, upload_syncs};
-use crate::configuration::ClientActions;
-use crate::runtime::{CONFIG, OFFLINE};
-use actions::run::run_game_synced;
-use actions::sync::download_sync_for_game;
-use std::ops::Deref;
+use minus_games_client::actions::other::{list, list_json};
+use minus_games_client::actions::repair::repair_game;
+use minus_games_client::actions::run::run_game_synced;
+use minus_games_client::actions::run::{run_game, sync_run_game};
+use minus_games_client::actions::scan::scan_for_games;
+use minus_games_client::actions::sync::download_sync_for_game;
+use minus_games_client::actions::sync::{download_syncs, sync_infos_for_all_games, upload_syncs};
+use minus_games_client::configuration::ClientActions;
+use minus_games_client::runtime::{
+    get_config, send_event, set_sender, MinusGamesClientEvents, OFFLINE,
+};
 use std::sync::atomic::Ordering;
+use tracing::{debug, info, warn};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
-mod actions;
-mod configuration;
-mod download_manager;
-mod minus_games_client;
-mod runtime;
-mod utils;
-
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().ok();
     // Configuration
-
     if let Some(config_dir) = dirs::config_local_dir() {
         let config_path = config_dir.join("minus_games_client").join("config");
         if config_path.exists() {
             dotenvy::from_filename_override(config_path).ok();
         }
     }
+    dotenvy::dotenv().ok();
 
-    if CONFIG.action != ClientActions::ListJson {
+    let action = get_config()
+        .action
+        .as_ref()
+        .unwrap_or(&ClientActions::Menu)
+        .clone();
+
+    if action != ClientActions::ListJson {
         println!("Config:");
-        println!("{}", CONFIG.deref());
+        println!("{}", get_config());
     }
 
     // Logging
-    let filter = if CONFIG.verbose {
+    let filter = if get_config().verbose {
         EnvFilter::default()
             .add_directive(LevelFilter::TRACE.into())
             .add_directive("minus_games_client=debug".parse().unwrap())
     } else {
-        EnvFilter::default()
-            .add_directive(LevelFilter::INFO.into())
-            .add_directive("minus_games_client=debug".parse().unwrap())
+        EnvFilter::default().add_directive(LevelFilter::INFO.into())
+        // .add_directive("minus_games_client=debug".parse().unwrap())
     };
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
     // Offline
-    OFFLINE.store(CONFIG.offline, Ordering::Relaxed);
+    OFFLINE.store(get_config().offline, Ordering::Relaxed);
+
+    // Init EventManager
+    let (sender, mut receiver) =
+        tokio::sync::mpsc::channel(std::thread::available_parallelism().unwrap().get());
+    set_sender(sender).await;
+    let event_handle = tokio::task::spawn(async move {
+        let mut bar_option: Option<ProgressBar> = None;
+        while let Some(event) = receiver.recv().await {
+            match event {
+                MinusGamesClientEvents::StartDownloadingFiles(files_count) => {
+                    let _ = bar_option.insert(ProgressBar::new(files_count as u64));
+                }
+                MinusGamesClientEvents::FinishedDownloadingFile => {
+                    if let Some(bar) = &bar_option {
+                        bar.inc(1);
+                    }
+                }
+                MinusGamesClientEvents::FinishedDownloadingFiles => {
+                    if let Some(bar) = &bar_option {
+                        bar.finish();
+                    }
+                    bar_option = None;
+                }
+                MinusGamesClientEvents::LogInfoMessage(msg) => {
+                    info!("{msg}");
+                }
+                MinusGamesClientEvents::LogInfoStaticMessage(msg) => {
+                    info!("{msg}");
+                }
+                MinusGamesClientEvents::Close => {
+                    return;
+                }
+                _ => {
+                    debug!("Caught event: {}", event);
+                }
+            }
+        }
+    });
 
     // Main
-    match &CONFIG.action {
+    match action {
         ClientActions::List => {
             list().await;
         }
@@ -71,20 +109,27 @@ async fn main() {
         }
         ClientActions::Sync => sync_infos_for_all_games().await,
         ClientActions::SelectDownload => select_download().await,
-        ClientActions::RunGame { game } => run_game(game),
-        ClientActions::RunGameSynced { game } => run_game_synced(game).await,
-        ClientActions::SyncRunGame { game } => sync_run_game(game).await,
+        ClientActions::RunGame { game } => run_game(&game).await,
+        ClientActions::RunGameSynced { game } => run_game_synced(&game).await,
+        ClientActions::SyncRunGame { game } => sync_run_game(&game).await,
         ClientActions::SelectGame => select_game().await,
-        ClientActions::DeleteGame { game, purge } => delete_game(game, purge.unwrap_or(true)),
+        ClientActions::DeleteGame { game, purge } => delete_game(&game, purge.unwrap_or(true)),
         ClientActions::SelectDeleteGame { purge } => select_game_to_delete(purge.unwrap_or(true)),
         ClientActions::Menu => start_menu().await,
-        ClientActions::Repair { game } => repair_game(game).await,
+        ClientActions::Repair { game } => repair_game(&game).await,
         ClientActions::SelectRepair => select_repair().await,
         ClientActions::DownloadSyncs => download_syncs().await,
-        ClientActions::DownloadSync { game } => download_sync_for_game(game).await,
+        ClientActions::DownloadSync { game } => download_sync_for_game(&game).await,
         ClientActions::UploadSyncs => upload_syncs().await,
         ClientActions::ScanForGames => scan_for_games(),
         #[cfg(target_family = "unix")]
         ClientActions::SelectGameToPlay => select_game_to_play().await,
+        ClientActions::Gui => {
+            warn!("Gui mode is not supported by the client");
+        }
     }
+
+    // Cleanup
+    send_event(MinusGamesClientEvents::Close).await;
+    event_handle.await.unwrap();
 }
