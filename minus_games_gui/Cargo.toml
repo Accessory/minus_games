@@ -4,7 +4,7 @@ version = "0.4.0"
 edition = "2021"
 
 [dependencies]
-iced = { git = "https://github.com/iced-rs/iced", branch = "master", features = ["image", "tokio"] }
+iced = { version="0.13" , features = ["image", "tokio"] }
 reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream"] }
 dotenvy = "0"
 dirs = "5"
