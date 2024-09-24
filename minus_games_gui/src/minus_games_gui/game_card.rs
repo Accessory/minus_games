@@ -1,7 +1,7 @@
 use crate::minus_games_gui::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::utils::{fetch_image, fetch_image_sync};
 use iced::widget::{button, horizontal_space, image, row, text, Row};
-use iced_wgpu::core::Length;
+use iced::Length;
 
 #[derive(Clone, Debug, Default)]
 pub struct GameCard {

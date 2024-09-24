@@ -4,7 +4,7 @@ use crate::minus_games_gui::MinusGamesGui;
 use iced::widget::{
     button, checkbox, column, horizontal_space, row, text, text_input, vertical_space, Column, Row,
 };
-use iced_wgpu::core::Length::Fill;
+use iced::Fill;
 
 #[derive(Clone, Debug)]
 pub enum SettingInput {
