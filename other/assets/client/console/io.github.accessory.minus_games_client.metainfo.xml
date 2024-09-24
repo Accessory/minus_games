@@ -22,6 +22,13 @@
         </p>
     </description>
 
+    <screenshots>
+        <screenshot type="default">
+            <image>https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/screenshot.png</image>
+            <caption>Main Application</caption>
+        </screenshot>
+    </screenshots>
+
     <icon type="stock">io.github.accessory.minus_games_client</icon>
 
     <categories>
