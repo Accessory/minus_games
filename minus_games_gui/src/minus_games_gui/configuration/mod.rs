@@ -10,7 +10,7 @@ pub struct GuiConfiguration {
     pub cli: bool,
 }
 
-pub(crate) const GUI_CONFIGURATION_OPTIONS: [&'static str; 2] = ["--fullscreen", "--cli"];
+pub(crate) const GUI_CONFIGURATION_OPTIONS: [&str; 2] = ["--fullscreen", "--cli"];
 
 impl Display for GuiConfiguration {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

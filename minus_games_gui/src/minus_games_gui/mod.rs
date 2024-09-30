@@ -3,7 +3,8 @@ use crate::minus_games_gui::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
 use crate::minus_games_gui::settings::{handle_change_event, save_new_settings};
 use crate::minus_games_gui::style_constants::{
-    BIG_TEXT, MARGIN_DEFAULT, SPACING_DEFAULT, TOP_BUTTON,
+    BIG_TEXT, DOUBLE_MARGIN_DEFAULT, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SPACING_DEFAULT,
+    TOP_BUTTON,
 };
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::runtime::get_gui_config;
@@ -11,9 +12,9 @@ use iced::futures::{SinkExt, Stream};
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{Direction, Scrollbar};
 use iced::widget::{
-    button, column, horizontal_space, row, scrollable, text, vertical_space, Column,
+    button, column, horizontal_space, row, scrollable, text, text_input, vertical_space, Column,
 };
-use iced::{event, stream, window, Element, Event, Length, Subscription, Task};
+use iced::{event, stream, window, Center, Element, Event, Fill, Length, Subscription, Task};
 use minus_games_client::actions::delete::delete_game;
 use minus_games_client::actions::run::run_game_synced;
 use minus_games_client::runtime::{
@@ -53,6 +54,7 @@ pub struct MinusGamesGui {
     pub current_game: Option<GameInfos>,
     pub current_game_name: Option<String>,
     pub settings: Option<MinusGamesSettings>,
+    pub filter: String,
 }
 
 impl MinusGamesGui {
@@ -125,7 +127,7 @@ impl MinusGamesGui {
 
         let mut rtn = Vec::new();
         for game in &installed_games {
-            let game_card = GameCard::new(game.to_string(), "Is Installed".into(), true);
+            let game_card = GameCard::new(game.to_string(), "Installed".into(), true);
             rtn.push(game_card);
         }
 
@@ -133,7 +135,7 @@ impl MinusGamesGui {
             if installed_games.contains(game) {
                 continue;
             }
-            let game_card = GameCard::new(game.to_string(), "Is not Installed".into(), false);
+            let game_card = GameCard::new(game.to_string(), " ".into(), false);
             rtn.push(game_card);
         }
 
@@ -143,6 +145,11 @@ impl MinusGamesGui {
     pub fn update(&mut self, message: MinusGamesGuiMessage) -> Task<MinusGamesGuiMessage> {
         match message {
             MinusGamesGuiMessage::Loading => {}
+            MinusGamesGuiMessage::Reload => {
+                self.game_cards.clear();
+                self.state = MinusGamesState::Loading;
+                return Self::load();
+            }
             MinusGamesGuiMessage::Created(game_cards) => {
                 self.game_cards = game_cards;
                 self.state = MinusGamesState::Ready;
@@ -258,6 +265,9 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::ChangeSetting(change_input) => {
                 handle_change_event(self.settings.as_mut(), change_input);
             }
+            MinusGamesGuiMessage::FilterChanged(change) => {
+                self.filter = change;
+            }
         };
         Task::none()
     }
@@ -297,20 +307,38 @@ impl MinusGamesGui {
             ];
         }
         let mut rtn = Column::with_capacity(self.game_cards.len() + 1).spacing(SPACING_DEFAULT);
-        rtn = rtn.push(row![
-            text("Games").size(BIG_TEXT),
-            horizontal_space(),
-            button("Settings")
-                .on_press(MinusGamesGuiMessage::Settings)
-                .padding(TOP_BUTTON),
-            horizontal_space().width(MARGIN_DEFAULT),
-            button("Quit")
-                .on_press(MinusGamesGuiMessage::CloseApplication(()))
-                .padding(TOP_BUTTON)
-        ]);
+        rtn = rtn.push(
+            row![
+                text("Games").size(BIG_TEXT),
+                horizontal_space().width(DOUBLE_MARGIN_DEFAULT),
+                text_input("Filter", &self.filter)
+                    .on_input(MinusGamesGuiMessage::FilterChanged)
+                    .width(Fill),
+                horizontal_space().width(DOUBLE_MARGIN_DEFAULT),
+                button("Reload")
+                    .on_press(MinusGamesGuiMessage::Reload)
+                    .padding(TOP_BUTTON),
+                horizontal_space().width(HALF_MARGIN_DEFAULT),
+                button("Settings")
+                    .on_press(MinusGamesGuiMessage::Settings)
+                    .padding(TOP_BUTTON),
+                horizontal_space().width(MARGIN_DEFAULT),
+                button("Quit")
+                    .on_press(MinusGamesGuiMessage::CloseApplication(()))
+                    .padding(TOP_BUTTON)
+            ]
+            .align_y(Center),
+        );
         for (i, game_card) in self.game_cards.iter().enumerate() {
-            rtn =
-                rtn.push(row![text(format!("{i:0>3}")), game_card.view()].spacing(SPACING_DEFAULT));
+            if game_card
+                .game
+                .to_lowercase()
+                .contains(self.filter.trim().to_lowercase().as_str())
+            {
+                rtn = rtn.push(
+                    row![text(format!("{i:0>3}")), game_card.view()].spacing(SPACING_DEFAULT),
+                );
+            }
         }
 
         rtn

@@ -1,5 +1,6 @@
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
 use crate::minus_games_gui::views::settings_view::SettingInput;
+use crate::runtime::get_mut_gui_config;
 use minus_games_client::runtime::{get_mut_config, OFFLINE};
 use std::{
     io::{BufWriter, Write},
@@ -8,7 +9,6 @@ use std::{
     sync::atomic::Ordering,
 };
 use tracing::{info, warn};
-use crate::runtime::get_mut_gui_config;
 // unsafe fn change_config_value<T>() {
 
 // }

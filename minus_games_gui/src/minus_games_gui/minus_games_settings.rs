@@ -1,5 +1,5 @@
-use minus_games_client::configuration::Configuration;
 use crate::runtime::get_gui_config;
+use minus_games_client::configuration::Configuration;
 
 #[derive(Clone, Default, Debug)]
 pub(crate) struct MinusGamesSettings {
