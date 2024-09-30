@@ -53,9 +53,8 @@ pub async fn send_event(event: MinusGamesClientEvents) {
 }
 
 pub static mut CONFIG: Option<Configuration> = None;
-
 pub fn get_config() -> &'static Configuration {
-    unsafe { CONFIG.get_or_insert_with(Configuration::parse) }
+    get_mut_config()
 }
 
 pub fn get_mut_config() -> &'static mut Configuration {

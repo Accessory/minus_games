@@ -1,12 +1,20 @@
 #![windows_subsystem = "windows"]
+
 use crate::minus_games_gui::MinusGamesGui;
+use crate::runtime::get_gui_config;
+use clap::Parser;
 use iced::application;
-use minus_games_client::runtime::{get_config, OFFLINE};
+use minus_games_client::configuration::Configuration;
+use minus_games_client::run_cli;
+use minus_games_client::runtime::{get_config, CONFIG, OFFLINE};
+use std::env;
 use std::sync::atomic::Ordering::Relaxed;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
+use crate::minus_games_gui::configuration::GUI_CONFIGURATION_OPTIONS;
 
 mod minus_games_gui;
+mod runtime;
 
 fn main() -> iced::Result {
     if let Some(config_dir) = dirs::config_local_dir() {
@@ -15,10 +23,18 @@ fn main() -> iced::Result {
             dotenvy::from_filename_override(config_path).ok();
         }
     }
-    dotenvy::dotenv().ok();
+    dotenvy::dotenv_override().ok();
 
     println!("Config:");
-    println!("{}", get_config());
+    println!("{}", unsafe {
+        CONFIG.get_or_insert_with(|| {
+            Configuration::parse_from(
+                env::args().filter(|arg| !GUI_CONFIGURATION_OPTIONS.contains(&arg.as_str())),
+            )
+        })
+    });
+    println!("{}", get_gui_config());
+
     OFFLINE.store(get_config().offline, Relaxed);
 
     // Logging
@@ -29,8 +45,17 @@ fn main() -> iced::Result {
     };
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    application("Minus Games", MinusGamesGui::update, MinusGamesGui::view)
-        .subscription(MinusGamesGui::batch_subscription)
-        .exit_on_close_request(false)
-        .run_with(MinusGamesGui::init)
+    if get_gui_config().cli {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("Could not create a tokio runtime")
+            .block_on(async { run_cli().await });
+        iced::Result::Ok(())
+    } else {
+        application("Minus Games", MinusGamesGui::update, MinusGamesGui::view)
+            .subscription(MinusGamesGui::batch_subscription)
+            .exit_on_close_request(false)
+            .run_with(MinusGamesGui::init)
+    }
 }

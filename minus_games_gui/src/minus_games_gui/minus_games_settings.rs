@@ -1,4 +1,5 @@
 use minus_games_client::configuration::Configuration;
+use crate::runtime::get_gui_config;
 
 #[derive(Clone, Default, Debug)]
 pub(crate) struct MinusGamesSettings {
@@ -30,7 +31,7 @@ impl MinusGamesSettings {
             },
             verbose: value.verbose,
             offline: value.offline,
-            fullscreen: std::env::var("MINUS_GAMES_GUI_FULLSCREEN").is_ok_and(|i| i == "true"),
+            fullscreen: get_gui_config().fullscreen,
             username: value.username.clone().unwrap_or_default(),
             password: value.password.clone().unwrap_or_default(),
         }

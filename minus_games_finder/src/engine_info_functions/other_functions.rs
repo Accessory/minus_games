@@ -1,7 +1,7 @@
 use crate::engine_info_functions::EngineInfoFunctions;
 use crate::utils::{
     find_possible_save_dir_in_game_root, get_closest_windows_exe, get_title_from_parent_folder,
-    return_closed_string,
+    is_elf, return_closed_string,
 };
 use std::path::Path;
 
@@ -40,7 +40,9 @@ impl EngineInfoFunctions for OtherFunctions {
                 }
             } else {
                 let file_name = path.file_name()?.to_ascii_lowercase();
-                if file_name != "version" || file_name != "readme" || file_name != "notes" {
+                if (file_name != "version" || file_name != "readme" || file_name != "notes")
+                    && is_elf(&path)
+                {
                     potentials.push(dir_entry.path().file_name().unwrap().to_str()?.to_string());
                 }
             }

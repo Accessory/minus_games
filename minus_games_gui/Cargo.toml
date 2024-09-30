@@ -13,3 +13,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 minus_games_client = { path = "../minus_games_client" }
 minus_games_models = { path = "../minus_games_models" }
 tokio = { version = "1", features = ["full"] }
+clap = { version = "4", features = ["derive", "env", "string"] }

@@ -28,6 +28,7 @@ pub(crate) enum MinusGamesGuiMessage {
     LogMessage(String),
     LogStaticMessage(&'static str),
     Fullscreen,
+    ApplyScreenSettings,
     Exit,
     Noop,
     CloseApplication(()),

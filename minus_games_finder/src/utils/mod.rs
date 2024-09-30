@@ -5,11 +5,31 @@ use minus_games_models::game_file_info::GameFileInfo;
 use minus_games_models::game_infos::GameInfos;
 use minus_games_utils::create_file_list;
 use std::ffi::OsStr;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use textdistance::str::damerau_levenshtein;
 use tracing::trace;
 use walkdir::WalkDir;
+
+pub(crate) fn is_elf(path: &Path) -> bool {
+    // First 7 Bytes of a ELF 64 executable
+    const ELF_64: [u8; 7] = [0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01];
+    let mut file = match std::fs::File::open(path) {
+        Ok(file) => file,
+        Err(_) => {
+            return false;
+        }
+    };
+    let mut buffer = [0; 7];
+    match file.read_exact(&mut buffer) {
+        Ok(_) => {}
+        Err(_) => {
+            return false;
+        }
+    };
+    buffer == ELF_64
+}
 
 pub fn find_name_in_folder_name(folder_name: &str) -> String {
     let mut end = 0;

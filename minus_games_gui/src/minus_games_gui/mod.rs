@@ -6,6 +6,7 @@ use crate::minus_games_gui::style_constants::{
     BIG_TEXT, MARGIN_DEFAULT, SPACING_DEFAULT, TOP_BUTTON,
 };
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
+use crate::runtime::get_gui_config;
 use iced::futures::{SinkExt, Stream};
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{Direction, Scrollbar};
@@ -22,6 +23,7 @@ use minus_games_models::game_infos::GameInfos;
 use settings::override_config;
 use tracing::info;
 
+pub mod configuration;
 mod game_card;
 mod minus_games_gui_message;
 mod minus_games_settings;
@@ -68,7 +70,7 @@ impl MinusGamesGui {
 
     pub fn set_start_fullscreen() -> impl Stream<Item = MinusGamesGuiMessage> {
         stream::channel(1, |mut output| async move {
-            if std::env::var("MINUS_GAMES_GUI_FULLSCREEN").is_ok_and(|i| i == "true") {
+            if get_gui_config().fullscreen {
                 let _ = output.send(MinusGamesGuiMessage::Fullscreen).await;
             }
         })
@@ -230,6 +232,16 @@ impl MinusGamesGui {
                 self.settings = Some(MinusGamesSettings::from_config(get_config()));
                 self.state = MinusGamesState::Settings;
             }
+            MinusGamesGuiMessage::ApplyScreenSettings => {
+                return if get_gui_config().fullscreen {
+                    window::get_latest().and_then(move |window| {
+                        window::change_mode(window, window::Mode::Fullscreen)
+                    })
+                } else {
+                    window::get_latest()
+                        .and_then(move |window| window::change_mode(window, window::Mode::Windowed))
+                }
+            }
             MinusGamesGuiMessage::BackFromSettings(save) => {
                 if save {
                     save_new_settings(self.settings.as_ref());
@@ -238,7 +250,10 @@ impl MinusGamesGui {
                 }
                 self.settings = None;
                 self.state = MinusGamesState::Loading;
-                return Self::load();
+                return Task::batch([
+                    Task::done(MinusGamesGuiMessage::ApplyScreenSettings),
+                    Self::load(),
+                ]);
             }
             MinusGamesGuiMessage::ChangeSetting(change_input) => {
                 handle_change_event(self.settings.as_mut(), change_input);

@@ -8,7 +8,7 @@ use std::{
     sync::atomic::Ordering,
 };
 use tracing::{info, warn};
-
+use crate::runtime::get_mut_gui_config;
 // unsafe fn change_config_value<T>() {
 
 // }
@@ -25,22 +25,19 @@ pub(crate) fn override_config(minus_games_settings_option: Option<&MinusGamesSet
         OFFLINE.store(minus_games_settings.offline, Ordering::Relaxed);
         get_mut_config().client_games_folder =
             PathBuf::from_str(&minus_games_settings.client_games_folder).unwrap_or_default();
-        get_mut_config().username = resolve_string(&minus_games_settings.server_url);
-        get_mut_config().password = resolve_string(&minus_games_settings.server_url);
-        std::env::set_var(
-            "MINUS_GAMES_GUI_FULLSCREEN",
-            resolve_bool_os_str(minus_games_settings.fullscreen),
-        );
+        get_mut_config().username = resolve_string(&minus_games_settings.username);
+        get_mut_config().password = resolve_string(&minus_games_settings.password);
+        get_mut_gui_config().fullscreen = minus_games_settings.fullscreen;
     }
 }
 
-fn resolve_bool_os_str(fullscreen: bool) -> &'static str {
-    if fullscreen {
-        "true"
-    } else {
-        "false"
-    }
-}
+// fn resolve_bool_os_str(fullscreen: bool) -> &'static str {
+//     if fullscreen {
+//         "true"
+//     } else {
+//         "false"
+//     }
+// }
 
 fn resolve_path(value: &str) -> Option<PathBuf> {
     if value.is_empty() {

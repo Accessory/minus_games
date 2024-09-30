@@ -15,7 +15,6 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::Output;
 use tokio::process::Command;
-#[cfg(target_family = "unix")]
 use tracing::debug;
 use tracing::warn;
 
@@ -91,7 +90,8 @@ pub async fn run_windows_game_on_windows(infos: GameInfos) {
 #[cfg(target_family = "unix")]
 pub async fn run_windows_game_on_linux(infos: GameInfos) {
     if get_config().wine_exe.is_none() || get_config().wine_prefix.is_none() {
-        panic!("Wine not configured");
+        warn!("Cannot run the games since Wine is not configured");
+        return;
     }
 
     if has_gamemoderun() {
