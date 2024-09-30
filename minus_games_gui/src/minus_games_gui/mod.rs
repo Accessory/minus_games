@@ -3,8 +3,7 @@ use crate::minus_games_gui::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
 use crate::minus_games_gui::settings::{handle_change_event, save_new_settings};
 use crate::minus_games_gui::style_constants::{
-    BIG_TEXT, DOUBLE_MARGIN_DEFAULT, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SPACING_DEFAULT,
-    TOP_BUTTON,
+    DOUBLE_MARGIN_DEFAULT, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SPACING_DEFAULT, TEXT, TOP_BUTTON,
 };
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::runtime::get_gui_config;
@@ -309,11 +308,12 @@ impl MinusGamesGui {
         let mut rtn = Column::with_capacity(self.game_cards.len() + 1).spacing(SPACING_DEFAULT);
         rtn = rtn.push(
             row![
-                text("Games").size(BIG_TEXT),
-                horizontal_space().width(DOUBLE_MARGIN_DEFAULT),
-                text_input("Filter", &self.filter)
-                    .on_input(MinusGamesGuiMessage::FilterChanged)
-                    .width(Fill),
+                column![
+                    text("Games").size(TEXT),
+                    text_input("Filter", &self.filter)
+                        .on_input(MinusGamesGuiMessage::FilterChanged)
+                        .width(Fill)
+                ],
                 horizontal_space().width(DOUBLE_MARGIN_DEFAULT),
                 button("Reload")
                     .on_press(MinusGamesGuiMessage::Reload)
