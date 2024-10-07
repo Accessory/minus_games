@@ -4,7 +4,7 @@
     <id>io.github.accessory.minus_games_gui</id>
     <url type="homepage">https://github.com/Accessory/minus_games</url>
     <url type="faq">https://github.com/Accessory/minus_games/blob/main/other/docs/quick_start.md</url>
-    <name>Minus Games Gui</name>
+    <name>Minus Games</name>
     <summary>Download, sync and run a game</summary>
     <launchable type="desktop-id">io.github.accessory.minus_games_gui.desktop</launchable>
     <content_rating type="oars-1.0" />
@@ -42,6 +42,11 @@
     </provides>
 
     <releases>
+        <release version="0.5.0" date="2024-10-08">
+            <description>
+                <p>General Updates and Bugfixes</p>
+            </description>
+        </release>
         <release version="0.4.0" date="2024-08-17">
             <description>
                 <p>Add Gui</p>
@@ -62,4 +67,8 @@
     <developer id="io.github.accessory">
         <name>Accessory</name>
     </developer>
+    <branding>
+        <color type="primary" scheme_preference="light">#D98E73</color>
+        <color type="primary" scheme_preference="dark">#D95032</color>
+    </branding>
 </component>

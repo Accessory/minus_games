@@ -3,8 +3,7 @@ use crate::actions::download::download;
 #[cfg(target_family = "unix")]
 use crate::actions::menu::select_game_to_play;
 use crate::actions::menu::{
-    select_download, select_game, select_game_to_delete, select_repair,
-    start_menu,
+    select_download, select_game, select_game_to_delete, select_repair, start_menu,
 };
 use crate::actions::other::{list, list_json};
 use crate::actions::repair::repair_game;
