@@ -1,4 +1,4 @@
-use crate::minus_games_gui::minus_games_gui_message::MinusGamesGuiMessage;
+use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use iced::widget::{horizontal_space, row, text, Row};
 
 pub(crate) fn view() -> Row<'static, MinusGamesGuiMessage> {

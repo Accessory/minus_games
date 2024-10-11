@@ -1,4 +1,4 @@
-use crate::minus_games_gui::minus_games_gui_message::MinusGamesGuiMessage;
+use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::MARGIN_DEFAULT;
 use crate::minus_games_gui::MinusGamesGui;
 use iced::widget::{column, horizontal_space, progress_bar, row, text, vertical_space, Row};

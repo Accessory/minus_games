@@ -1,5 +1,5 @@
-use crate::minus_games_gui::minus_games_gui_message::MinusGamesGuiMessage;
-use crate::minus_games_gui::style_constants::{MARGIN_DEFAULT, TOP_BUTTON};
+use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
+use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, TOP_BUTTON};
 use crate::minus_games_gui::MinusGamesGui;
 use iced::widget::{
     button, checkbox, column, horizontal_space, row, text, text_input, vertical_space, Column, Row,
@@ -54,14 +54,17 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
         client_games_folder,
         ClientGamesFolder
     );
-    settings = add_setting_input!(minus_games_gui, settings, "Wine Exe", wine_exe, WineExe);
-    settings = add_setting_input!(
-        minus_games_gui,
-        settings,
-        "Wine Prefix",
-        wine_prefix,
-        WinePrefix
-    );
+    #[cfg(not(target_family = "windows"))]
+    {
+        settings = add_setting_input!(minus_games_gui, settings, "Wine Exe", wine_exe, WineExe);
+        settings = add_setting_input!(
+            minus_games_gui,
+            settings,
+            "Wine Prefix",
+            wine_prefix,
+            WinePrefix
+        );
+    }
     settings = settings
         .push(
             checkbox(
@@ -102,13 +105,6 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
         )
         .push(vertical_space().height(MARGIN_DEFAULT));
 
-    settings = settings.push(row![
-        horizontal_space(),
-        button("Save").on_press(MinusGamesGuiMessage::BackFromSettings(true)),
-        horizontal_space().width(MARGIN_DEFAULT),
-        button("Back").on_press(MinusGamesGuiMessage::BackFromSettings(false)),
-        horizontal_space().width(MARGIN_DEFAULT),
-    ]);
     settings = settings.push(vertical_space().height(MARGIN_DEFAULT));
 
     row![
@@ -118,6 +114,14 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
             row![
                 text("Settings").size(50),
                 horizontal_space(),
+                button("Save")
+                    .on_press(MinusGamesGuiMessage::BackFromSettings(true))
+                    .padding(TOP_BUTTON),
+                horizontal_space().width(HALF_MARGIN_DEFAULT),
+                button("Back")
+                    .on_press(MinusGamesGuiMessage::BackFromSettings(false))
+                    .padding(TOP_BUTTON),
+                horizontal_space().width(MARGIN_DEFAULT),
                 button("Quit")
                     .on_press(MinusGamesGuiMessage::CloseApplication(()))
                     .padding(TOP_BUTTON),

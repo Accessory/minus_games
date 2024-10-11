@@ -1,4 +1,5 @@
 use crate::minus_games_gui::game_card::GameCard;
+use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::views::settings_view::SettingInput;
 use iced::Event;
 use minus_games_client::runtime::MinusGamesClientEvents;
@@ -18,17 +19,21 @@ pub(crate) enum MinusGamesGuiMessage {
     ChangeSetting(SettingInput),
     Play(String),
     Delete(String),
+    Repair(String),
+    OpenGameModal(String),
     FinishedPlay(()),
     FinishedDelete(()),
+    FinishedRepairing(()),
     SetFilesToDownload(usize),
     FinishedDownloading,
     SyncFileInfosComplete,
-    RunningGame(String),
+    CurrentGame(String),
     StartGame(String),
     CloseGame(String),
     LogMessage(String),
     LogStaticMessage(&'static str),
     Fullscreen,
+    ModalCallback(Option<ModalCallback>),
     ApplyScreenSettings,
     FilterChanged(String),
     Exit,
@@ -53,7 +58,7 @@ impl From<MinusGamesClientEvents> for MinusGamesGuiMessage {
             }
             MinusGamesClientEvents::LogInfoMessage(msg) => MinusGamesGuiMessage::LogMessage(msg),
             MinusGamesClientEvents::StartGame(game) => MinusGamesGuiMessage::StartGame(game),
-            MinusGamesClientEvents::RunningGame(game) => MinusGamesGuiMessage::RunningGame(game),
+            MinusGamesClientEvents::CurrentGame(game) => MinusGamesGuiMessage::CurrentGame(game),
             MinusGamesClientEvents::LogInfoStaticMessage(msg) => {
                 MinusGamesGuiMessage::LogStaticMessage(msg)
             }

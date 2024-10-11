@@ -136,6 +136,7 @@ impl Display for Configuration {
         writeln!(f, "Wine Exe: {}", is_or_none_path_buf(&self.wine_exe))?;
         writeln!(f, "Wine Prefix: {}", is_or_none_path_buf(&self.wine_prefix))?;
         writeln!(f, "Username: {}", is_or_none_string(&self.username))?;
+        writeln!(f, "Offline: {:?}", &self.offline)?;
         write!(f, "Action: {}", is_or_none(self.action.as_ref()))
     }
 }

@@ -1,31 +1,34 @@
 use crate::minus_games_gui::game_card::GameCard;
-use crate::minus_games_gui::minus_games_gui_message::MinusGamesGuiMessage;
+use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
+use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
 use crate::minus_games_gui::settings::{handle_change_event, save_new_settings};
 use crate::minus_games_gui::style_constants::{
     DOUBLE_MARGIN_DEFAULT, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SPACING_DEFAULT, TEXT, TOP_BUTTON,
 };
+use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::runtime::get_gui_config;
 use iced::futures::{SinkExt, Stream};
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{Direction, Scrollbar};
 use iced::widget::{
-    button, column, horizontal_space, row, scrollable, text, text_input, vertical_space, Column,
+    button, column, horizontal_space, row, scrollable, stack, text, text_input, Column,
 };
-use iced::{event, stream, window, Center, Element, Event, Fill, Length, Subscription, Task};
+use iced::{event, stream, window, Center, Element, Event, Fill, Length, Size, Subscription, Task};
 use minus_games_client::actions::delete::delete_game;
+use minus_games_client::actions::repair::repair_game;
 use minus_games_client::actions::run::run_game_synced;
 use minus_games_client::runtime::{
     get_config, get_installed_games, send_event, set_sender, MinusGamesClientEvents, CLIENT,
 };
 use minus_games_models::game_infos::GameInfos;
 use settings::override_config;
-use tracing::info;
+use tracing::{debug, info};
 
 pub mod configuration;
 mod game_card;
-mod minus_games_gui_message;
+mod messages;
 mod minus_games_settings;
 mod settings;
 mod style_constants;
@@ -54,6 +57,8 @@ pub struct MinusGamesGui {
     pub current_game_name: Option<String>,
     pub settings: Option<MinusGamesSettings>,
     pub filter: String,
+    pub model: Option<String>,
+    pub size: Size,
 }
 
 impl MinusGamesGui {
@@ -120,7 +125,8 @@ impl MinusGamesGui {
     }
 
     pub async fn create_cards() -> Vec<GameCard> {
-        send_event("Create Cards".into()).await;
+        // send_event("Create Cards".into()).await;
+        debug!("Create Cards");
         let installed_games = get_installed_games();
         let server_games = CLIENT.get_games_list().await.unwrap_or_default();
 
@@ -171,7 +177,38 @@ impl MinusGamesGui {
                     MinusGamesGuiMessage::FinishedDelete,
                 );
             }
-            MinusGamesGuiMessage::FinishedPlay(_) | MinusGamesGuiMessage::FinishedDelete(_) => {
+            MinusGamesGuiMessage::Repair(game) => {
+                self.state = MinusGamesState::Loading;
+                return Task::perform(
+                    async move {
+                        repair_game(&game).await;
+                    },
+                    MinusGamesGuiMessage::FinishedRepairing,
+                );
+            }
+            MinusGamesGuiMessage::OpenGameModal(game) => {
+                self.model = Some(game);
+            }
+            MinusGamesGuiMessage::ModalCallback(message_option) => {
+                self.model = None;
+                if let Some(message) = message_option {
+                    return match message {
+                        ModalCallback::DeleteGame(game) => {
+                            Task::done(MinusGamesGuiMessage::Delete(game))
+                        }
+                        ModalCallback::RepairGame(game) => {
+                            Task::done(MinusGamesGuiMessage::Repair(game))
+                        }
+                        ModalCallback::OpenGameFolder(path) => {
+                            open::that(path).ok();
+                            Task::none()
+                        }
+                    };
+                }
+            }
+            MinusGamesGuiMessage::FinishedPlay(_)
+            | MinusGamesGuiMessage::FinishedDelete(_)
+            | MinusGamesGuiMessage::FinishedRepairing(_) => {
                 self.state = MinusGamesState::Ready;
                 return MinusGamesGui::load();
             } // _ => Task::none(),
@@ -198,7 +235,7 @@ impl MinusGamesGui {
                     self.current_game = get_config().get_game_infos(game);
                 }
             }
-            MinusGamesGuiMessage::RunningGame(game) => {
+            MinusGamesGuiMessage::CurrentGame(game) => {
                 self.current_game_name = Some(game);
             }
             MinusGamesGuiMessage::StartGame(_) => {
@@ -228,6 +265,10 @@ impl MinusGamesGui {
                 if let Event::Window(window::Event::CloseRequested) = event {
                     info!("Close Application!");
                     return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
+                }
+                if let Event::Window(window::Event::Resized(size)) = event {
+                    self.size = size;
+                    return Task::none();
                 }
             }
             MinusGamesGuiMessage::Fullscreen => {
@@ -284,7 +325,7 @@ impl MinusGamesGui {
             MinusGamesState::Settings => settings_view::view(self),
         };
 
-        scrollable(to_display.height(Length::Shrink))
+        let content = scrollable(to_display.height(Length::Shrink))
             .direction(Direction::Vertical(
                 Scrollbar::new()
                     .width(5)
@@ -293,17 +334,31 @@ impl MinusGamesGui {
                     .anchor(Start),
             ))
             .width(Length::Fill)
-            .height(Length::Fill)
-            .into()
+            .height(Length::Fill);
+
+        match &self.model {
+            None => content.into(),
+            Some(game) => stack!(content, create_modal(game, self.size.width).into()).into(),
+        }
     }
 
     fn create_ready_view(&self) -> Column<MinusGamesGuiMessage> {
         if self.game_cards.is_empty() {
-            return column![
+            return column![row![
                 text("No Games found...").size(50),
-                vertical_space().height(MARGIN_DEFAULT),
-                button("Settings").on_press(MinusGamesGuiMessage::Settings)
-            ];
+                horizontal_space().width(Fill),
+                button("Reload")
+                    .on_press(MinusGamesGuiMessage::Reload)
+                    .padding(TOP_BUTTON),
+                horizontal_space().width(HALF_MARGIN_DEFAULT),
+                button("Settings")
+                    .on_press(MinusGamesGuiMessage::Settings)
+                    .padding(TOP_BUTTON),
+                horizontal_space().width(MARGIN_DEFAULT),
+                button("Quit")
+                    .on_press(MinusGamesGuiMessage::CloseApplication(()))
+                    .padding(TOP_BUTTON)
+            ]];
         }
         let mut rtn = Column::with_capacity(self.game_cards.len() + 1).spacing(SPACING_DEFAULT);
         rtn = rtn.push(

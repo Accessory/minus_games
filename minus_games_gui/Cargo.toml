@@ -1,10 +1,10 @@
 [package]
 name = "minus_games_gui"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 
 [dependencies]
-iced = { version="0.13" , features = ["image", "tokio"] }
+iced = { version="0.13" , features = ["image", "tokio", "svg"] }
 reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream"] }
 dotenvy = "0"
 dirs = "5"
@@ -14,3 +14,5 @@ minus_games_client = { path = "../minus_games_client" }
 minus_games_models = { path = "../minus_games_models" }
 tokio = { version = "1", features = ["full"] }
 clap = { version = "4", features = ["derive", "env", "string"] }
+image = {version = "0", features = ["jpeg"]}
+open = "5"

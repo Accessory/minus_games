@@ -51,7 +51,7 @@ pub async fn run_game(game: &str) {
 }
 
 pub async fn run_game_synced(game: &str) {
-    send_event(MinusGamesClientEvents::RunningGame(game.to_string())).await;
+    send_event(MinusGamesClientEvents::CurrentGame(game.to_string())).await;
     send_event("Sync game files.".into()).await;
     sync_all_game_files(game).await;
     send_event(MinusGamesClientEvents::FinishedSyncGameFiles).await;

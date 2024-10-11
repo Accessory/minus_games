@@ -5,6 +5,7 @@ use crate::minus_games_gui::MinusGamesGui;
 use crate::runtime::get_gui_config;
 use clap::Parser;
 use iced::application;
+use iced::window::icon::from_rgba;
 use minus_games_client::configuration::Configuration;
 use minus_games_client::run_cli;
 use minus_games_client::runtime::{get_config, CONFIG, OFFLINE};
@@ -53,9 +54,17 @@ fn main() -> iced::Result {
             .block_on(async { run_cli().await });
         iced::Result::Ok(())
     } else {
+        static ICON: &[u8] = include_bytes!("../../other/assets/common/MinusGames.jpg");
+        let image = image::load_from_memory(ICON).unwrap();
+        let window_settings = iced::window::Settings {
+            icon: Some(
+                from_rgba(image.into_rgba8().to_vec(), 128, 128).expect("Failed to load icon"),
+            ),
+            ..Default::default()
+        };
         application("Minus Games", MinusGamesGui::update, MinusGamesGui::view)
             .subscription(MinusGamesGui::batch_subscription)
-            .exit_on_close_request(false)
+            .window(window_settings)
             .run_with(MinusGamesGui::init)
     }
 }

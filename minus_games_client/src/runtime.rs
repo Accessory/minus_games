@@ -20,7 +20,7 @@ pub enum MinusGamesClientEvents {
     StartSyncGameFiles,
     FinishedSyncFileInfos,
     FinishedSyncGameFiles,
-    RunningGame(String),
+    CurrentGame(String),
     StartGame(String),
     CloseGame(String),
     DownloadSaves,

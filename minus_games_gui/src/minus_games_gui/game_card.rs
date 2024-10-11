@@ -1,4 +1,5 @@
-use crate::minus_games_gui::minus_games_gui_message::MinusGamesGuiMessage;
+use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
+use crate::minus_games_gui::style_constants::DEFAULT_MODAL_BUTTON_WIDTH;
 use crate::minus_games_gui::utils::{fetch_image, fetch_image_sync};
 use iced::widget::{button, horizontal_space, image, row, text, Row};
 use iced::Length;
@@ -58,14 +59,24 @@ impl GameCard {
                     text(&self.title).width(Length::Fill),
                     text(&self.content),
                     horizontal_space(),
-                    button("Play").on_press(MinusGamesGuiMessage::Play(self.game.clone())),
+                    button("Play")
+                        .width(DEFAULT_MODAL_BUTTON_WIDTH)
+                        .on_press(MinusGamesGuiMessage::Play(self.game.clone())),
                 ];
 
-                if self.is_installed {
-                    row = row.push(
-                        button("Delete").on_press(MinusGamesGuiMessage::Delete(self.game.clone())),
-                    );
-                }
+                row = if self.is_installed {
+                    row.push(
+                        button("More")
+                            .width(DEFAULT_MODAL_BUTTON_WIDTH)
+                            .on_press(MinusGamesGuiMessage::OpenGameModal(self.game.clone())),
+                    )
+                } else {
+                    row.push(
+                        button("Download")
+                            .width(DEFAULT_MODAL_BUTTON_WIDTH)
+                            .on_press(MinusGamesGuiMessage::Repair(self.game.clone())),
+                    )
+                };
                 row
             }
             Some(img) => {
