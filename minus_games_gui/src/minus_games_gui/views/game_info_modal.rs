@@ -4,7 +4,7 @@ use crate::minus_games_gui::style_constants::{
     DEFAULT_MODAL_BUTTON_WIDTH, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT,
 };
 use iced::widget::{button, center, container, mouse_area, opaque, text, vertical_space, Column};
-use iced::{Center, Color, Element};
+use iced::{Center, Color, Element, Fill};
 use minus_games_client::runtime::get_config;
 
 pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGamesGuiMessage>> {
@@ -26,16 +26,24 @@ pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGam
             game_infos.supported_platforms.linux
         )));
         column = column.push(vertical_space().height(MARGIN_DEFAULT));
-        column = column.push(button("Delete").width(DEFAULT_MODAL_BUTTON_WIDTH).on_press(
-            MinusGamesGuiMessage::ModalCallback(Some(ModalCallback::DeleteGame(game.to_string()))),
-        ));
-        column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
-        column = column.push(button("Repair").width(DEFAULT_MODAL_BUTTON_WIDTH).on_press(
-            MinusGamesGuiMessage::ModalCallback(Some(ModalCallback::RepairGame(game.to_string()))),
-        ));
+        column = column.push(
+            button(text("Delete").width(Fill).align_x(Center))
+                .width(DEFAULT_MODAL_BUTTON_WIDTH)
+                .on_press(MinusGamesGuiMessage::ModalCallback(Some(
+                    ModalCallback::DeleteGame(game.to_string()),
+                ))),
+        );
         column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
         column = column.push(
-            button("Open folder")
+            button(text("Repair").width(Fill).align_x(Center))
+                .width(DEFAULT_MODAL_BUTTON_WIDTH)
+                .on_press(MinusGamesGuiMessage::ModalCallback(Some(
+                    ModalCallback::RepairGame(game.to_string()),
+                ))),
+        );
+        column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
+        column = column.push(
+            button(text("Open folder").width(Fill).align_x(Center))
                 .width(DEFAULT_MODAL_BUTTON_WIDTH)
                 .on_press(MinusGamesGuiMessage::ModalCallback(Some(
                     ModalCallback::OpenGameFolder(get_config().get_game_path(game)),
@@ -44,7 +52,7 @@ pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGam
     }
     column = column.push(vertical_space().height(MARGIN_DEFAULT));
     column = column.push(
-        button("Close")
+        button(text("Close").width(Fill).align_x(Center))
             .width(DEFAULT_MODAL_BUTTON_WIDTH)
             .on_press(MinusGamesGuiMessage::ModalCallback(None)),
     );

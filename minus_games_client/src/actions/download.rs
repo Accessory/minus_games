@@ -1,7 +1,7 @@
-use crate::actions::sync::sync_game_infos;
 use crate::download_manager::{DownloadConfig, DownloadManager};
 use crate::runtime::{get_config, CLIENT};
 use tracing::{info, warn};
+use crate::actions::sync::sync_all_game_files;
 
 pub async fn download(game: &Option<String>) {
     match game {
@@ -13,7 +13,7 @@ pub async fn download(game: &Option<String>) {
 pub async fn download_game(game: &str) {
     info!("Start Syncing: {game}");
     if !get_config().get_csv_path_for_game(game).as_path().is_file() {
-        sync_game_infos(game).await;
+        sync_all_game_files(game).await;
     }
     download_all_files(game).await;
 }

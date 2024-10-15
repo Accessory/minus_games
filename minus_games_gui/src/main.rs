@@ -62,9 +62,11 @@ fn main() -> iced::Result {
             ),
             ..Default::default()
         };
+
         application("Minus Games", MinusGamesGui::update, MinusGamesGui::view)
             .subscription(MinusGamesGui::batch_subscription)
             .window(window_settings)
+            .theme(MinusGamesGui::get_theme)
             .run_with(MinusGamesGui::init)
     }
 }

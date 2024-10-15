@@ -15,7 +15,9 @@ use iced::widget::scrollable::{Direction, Scrollbar};
 use iced::widget::{
     button, column, horizontal_space, row, scrollable, stack, text, text_input, Column,
 };
-use iced::{event, stream, window, Center, Element, Event, Fill, Length, Size, Subscription, Task};
+use iced::{
+    event, stream, window, Center, Element, Event, Fill, Length, Size, Subscription, Task, Theme,
+};
 use minus_games_client::actions::delete::delete_game;
 use minus_games_client::actions::repair::repair_game;
 use minus_games_client::actions::run::run_game_synced;
@@ -46,10 +48,9 @@ pub(crate) enum MinusGamesState {
 }
 
 #[derive(Debug, Clone, Default)]
-#[allow(dead_code)]
 pub struct MinusGamesGui {
+    pub theme: Theme,
     pub game_cards: Vec<GameCard>,
-    #[allow(dead_code)]
     pub state: MinusGamesState,
     pub files_to_download: usize,
     pub files_downloaded: usize,
@@ -102,6 +103,20 @@ impl MinusGamesGui {
     }
 
     pub fn init() -> (Self, Task<MinusGamesGuiMessage>) {
+        if let Some(theme_string) = get_gui_config().theme.as_ref() {
+            if let Some(theme) = Theme::ALL
+                .iter()
+                .find(|&t| theme_string == t.to_string().as_str())
+            {
+                return (
+                    MinusGamesGui {
+                        theme: theme.clone(),
+                        ..MinusGamesGui::default()
+                    },
+                    Self::start_async_init(),
+                );
+            }
+        }
         (MinusGamesGui::default(), Self::start_async_init())
     }
 
@@ -132,7 +147,8 @@ impl MinusGamesGui {
 
         let mut rtn = Vec::new();
         for game in &installed_games {
-            let game_card = GameCard::new(game.to_string(), "Installed".into(), true);
+            let content = if server_games.contains(game) { "Installed/On Server" } else { "Installed" };
+            let game_card = GameCard::new(game.to_string(), content.into(), true);
             rtn.push(game_card);
         }
 
@@ -140,7 +156,7 @@ impl MinusGamesGui {
             if installed_games.contains(game) {
                 continue;
             }
-            let game_card = GameCard::new(game.to_string(), " ".into(), false);
+            let game_card = GameCard::new(game.to_string(), "On Server".into(), false);
             rtn.push(game_card);
         }
 
@@ -276,7 +292,10 @@ impl MinusGamesGui {
                     .and_then(move |window| window::change_mode(window, window::Mode::Fullscreen));
             }
             MinusGamesGuiMessage::Settings => {
-                self.settings = Some(MinusGamesSettings::from_config(get_config()));
+                self.settings = Some(MinusGamesSettings::from_config_with_theme(
+                    get_config(),
+                    self.get_theme(),
+                ));
                 self.state = MinusGamesState::Settings;
             }
             MinusGamesGuiMessage::ApplyScreenSettings => {
@@ -293,9 +312,13 @@ impl MinusGamesGui {
                 if save {
                     save_new_settings(self.settings.as_ref());
                     override_config(self.settings.as_ref());
+                    if let Some(settings) = self.settings.take() {
+                        self.theme = settings.theme;
+                    }
                     // return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
+                } else if let Some(settings) = self.settings.take() {
+                    self.theme = settings.initial_theme;
                 }
-                self.settings = None;
                 self.state = MinusGamesState::Loading;
                 return Task::batch([
                     Task::done(MinusGamesGuiMessage::ApplyScreenSettings),
@@ -304,6 +327,11 @@ impl MinusGamesGui {
             }
             MinusGamesGuiMessage::ChangeSetting(change_input) => {
                 handle_change_event(self.settings.as_mut(), change_input);
+                if let Some(settings) = self.settings.as_ref() {
+                    if self.theme != settings.theme {
+                        self.theme = settings.theme.clone();
+                    }
+                }
             }
             MinusGamesGuiMessage::FilterChanged(change) => {
                 self.filter = change;
@@ -397,5 +425,9 @@ impl MinusGamesGui {
         }
 
         rtn
+    }
+
+    pub fn get_theme(&self) -> Theme {
+        self.theme.clone()
     }
 }

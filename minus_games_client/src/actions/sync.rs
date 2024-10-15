@@ -13,26 +13,12 @@ use std::sync::atomic::Ordering::Relaxed;
 use std::time::SystemTime;
 use tracing::{debug, trace, warn};
 
-pub async fn sync_game_infos(game: &str) {
-    let json = get_config().get_json_path_from_game(game);
-    if json.exists() {
-        std::fs::remove_file(json).unwrap();
-    }
-
-    let csv = get_config().get_csv_path_for_game(game);
-    if csv.exists() {
-        std::fs::remove_file(csv).unwrap();
-    }
-
-    CLIENT.download_infos(game).await;
-}
-
 pub async fn sync_infos_for_all_games() {
     let games = CLIENT.get_games_list().await.unwrap_or_default();
 
     for game in games {
         delete_game_info_files(game.as_str());
-        sync_game_infos(game.as_str()).await
+        sync_all_game_files(game.as_str()).await
     }
 }
 
@@ -46,6 +32,14 @@ pub async fn sync_all_game_files(game: &str) {
     }
 }
 
+pub async fn force_sync_all_game_files(game: &str) {
+    offline_to_return!();
+    CLIENT.download_game_infos_if_modified(game).await;
+    CLIENT.download_game_files_if_modified(game).await;
+    send_event(MinusGamesClientEvents::FinishedSyncFileInfos).await;
+    sync_game_files_and_download(game).await;
+}
+
 async fn sync_game_files_and_download(game: &str) {
     let game_file_infos = get_config()
         .get_game_file_list(game)
@@ -54,7 +48,12 @@ async fn sync_game_files_and_download(game: &str) {
         let file_path = get_config().client_games_folder.join(info.file_path);
         if let Ok(metadata) = file_path.as_path().metadata() {
             if metadata.len() != info.size && file_path.as_path().is_file() {
-                std::fs::remove_file(file_path).unwrap();
+                match std::fs::remove_file(&file_path) {
+                    Ok(_) => {}
+                    Err(_) => {
+                        warn!("Failed to delete file: {}", file_path.display());
+                    }
+                };
             }
         }
     }

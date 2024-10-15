@@ -8,6 +8,8 @@ pub struct GuiConfiguration {
     pub fullscreen: bool,
     #[arg(long, env = "MINUS_GAMES_GUI_CLI")]
     pub cli: bool,
+    #[arg(long, env = "MINUS_GAMES_GUI_THEME")]
+    pub theme: Option<String>,
 }
 
 pub(crate) const GUI_CONFIGURATION_OPTIONS: [&str; 2] = ["--fullscreen", "--cli"];
@@ -15,6 +17,7 @@ pub(crate) const GUI_CONFIGURATION_OPTIONS: [&str; 2] = ["--fullscreen", "--cli"
 impl Display for GuiConfiguration {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Fullscreen: {}", self.fullscreen)?;
-        write!(f, "Cli: {}", self.cli)
+        writeln!(f, "Cli: {}", self.cli)?;
+        write!(f, "Theme: {}", self.theme.as_deref().unwrap_or("Light"))
     }
 }

@@ -5,7 +5,7 @@ use crate::actions::repair::repair_game;
 use crate::actions::scan::scan_for_games;
 #[cfg(target_family = "unix")]
 use crate::actions::sync::sync_all_game_files;
-use crate::actions::sync::{download_sync_for_game, sync_game_infos, upload_sync_for_game};
+use crate::actions::sync::{download_sync_for_game, upload_sync_for_game};
 use crate::runtime::{get_all_games, get_config, get_installed_games, send_event, CLIENT};
 #[cfg(target_family = "unix")]
 use crate::utils::make_executable_from_path;
@@ -211,7 +211,7 @@ pub async fn select_game_to_download() {
             .as_path()
             .is_file()
         {
-            sync_game_infos(game).await;
+            sync_all_game_files(game).await;
         }
         if !get_config().get_game_path(game).is_dir() {
             download_game(game).await;
@@ -273,7 +273,7 @@ pub async fn select_game() {
             .as_path()
             .is_file()
         {
-            sync_game_infos(game).await;
+            sync_all_game_files(game).await;
         }
         if !get_config().get_game_path(game).is_dir() {
             download_game(game).await;

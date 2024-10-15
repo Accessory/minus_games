@@ -5,6 +5,7 @@ use crate::utils::{encode_problem_chars, get_csv_name, get_json_name};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use chrono::{DateTime, Utc};
+use log::{debug, warn};
 use minus_games_models::sync_file_info::SyncFileInfo;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, IF_MODIFIED_SINCE};
 use reqwest::{multipart, Body, Client, Response, StatusCode, Url};
@@ -12,7 +13,6 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering::Relaxed;
 use std::time::SystemTime;
 use tokio_util::codec::{BytesCodec, FramedRead};
-use tracing::{debug, warn};
 
 pub struct MinusGamesClient {
     client: Client,
@@ -187,7 +187,7 @@ impl MinusGamesClient {
         let response = match modified {
             Some(modified) => match self
                 .client
-                .get(from)
+                .get(from.as_str())
                 .header(
                     IF_MODIFIED_SINCE,
                     <DateTime<Utc>>::from(modified)
@@ -211,16 +211,23 @@ impl MinusGamesClient {
             },
         };
 
-        if response.status() == StatusCode::NOT_MODIFIED {
+        let status = response.status();
+        if status == StatusCode::NOT_MODIFIED {
+            debug!("File not modified: {from}");
             return false;
         }
 
-        if !response.status().is_success() {
-            panic!(
-                "Sync failed with: {} - {}",
-                response.status(),
-                response.text().await.unwrap()
+        if status == StatusCode::NOT_FOUND {
+            warn!("File not found: {from}");
+            return false;
+        }
+
+        if !status.is_success() {
+            warn!(
+                "Failed to download file: {from} with status: {}",
+                status.as_str()
             );
+            return false;
         }
 
         download_loop(response, to).await;
@@ -228,14 +235,16 @@ impl MinusGamesClient {
     }
 
     pub async fn download_file(&self, from: Url, to: &Path) {
-        let response = self.client.get(from).send().await.unwrap();
+        let response = self.client.get(from.clone()).send().await.unwrap();
 
-        if !response.status().is_success() {
-            panic!(
-                "Sync failed with: {} - {}",
-                response.status(),
-                response.text().await.unwrap()
+        let status = response.status();
+
+        if !status.is_success() {
+            warn!(
+                "Failed to download file: {from} with status: {}",
+                status.as_str()
             );
+            return;
         }
 
         download_loop(response, to).await

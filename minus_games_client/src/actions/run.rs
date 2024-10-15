@@ -1,6 +1,5 @@
 use super::sync::{download_sync_for_game, sync_all_game_files, upload_sync_for_game};
 use crate::actions::download::download_game;
-use crate::actions::sync::sync_game_infos;
 use crate::runtime::{get_config, send_event, MinusGamesClientEvents};
 #[cfg(target_family = "unix")]
 use crate::utils::{add_permissions, is_not_executable, make_executable};
@@ -19,7 +18,7 @@ use tracing::debug;
 use tracing::warn;
 
 pub async fn sync_run_game(game: &str) {
-    sync_game_infos(game).await;
+    sync_all_game_files(game).await;
     if !get_config().get_game_path(game).is_dir() {
         download_game(game).await;
     }

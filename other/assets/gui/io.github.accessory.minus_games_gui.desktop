@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Minus Games Gui
+Name=Minus Games
 Exec=minus_games_gui
 Type=Application
 Icon=io.github.accessory.minus_games_gui

@@ -90,7 +90,7 @@ impl Configuration {
 
     pub fn get_game_info(&self, game: &str) -> Option<Vec<GameFileInfo>> {
         let csv_path = self.get_csv_path_for_game(game);
-        let csv_file = File::open(csv_path.as_path()).unwrap();
+        let csv_file = File::open(csv_path.as_path()).ok()?;
         let csv_buf_reader = BufReader::new(csv_file);
         let mut reader = csv::ReaderBuilder::new().from_reader(csv_buf_reader);
         Some(reader.deserialize().map(|i| i.unwrap()).collect())
@@ -111,7 +111,6 @@ impl Configuration {
         self.client_folder.join(json_name)
     }
 
-    #[allow(dead_code)]
     pub fn get_csv_path_for_game(&self, game: &str) -> PathBuf {
         let csv_name = get_csv_name(game);
         self.client_folder.join(csv_name)

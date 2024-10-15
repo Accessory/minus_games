@@ -9,9 +9,6 @@ use std::{
     sync::atomic::Ordering,
 };
 use tracing::{info, warn};
-// unsafe fn change_config_value<T>() {
-
-// }
 
 pub(crate) fn override_config(minus_games_settings_option: Option<&MinusGamesSettings>) {
     if let Some(minus_games_settings) = minus_games_settings_option {
@@ -28,6 +25,7 @@ pub(crate) fn override_config(minus_games_settings_option: Option<&MinusGamesSet
         get_mut_config().username = resolve_string(&minus_games_settings.username);
         get_mut_config().password = resolve_string(&minus_games_settings.password);
         get_mut_gui_config().fullscreen = minus_games_settings.fullscreen;
+        get_mut_gui_config().theme = Some(minus_games_settings.theme.to_string());
     }
 }
 
@@ -70,9 +68,11 @@ pub(crate) fn handle_change_event(
             SettingInput::ClientGamesFolder(change) => {
                 minus_games_settings.client_games_folder = change.trim().to_string();
             }
+            #[cfg(not(target_family = "windows"))]
             SettingInput::WineExe(change) => {
                 minus_games_settings.wine_exe = change.trim().to_string();
             }
+            #[cfg(not(target_family = "windows"))]
             SettingInput::WinePrefix(change) => {
                 minus_games_settings.wine_prefix = change.trim().to_string();
             }
@@ -90,6 +90,9 @@ pub(crate) fn handle_change_event(
             }
             SettingInput::Password(change) => {
                 minus_games_settings.password = change.trim().to_string();
+            }
+            SettingInput::Theme(theme) => {
+                minus_games_settings.theme = theme;
             }
         };
     } else {
@@ -121,53 +124,91 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                 #[cfg(target_family = "windows")]
                 const NEW_LINE: &str = "\r\n";
 
-                writer.write_all(b"SERVER_URL=").unwrap();
-                writer.write_all(settings.server_url.as_bytes()).unwrap();
-                writer.write_all(NEW_LINE.as_bytes()).unwrap();
-                writer.write_all(b"CLIENT_FOLDER=").unwrap();
-                writer.write_all(settings.client_folder.as_bytes()).unwrap();
-                writer.write_all(NEW_LINE.as_bytes()).unwrap();
-                writer.write_all(b"CLIENT_GAMES_FOLDER=").unwrap();
+                // TODO Put everything in Quotes
                 writer
-                    .write_all(settings.client_games_folder.as_bytes())
+                    .write_all(
+                        format!("SERVER_URL=\"{}\"{}", settings.server_url, NEW_LINE).as_bytes(),
+                    )
                     .unwrap();
-                writer.write_all(NEW_LINE.as_bytes()).unwrap();
+                writer
+                    .write_all(
+                        format!("CLIENT_FOLDER=\"{}\"{}", settings.client_folder, NEW_LINE)
+                            .as_bytes(),
+                    )
+                    .unwrap();
+                writer
+                    .write_all(
+                        format!(
+                            "CLIENT_GAMES_FOLDER=\"{}\"{}",
+                            settings.client_games_folder, NEW_LINE
+                        )
+                        .as_bytes(),
+                    )
+                    .unwrap();
+                writer
+                    .write_all(
+                        format!("MINUS_GAMES_GUI_THEME=\"{}\"{}", settings.theme, NEW_LINE)
+                            .as_bytes(),
+                    )
+                    .unwrap();
                 if !settings.wine_exe.trim().is_empty() {
-                    writer.write_all(b"WINE_EXE=").unwrap();
                     writer
-                        .write_all(settings.wine_exe.trim().as_bytes())
+                        .write_all(
+                            format!("WINE_EXE=\"{}\"{}", settings.wine_exe.trim(), NEW_LINE)
+                                .as_bytes(),
+                        )
                         .unwrap();
-                    writer.write_all(NEW_LINE.as_bytes()).unwrap();
                 }
                 if !settings.wine_prefix.trim().is_empty() {
-                    writer.write_all(b"WINE_PREFIX=").unwrap();
                     writer
-                        .write_all(settings.wine_prefix.trim().as_bytes())
+                        .write_all(
+                            format!(
+                                "WINE_PREFIX=\"{}\"{}",
+                                settings.wine_prefix.trim(),
+                                NEW_LINE
+                            )
+                            .as_bytes(),
+                        )
                         .unwrap();
-                    writer.write_all(NEW_LINE.as_bytes()).unwrap();
                 }
-                writer.write_all(b"VERBOSE=").unwrap();
-                writer.write_all(resolve_bool(settings.verbose)).unwrap();
-                writer.write_all(NEW_LINE.as_bytes()).unwrap();
-                writer.write_all(b"OFFLINE=").unwrap();
-                writer.write_all(resolve_bool(settings.offline)).unwrap();
-                writer.write_all(NEW_LINE.as_bytes()).unwrap();
-                writer.write_all(b"MINUS_GAMES_GUI_FULLSCREEN=").unwrap();
-                writer.write_all(resolve_bool(settings.fullscreen)).unwrap();
-                writer.write_all(NEW_LINE.as_bytes()).unwrap();
+                writer
+                    .write_all(format!("VERBOSE=\"{}\"{}", settings.verbose, NEW_LINE).as_bytes())
+                    .unwrap();
+                writer
+                    .write_all(format!("OFFLINE=\"{}\"{}", settings.offline, NEW_LINE).as_bytes())
+                    .unwrap();
+                writer
+                    .write_all(
+                        format!(
+                            "MINUS_GAMES_GUI_FULLSCREEN=\"{}\"{}",
+                            settings.fullscreen, NEW_LINE
+                        )
+                        .as_bytes(),
+                    )
+                    .unwrap();
                 if !settings.username.trim().is_empty() {
-                    writer.write_all(b"MINUS_GAMES_USERNAME=").unwrap();
                     writer
-                        .write_all(settings.username.trim().as_bytes())
+                        .write_all(
+                            format!(
+                                "MINUS_GAMES_USERNAME=\"{}\"{}",
+                                settings.username.trim(),
+                                NEW_LINE
+                            )
+                            .as_bytes(),
+                        )
                         .unwrap();
-                    writer.write_all(NEW_LINE.as_bytes()).unwrap();
                 }
                 if !settings.password.trim().is_empty() {
-                    writer.write_all(b"MINUS_GAMES_PASSWORD=").unwrap();
                     writer
-                        .write_all(settings.password.trim().as_bytes())
+                        .write_all(
+                            format!(
+                                "MINUS_GAMES_PASSWORD=\"{}\"{}",
+                                settings.password.trim(),
+                                NEW_LINE
+                            )
+                            .as_bytes(),
+                        )
                         .unwrap();
-                    writer.write_all(NEW_LINE.as_bytes()).unwrap();
                 }
 
                 info!(
@@ -178,12 +219,5 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
         }
     } else {
         warn!("Settings are not set and cannot be saved");
-    }
-}
-
-fn resolve_bool(value: bool) -> &'static [u8] {
-    match value {
-        true => b"true",
-        false => b"false",
     }
 }

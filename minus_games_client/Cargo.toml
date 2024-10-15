@@ -1,6 +1,6 @@
 [package]
 name = "minus_games_client"
-version = "0.5.1"
+version = "0.5.3"
 edition = "2021"
 
 [dependencies]
@@ -26,4 +26,5 @@ convert_case = "0"
 minus_games_utils = { path = "../minus_games_utils" }
 minus_games_models = { path = "../minus_games_models" }
 minus_games_finder = { path = "../minus_games_finder" }
+log = "0.4.22"
 

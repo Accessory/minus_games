@@ -2,22 +2,26 @@ use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMess
 use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, TOP_BUTTON};
 use crate::minus_games_gui::MinusGamesGui;
 use iced::widget::{
-    button, checkbox, column, horizontal_space, row, text, text_input, vertical_space, Column, Row,
+    button, checkbox, column, horizontal_space, pick_list, row, text, text_input, vertical_space,
+    Column, Row,
 };
-use iced::Fill;
+use iced::{Fill, Theme};
 
 #[derive(Clone, Debug)]
 pub enum SettingInput {
     ServerUrl(String),
     ClientFolder(String),
     ClientGamesFolder(String),
+    #[cfg(not(target_family = "windows"))]
     WineExe(String),
+    #[cfg(not(target_family = "windows"))]
     WinePrefix(String),
     Verbose(bool),
     Offline(bool),
     Fullscreen(bool),
     Username(String),
     Password(String),
+    Theme(Theme),
 }
 
 macro_rules! add_setting_input {
@@ -104,6 +108,11 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
             .secure(true),
         )
         .push(vertical_space().height(MARGIN_DEFAULT));
+    settings = settings.push(pick_list(
+        Theme::ALL,
+        Some(&minus_games_gui.settings.as_ref().unwrap().theme),
+        |t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(t)),
+    ));
 
     settings = settings.push(vertical_space().height(MARGIN_DEFAULT));
 
