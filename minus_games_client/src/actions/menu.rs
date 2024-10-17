@@ -3,10 +3,9 @@ use crate::actions::delete::delete_game;
 use crate::actions::download::download_game;
 use crate::actions::repair::repair_game;
 use crate::actions::scan::scan_for_games;
-#[cfg(target_family = "unix")]
 use crate::actions::sync::sync_all_game_files;
 use crate::actions::sync::{download_sync_for_game, upload_sync_for_game};
-use crate::runtime::{get_all_games, get_config, get_installed_games, send_event, CLIENT};
+use crate::runtime::{get_all_games, get_client, get_config, get_installed_games, send_event};
 #[cfg(target_family = "unix")]
 use crate::utils::make_executable_from_path;
 use dialoguer::theme::ColorfulTheme;
@@ -182,7 +181,7 @@ pub fn select_game_to_delete(purge: bool) {
 }
 
 pub async fn select_game_to_download() {
-    let mut games = CLIENT.get_games_list().await.unwrap_or_default();
+    let mut games = get_client().get_games_list().await.unwrap_or_default();
     if games.is_empty() {
         info!("No games found!");
         return;
@@ -246,7 +245,7 @@ pub async fn select_game_to_run_synced() {
 
 pub async fn select_game() {
     let mut installed_games = get_installed_games();
-    let games = CLIENT.get_games_list().await.unwrap_or_default();
+    let games = get_client().get_games_list().await.unwrap_or_default();
 
     for game in games {
         if !installed_games.contains(&game) {
@@ -286,7 +285,7 @@ pub async fn select_game() {
 
 pub async fn select_download() {
     println!("Select Game:");
-    let games = CLIENT.get_games_list().await.unwrap_or_default();
+    let games = get_client().get_games_list().await.unwrap_or_default();
     for (idx, game) in games.iter().enumerate() {
         println!("{idx:<2} - {game}");
     }

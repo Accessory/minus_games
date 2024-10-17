@@ -124,7 +124,6 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                 #[cfg(target_family = "windows")]
                 const NEW_LINE: &str = "\r\n";
 
-                // TODO Put everything in Quotes
                 writer
                     .write_all(
                         format!("SERVER_URL=\"{}\"{}", settings.server_url, NEW_LINE).as_bytes(),

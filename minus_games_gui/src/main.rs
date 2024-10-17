@@ -28,6 +28,7 @@ fn main() -> iced::Result {
 
     println!("Config:");
     println!("{}", unsafe {
+        #[allow(static_mut_refs)]
         CONFIG.get_or_insert_with(|| {
             Configuration::parse_from(
                 env::args().filter(|arg| !GUI_CONFIGURATION_OPTIONS.contains(&arg.as_str())),

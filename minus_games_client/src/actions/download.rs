@@ -1,7 +1,7 @@
-use crate::download_manager::{DownloadConfig, DownloadManager};
-use crate::runtime::{get_config, CLIENT};
-use tracing::{info, warn};
 use crate::actions::sync::sync_all_game_files;
+use crate::download_manager::{DownloadConfig, DownloadManager};
+use crate::runtime::{get_client, get_config};
+use tracing::{info, warn};
 
 pub async fn download(game: &Option<String>) {
     match game {
@@ -19,7 +19,7 @@ pub async fn download_game(game: &str) {
 }
 
 async fn download_all() {
-    let games = CLIENT.get_games_list().await.unwrap_or_default();
+    let games = get_client().get_games_list().await.unwrap_or_default();
     for game in games.iter() {
         info!("Start Syncing: {game}");
         download_all_files(game).await;

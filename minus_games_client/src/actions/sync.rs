@@ -2,7 +2,7 @@ use crate::actions::delete::delete_game_info_files;
 use crate::actions::download::download_all_files;
 use crate::offline_to_return;
 use crate::runtime::{
-    get_config, get_installed_games, send_event, MinusGamesClientEvents, CLIENT, OFFLINE,
+    get_client, get_config, get_installed_games, send_event, MinusGamesClientEvents, OFFLINE,
 };
 use chrono::{DateTime, Utc};
 use minus_games_models::game_infos::GameInfos;
@@ -14,7 +14,7 @@ use std::time::SystemTime;
 use tracing::{debug, trace, warn};
 
 pub async fn sync_infos_for_all_games() {
-    let games = CLIENT.get_games_list().await.unwrap_or_default();
+    let games = get_client().get_games_list().await.unwrap_or_default();
 
     for game in games {
         delete_game_info_files(game.as_str());
@@ -24,8 +24,8 @@ pub async fn sync_infos_for_all_games() {
 
 pub async fn sync_all_game_files(game: &str) {
     offline_to_return!();
-    let has_new_game_infos = CLIENT.download_game_infos_if_modified(game).await;
-    let has_new_game_files = CLIENT.download_game_files_if_modified(game).await;
+    let has_new_game_infos = get_client().download_game_infos_if_modified(game).await;
+    let has_new_game_files = get_client().download_game_files_if_modified(game).await;
     send_event(MinusGamesClientEvents::FinishedSyncFileInfos).await;
     if has_new_game_files || has_new_game_infos {
         sync_game_files_and_download(game).await;
@@ -34,8 +34,8 @@ pub async fn sync_all_game_files(game: &str) {
 
 pub async fn force_sync_all_game_files(game: &str) {
     offline_to_return!();
-    CLIENT.download_game_infos_if_modified(game).await;
-    CLIENT.download_game_files_if_modified(game).await;
+    get_client().download_game_infos_if_modified(game).await;
+    get_client().download_game_files_if_modified(game).await;
     send_event(MinusGamesClientEvents::FinishedSyncFileInfos).await;
     sync_game_files_and_download(game).await;
 }
@@ -74,7 +74,10 @@ pub async fn download_sync_for_game(game: &str) {
     if let Some(sync_folders) = &game_infos.sync_folders {
         for folder in sync_folders {
             let folder_hash = create_hash_from_string(folder);
-            if let Some(file_infos) = CLIENT.get_sync_file_list(game, folder_hash.as_str()).await {
+            if let Some(file_infos) = get_client()
+                .get_sync_file_list(game, folder_hash.as_str())
+                .await
+            {
                 let sync_path: PathBuf = resolve_sync_path(folder, &game_infos);
                 for file_info in file_infos {
                     let download_file_path = sync_path.join(file_info.file_path.as_str());
@@ -83,7 +86,7 @@ pub async fn download_sync_for_game(game: &str) {
                         continue;
                     }
                     debug!("Downloading: {}", file_info);
-                    CLIENT
+                    get_client()
                         .download_sync_file(
                             game,
                             &folder_hash,
@@ -127,7 +130,7 @@ pub async fn upload_sync_for_game(game: &str) {
         for folder in sync_folders {
             let folder_hash = create_hash_from_string(folder);
             let sync_path: PathBuf = resolve_sync_path(folder, &game_infos);
-            let sfi_server = CLIENT.get_sync_file_list(game, &folder_hash).await;
+            let sfi_server = get_client().get_sync_file_list(game, &folder_hash).await;
             let file_list = create_file_list(&sync_path);
             let absolute_path = std::path::absolute(sync_path).unwrap();
             let cut_off = absolute_path.iter().count();
@@ -145,7 +148,7 @@ pub async fn upload_sync_for_game(game: &str) {
                 }
 
                 debug!("Uploading: {}", sfi);
-                CLIENT
+                get_client()
                     .upload_sync_file(game, folder_hash.as_str(), sfi, upload_file_path)
                     .await;
             }

@@ -22,7 +22,8 @@ use minus_games_client::actions::delete::delete_game;
 use minus_games_client::actions::repair::repair_game;
 use minus_games_client::actions::run::run_game_synced;
 use minus_games_client::runtime::{
-    get_config, get_installed_games, send_event, set_sender, MinusGamesClientEvents, CLIENT,
+    get_client, get_config, get_installed_games, reset_client, send_event, set_sender,
+    MinusGamesClientEvents,
 };
 use minus_games_models::game_infos::GameInfos;
 use settings::override_config;
@@ -143,11 +144,15 @@ impl MinusGamesGui {
         // send_event("Create Cards".into()).await;
         debug!("Create Cards");
         let installed_games = get_installed_games();
-        let server_games = CLIENT.get_games_list().await.unwrap_or_default();
+        let server_games = get_client().get_games_list().await.unwrap_or_default();
 
         let mut rtn = Vec::new();
         for game in &installed_games {
-            let content = if server_games.contains(game) { "Installed/On Server" } else { "Installed" };
+            let content = if server_games.contains(game) {
+                "Installed/On Server"
+            } else {
+                "Installed"
+            };
             let game_card = GameCard::new(game.to_string(), content.into(), true);
             rtn.push(game_card);
         }
@@ -315,7 +320,7 @@ impl MinusGamesGui {
                     if let Some(settings) = self.settings.take() {
                         self.theme = settings.theme;
                     }
-                    // return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
+                    reset_client();
                 } else if let Some(settings) = self.settings.take() {
                     self.theme = settings.initial_theme;
                 }

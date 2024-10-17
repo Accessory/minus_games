@@ -6,7 +6,6 @@ use clap::Parser;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
-use std::sync::LazyLock;
 use tokio::sync::OnceCell;
 
 #[derive(Clone, strum::Display)]
@@ -58,22 +57,39 @@ pub fn get_config() -> &'static Configuration {
 }
 
 pub fn get_mut_config() -> &'static mut Configuration {
-    unsafe { CONFIG.get_or_insert_with(Configuration::parse) }
+    #[allow(static_mut_refs)]
+    unsafe {
+        CONFIG.get_or_insert_with(Configuration::parse)
+    }
 }
 
-pub static CLIENT: LazyLock<MinusGamesClient> = LazyLock::new(|| {
-    MinusGamesClient::new(
-        get_config().server_url.as_str(),
-        get_config().username.as_ref(),
-        get_config().password.as_ref(),
-    )
-});
+static mut CLIENT: Option<MinusGamesClient> = None;
+
+pub fn get_client() -> &'static MinusGamesClient {
+    unsafe {
+        #[allow(static_mut_refs)]
+        CLIENT.get_or_insert_with(|| {
+            MinusGamesClient::new(
+                get_config().server_url.as_str(),
+                get_config().username.as_ref(),
+                get_config().password.as_ref(),
+            )
+        })
+    }
+}
+
+pub fn reset_client() {
+    unsafe {
+        #[allow(static_mut_refs)]
+        let _ = CLIENT.take();
+    }
+}
 
 pub static OFFLINE: AtomicBool = AtomicBool::new(false);
 
 pub async fn get_all_games() -> Vec<String> {
     let mut installed_games = get_installed_games();
-    let games = CLIENT.get_games_list().await.unwrap_or_default();
+    let games = get_client().get_games_list().await.unwrap_or_default();
 
     for game in games {
         if !installed_games.contains(&game) {

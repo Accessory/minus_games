@@ -1,4 +1,4 @@
-use crate::runtime::{send_event, MinusGamesClientEvents, CLIENT};
+use crate::runtime::{get_client, send_event, MinusGamesClientEvents};
 use chrono::DateTime;
 use minus_games_utils::set_file_modified_time;
 use reqwest::Response;
@@ -72,7 +72,7 @@ pub async fn download_to(download_config: DownloadConfig) {
         return;
     }
 
-    let response = CLIENT.get(&download_config.url).await;
+    let response = get_client().get(&download_config.url).await;
 
     if !response.status().is_success() {
         warn!(
