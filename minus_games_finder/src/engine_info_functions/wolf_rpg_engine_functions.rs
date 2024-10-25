@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use crate::engine_info_functions::EngineInfoFunctions;
-use crate::utils::{find_all_exe_files, find_closest_string, get_title_from_parent_folder};
+use crate::utils::{
+    find_all_possible_game_exe_files, find_closest_string, get_title_from_parent_folder,
+};
 
 #[derive(Copy, Clone)]
 pub struct WolfRPGEditorEngineFunctions {}
@@ -17,7 +19,7 @@ impl EngineInfoFunctions for WolfRPGEditorEngineFunctions {
         if game_root.join("Game.exe").is_file() {
             return Some("Game.exe".into());
         }
-        let mut files: Vec<String> = find_all_exe_files(game_root);
+        let mut files: Vec<String> = find_all_possible_game_exe_files(game_root);
         if files.is_empty() {
             None
         } else {

@@ -25,7 +25,7 @@ pub(crate) fn override_config(minus_games_settings_option: Option<&MinusGamesSet
         get_mut_config().username = resolve_string(&minus_games_settings.username);
         get_mut_config().password = resolve_string(&minus_games_settings.password);
         get_mut_gui_config().fullscreen = minus_games_settings.fullscreen;
-        get_mut_gui_config().theme = Some(minus_games_settings.theme.to_string());
+        get_mut_gui_config().theme = minus_games_settings.theme.to_string();
     }
 }
 

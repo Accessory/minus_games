@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::engine_info_functions::EngineInfoFunctions;
-use crate::utils::find_all_exe_files;
+use crate::utils::find_all_possible_game_exe_files;
 
 #[derive(Copy, Clone)]
 pub struct FinalFantasyPixelRemasterFunctions {}
@@ -15,7 +15,7 @@ impl EngineInfoFunctions for FinalFantasyPixelRemasterFunctions {
     }
 
     fn get_windows_exe(&self, game_root: &Path) -> Option<String> {
-        let files: Vec<String> = find_all_exe_files(game_root);
+        let files: Vec<String> = find_all_possible_game_exe_files(game_root);
         files
             .into_iter()
             .find(|file| file.to_lowercase().contains("final fantasy"))

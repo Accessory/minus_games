@@ -19,8 +19,9 @@ use iced::{
     event, stream, window, Center, Element, Event, Fill, Length, Size, Subscription, Task, Theme,
 };
 use minus_games_client::actions::delete::delete_game;
-use minus_games_client::actions::repair::repair_game;
+use minus_games_client::actions::repair::{repair_all_games, repair_game};
 use minus_games_client::actions::run::run_game_synced;
+use minus_games_client::actions::scan::scan_for_games;
 use minus_games_client::runtime::{
     get_client, get_config, get_installed_games, reset_client, send_event, set_sender,
     MinusGamesClientEvents,
@@ -104,20 +105,21 @@ impl MinusGamesGui {
     }
 
     pub fn init() -> (Self, Task<MinusGamesGuiMessage>) {
-        if let Some(theme_string) = get_gui_config().theme.as_ref() {
-            if let Some(theme) = Theme::ALL
-                .iter()
-                .find(|&t| theme_string == t.to_string().as_str())
-            {
-                return (
-                    MinusGamesGui {
-                        theme: theme.clone(),
-                        ..MinusGamesGui::default()
-                    },
-                    Self::start_async_init(),
-                );
-            }
+        let theme_string = get_gui_config().theme.as_str();
+
+        if let Some(theme) = Theme::ALL
+            .iter()
+            .find(|&t| theme_string == t.to_string().as_str())
+        {
+            return (
+                MinusGamesGui {
+                    theme: theme.clone(),
+                    ..MinusGamesGui::default()
+                },
+                Self::start_async_init(),
+            );
         }
+
         (MinusGamesGui::default(), Self::start_async_init())
     }
 
@@ -130,9 +132,6 @@ impl MinusGamesGui {
 
     // pub async fn async_init() -> Arc<RwLock<tokio::sync::mpsc::Receiver<MinusGamesClientEvents>>> {
     pub async fn async_init() {
-        // let (rx, tx) = tokio::sync::mpsc::channel(std::thread::available_parallelism().unwrap().get());
-        // set_sender(rx.into()).await;
-        // Arc::new(RwLock::new(tx))
         info!("Async Init!");
     }
 
@@ -149,7 +148,7 @@ impl MinusGamesGui {
         let mut rtn = Vec::new();
         for game in &installed_games {
             let content = if server_games.contains(game) {
-                "Installed/On Server"
+                "Installed - On Server"
             } else {
                 "Installed"
             };
@@ -231,6 +230,8 @@ impl MinusGamesGui {
             | MinusGamesGuiMessage::FinishedDelete(_)
             | MinusGamesGuiMessage::FinishedRepairing(_) => {
                 self.state = MinusGamesState::Ready;
+                self.current_game = None;
+                self.current_game_name = None;
                 return MinusGamesGui::load();
             } // _ => Task::none(),
             MinusGamesGuiMessage::Init => {}
@@ -341,6 +342,20 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::FilterChanged(change) => {
                 self.filter = change;
             }
+            MinusGamesGuiMessage::UpdateAllGames => {
+                self.state = MinusGamesState::Loading;
+                return Task::perform(
+                    async { repair_all_games().await },
+                    MinusGamesGuiMessage::FinishedRepairing,
+                );
+            }
+            MinusGamesGuiMessage::RescanGameFolder => {
+                self.state = MinusGamesState::Loading;
+                return Task::perform(
+                    async { scan_for_games() },
+                    MinusGamesGuiMessage::FinishedRepairing,
+                );
+            }
         };
         Task::none()
     }
@@ -417,15 +432,13 @@ impl MinusGamesGui {
             ]
             .align_y(Center),
         );
-        for (i, game_card) in self.game_cards.iter().enumerate() {
+        for game_card in self.game_cards.iter() {
             if game_card
                 .game
                 .to_lowercase()
                 .contains(self.filter.trim().to_lowercase().as_str())
             {
-                rtn = rtn.push(
-                    row![text(format!("{i:0>3}")), game_card.view()].spacing(SPACING_DEFAULT),
-                );
+                rtn = rtn.push(row![game_card.view()].spacing(SPACING_DEFAULT));
             }
         }
 

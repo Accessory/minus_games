@@ -5,7 +5,8 @@ use crate::minus_games_gui::style_constants::{
 };
 use iced::widget::{button, center, container, mouse_area, opaque, text, vertical_space, Column};
 use iced::{Center, Color, Element, Fill};
-use minus_games_client::runtime::get_config;
+use minus_games_client::runtime::{get_config, OFFLINE};
+use std::sync::atomic::Ordering::Relaxed;
 
 pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGamesGuiMessage>> {
     let game_infos_option = get_config().get_game_infos(game);
@@ -21,10 +22,6 @@ pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGam
             "Windows support: {}",
             game_infos.supported_platforms.windows
         )));
-        column = column.push(text(format!(
-            "Linux support: {}",
-            game_infos.supported_platforms.linux
-        )));
         column = column.push(vertical_space().height(MARGIN_DEFAULT));
         column = column.push(
             button(text("Delete").width(Fill).align_x(Center))
@@ -34,13 +31,15 @@ pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGam
                 ))),
         );
         column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
-        column = column.push(
-            button(text("Repair").width(Fill).align_x(Center))
-                .width(DEFAULT_MODAL_BUTTON_WIDTH)
-                .on_press(MinusGamesGuiMessage::ModalCallback(Some(
-                    ModalCallback::RepairGame(game.to_string()),
-                ))),
-        );
+        if !OFFLINE.load(Relaxed) {
+            column = column.push(
+                button(text("Repair").width(Fill).align_x(Center))
+                    .width(DEFAULT_MODAL_BUTTON_WIDTH)
+                    .on_press(MinusGamesGuiMessage::ModalCallback(Some(
+                        ModalCallback::RepairGame(game.to_string()),
+                    ))),
+            );
+        }
         column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
         column = column.push(
             button(text("Open folder").width(Fill).align_x(Center))

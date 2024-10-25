@@ -2,6 +2,7 @@ use crate::app_state::AppState;
 use crate::auth::auth_layer::AuthLayer;
 use crate::auth::session_manager::SessionManager;
 use crate::auth::user::ArcUser;
+use crate::auth::user::User;
 use crate::auth::user_handler::UserHandler;
 use crate::configuration::Configuration;
 use crate::controller::{

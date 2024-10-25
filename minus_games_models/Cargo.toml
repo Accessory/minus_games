@@ -1,6 +1,6 @@
 [package]
 name = "minus_games_models"
-version = "0.5.4"
+version = "0.5.5"
 edition = "2021"
 
 [dependencies]
@@ -9,5 +9,5 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 blake3 = "1"
 chrono = { version = "0", features = ["serde"] }
-minus_games_utils = {path = "../minus_games_utils"}
-utoipa = "4"
+minus_games_utils = { path = "../minus_games_utils" }
+utoipa = { version = "5", features = ["chrono"] }

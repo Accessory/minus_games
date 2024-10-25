@@ -40,6 +40,8 @@ pub(crate) enum MinusGamesGuiMessage {
     Noop,
     CloseApplication(()),
     WindowEvent(Event),
+    UpdateAllGames,
+    RescanGameFolder,
 }
 
 impl From<MinusGamesClientEvents> for MinusGamesGuiMessage {

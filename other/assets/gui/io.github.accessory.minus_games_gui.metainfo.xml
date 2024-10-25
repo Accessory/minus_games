@@ -5,7 +5,7 @@
     <url type="homepage">https://github.com/Accessory/minus_games</url>
     <url type="faq">https://github.com/Accessory/minus_games/blob/main/other/docs/quick_start.md</url>
     <name>Minus Games</name>
-    <summary>Download, sync and run a game</summary>
+    <summary>Download, sync and run games</summary>
     <launchable type="desktop-id">io.github.accessory.minus_games_gui.desktop</launchable>
     <content_rating type="oars-1.0" />
 
@@ -14,7 +14,7 @@
 
     <description>
         <p>
-            The Minus Games Gui offers an efficient solution for downloading, synchronizing, and
+            Minus Games offers an efficient solution for downloading, synchronizing, and
             running your games. It keeps your game files managed and up-to-date with the latest
             patches and updates from a Minus Games Server Instance. With seamless synchronization
             across devices, you can effortlessly continue your progress no matter where you are.
@@ -42,6 +42,11 @@
     </provides>
 
     <releases>
+        <release version="0.5.5" date="2024-10-11">
+            <description>
+                <p>Bug fixes</p>
+            </description>
+        </release>
         <release version="0.5.4" date="2024-10-11">
             <description>
                 <p>Bug fixes</p>

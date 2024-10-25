@@ -9,7 +9,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use textdistance::str::damerau_levenshtein;
-use tracing::trace;
+use tracing::{trace, warn};
 use walkdir::WalkDir;
 
 pub(crate) fn is_elf(path: &Path) -> bool {
@@ -34,14 +34,14 @@ pub(crate) fn is_elf(path: &Path) -> bool {
 pub fn find_name_in_folder_name(folder_name: &str) -> String {
     let mut end = 0;
 
-    for (pos, _) in folder_name.chars().enumerate().skip(1) {
-        let slice = &folder_name[pos..];
+    for (pos, _) in folder_name.as_bytes().iter().enumerate().skip(1) {
+        let slice = &folder_name.as_bytes()[pos..];
 
-        if slice.starts_with(" v") && slice.chars().nth(2).is_some_and(|i| i.is_ascii_digit()) {
+        if slice.starts_with(b" v") && slice.get(2).is_some_and(|i| i.is_ascii_digit()) {
             break;
         }
 
-        if slice.starts_with("-v") && slice.chars().nth(2).is_some_and(|i| i.is_ascii_digit()) {
+        if slice.starts_with(b"-v") && slice.get(2).is_some_and(|i| i.is_ascii_digit()) {
             break;
         }
         end = pos + 1;
@@ -70,6 +70,10 @@ pub fn save_game_file_infos(game_folder: &Path, config: &Configuration, game_inf
 
     let csv_name = format!("{}.csv", game_infos.folder_name.as_str());
     let csv_path = config.data_folder.join(csv_name);
+    if let Err(err) = std::fs::create_dir_all(config.data_folder.as_path()) {
+        warn!("Failed to create client data folder: {}", err);
+        return;
+    };
     let mut csv_writer = csv::Writer::from_path(csv_path.as_path()).unwrap();
     let cut_off = std::path::absolute(config.games_folder.as_path())
         .unwrap()
@@ -110,14 +114,18 @@ pub fn file_path_is_windows_exe(file_path: &Path) -> bool {
     file_path.is_file() && file_path.extension().is_some_and(|e| e == "exe")
 }
 
-pub fn find_all_exe_files(game_folder: &Path) -> Vec<String> {
+pub fn find_all_possible_game_exe_files(game_folder: &Path) -> Vec<String> {
     let mut files = Vec::new();
 
     for file_result in game_folder.read_dir().unwrap() {
         let file = file_result.unwrap();
         let file_path = file.path();
         if file_path_is_windows_exe(&file_path) {
-            files.push(file_path.file_name().unwrap().to_str().unwrap().to_string());
+            let file_name = file.file_name().to_str().unwrap().to_lowercase();
+
+            if !["uninstall.exe", "unins000.exe"].contains(&file_name.as_str()) {
+                files.push(file_path.file_name().unwrap().to_str().unwrap().to_string());
+            }
         }
     }
 
@@ -167,7 +175,7 @@ pub fn find_possible_save_dir_in_game_root(game_root: &Path) -> Option<Vec<Strin
 }
 
 pub fn get_closest_windows_exe(name: &str, folder: &Path) -> Option<String> {
-    let mut files: Vec<String> = find_all_exe_files(folder);
+    let mut files: Vec<String> = find_all_possible_game_exe_files(folder);
     if files.is_empty() {
         None
     } else {
@@ -212,7 +220,7 @@ pub fn get_game_exe_or_exe(folder: &Path) -> Option<String> {
 }
 
 pub fn get_closest_exe_from_folder(folder: &Path, name: &str) -> Option<String> {
-    let mut files: Vec<String> = find_all_exe_files(folder);
+    let mut files: Vec<String> = find_all_possible_game_exe_files(folder);
     if files.is_empty() {
         None
     } else {

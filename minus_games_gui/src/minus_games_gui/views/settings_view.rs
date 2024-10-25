@@ -5,7 +5,9 @@ use iced::widget::{
     button, checkbox, column, horizontal_space, pick_list, row, text, text_input, vertical_space,
     Column, Row,
 };
-use iced::{Fill, Theme};
+use iced::{Center, Fill, Theme};
+use minus_games_client::runtime::OFFLINE;
+use std::sync::atomic::Ordering::Relaxed;
 
 #[derive(Clone, Debug)]
 pub enum SettingInput {
@@ -116,6 +118,18 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
 
     settings = settings.push(vertical_space().height(MARGIN_DEFAULT));
 
+    let mut action_row = Row::new().spacing(HALF_MARGIN_DEFAULT);
+    if !OFFLINE.load(Relaxed) {
+        action_row = action_row.push(
+            button(text("Update all games").align_x(Center).width(Fill))
+                .on_press(MinusGamesGuiMessage::UpdateAllGames),
+        );
+    }
+    action_row = action_row.push(
+        button(text("Rescan Games folder").align_x(Center).width(Fill))
+            .on_press(MinusGamesGuiMessage::RescanGameFolder),
+    );
+
     row![
         horizontal_space().width(MARGIN_DEFAULT),
         column![
@@ -137,6 +151,8 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
             ],
             vertical_space().height(MARGIN_DEFAULT),
             settings,
+            action_row,
+            vertical_space().height(MARGIN_DEFAULT),
         ],
         horizontal_space().width(MARGIN_DEFAULT),
     ]
