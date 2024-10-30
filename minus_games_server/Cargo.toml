@@ -1,7 +1,10 @@
 [package]
 name = "minus_games_server"
-version = "0.5.5"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 axum = { version = "0", features = [

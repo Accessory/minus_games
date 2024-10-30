@@ -27,6 +27,7 @@ async fn main() {
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
     if !get_config().action.as_ref().is_some_and(|a| a == &ListJson) {
+        println!("Minus Games Version {}", env!("CARGO_PKG_VERSION"));
         println!("Config:");
         println!("{}", get_config());
     }

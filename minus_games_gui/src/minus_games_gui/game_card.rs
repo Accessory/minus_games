@@ -60,7 +60,8 @@ impl GameCard {
                     button(text("Play").width(Fill).align_x(Center))
                         .width(DEFAULT_MODAL_BUTTON_WIDTH)
                         .on_press(MinusGamesGuiMessage::Play(self.game.clone())),
-                ];
+                ]
+                .align_y(Center);
 
                 row = if self.is_installed {
                     row.push(

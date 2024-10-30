@@ -39,7 +39,7 @@ pub(crate) enum MinusGamesGuiMessage {
     Exit,
     Noop,
     CloseApplication(()),
-    WindowEvent(Event),
+    Event(Event),
     UpdateAllGames,
     RescanGameFolder,
 }

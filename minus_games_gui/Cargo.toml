@@ -1,7 +1,11 @@
 [package]
 name = "minus_games_gui"
-version = "0.5.5"
-edition = "2021"
+build = "build.rs"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 iced = { version="0.13" , features = ["image", "tokio", "svg"] }
@@ -17,3 +21,9 @@ clap = { version = "4", features = ["derive", "env", "string"] }
 image = {version = "0", features = ["jpeg"]}
 open = "5"
 strum = "0"
+
+[build-dependencies]
+vergen = {version = "9", features = ["build"]}
+vergen-git2 = { version = "1" }
+anyhow = "1"
+embed-resource = "2"

@@ -153,6 +153,21 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
             settings,
             action_row,
             vertical_space().height(MARGIN_DEFAULT),
+            column![text!(
+                "Minus Games Version {}  - Build on: {}",
+                env!("CARGO_PKG_VERSION"),
+                env!("VERGEN_BUILD_DATE")
+            )]
+            .align_x(Center)
+            .width(Fill),
+            column![text!(
+                "Git Commit Date: {} - Git Sha: {}",
+                env!("VERGEN_GIT_COMMIT_DATE"),
+                env!("VERGEN_GIT_SHA")
+            )]
+            .align_x(Center)
+            .width(Fill),
+            vertical_space().height(MARGIN_DEFAULT),
         ],
         horizontal_space().width(MARGIN_DEFAULT),
     ]

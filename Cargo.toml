@@ -16,3 +16,10 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = "symbols"
+
+[workspace.package]
+version = "0.5.5"
+edition = "2021"
+authors = ["Accessory"]
+repository = "https://github.com/Accessory/minus_games/"
+license = "MIT"

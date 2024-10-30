@@ -10,13 +10,16 @@ use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::runtime::get_gui_config;
 use iced::futures::{SinkExt, Stream};
+use iced::keyboard::key;
+use iced::mouse::Button;
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{Direction, Scrollbar};
 use iced::widget::{
     button, column, horizontal_space, row, scrollable, stack, text, text_input, Column,
 };
 use iced::{
-    event, stream, window, Center, Element, Event, Fill, Length, Size, Subscription, Task, Theme,
+    event, keyboard, mouse, stream, widget, window, Center, Element, Event, Fill, Length, Size,
+    Subscription, Task, Theme,
 };
 use minus_games_client::actions::delete::delete_game;
 use minus_games_client::actions::repair::{repair_all_games, repair_game};
@@ -64,6 +67,8 @@ pub struct MinusGamesGui {
     pub size: Size,
 }
 
+const FILTER_ID: &str = "FILTER_ID";
+
 impl MinusGamesGui {
     pub fn batch_subscription(&self) -> Subscription<MinusGamesGuiMessage> {
         Subscription::batch([
@@ -90,7 +95,7 @@ impl MinusGamesGui {
     }
 
     pub fn on_close(&self) -> Subscription<MinusGamesGuiMessage> {
-        event::listen().map(MinusGamesGuiMessage::WindowEvent)
+        event::listen().map(MinusGamesGuiMessage::Event)
     }
 
     pub fn run_events() -> impl Stream<Item = MinusGamesGuiMessage> {
@@ -178,6 +183,7 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::Created(game_cards) => {
                 self.game_cards = game_cards;
                 self.state = MinusGamesState::Ready;
+                return text_input::focus(FILTER_ID);
             }
             MinusGamesGuiMessage::Play(game) => {
                 self.files_to_download = 100;
@@ -283,15 +289,8 @@ impl MinusGamesGui {
                 info!("Client event listener closed!");
                 return window::get_latest().and_then(window::close);
             }
-            MinusGamesGuiMessage::WindowEvent(event) => {
-                if let Event::Window(window::Event::CloseRequested) = event {
-                    info!("Close Application!");
-                    return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
-                }
-                if let Event::Window(window::Event::Resized(size)) = event {
-                    self.size = size;
-                    return Task::none();
-                }
+            MinusGamesGuiMessage::Event(event) => {
+                return self.handle_event(event);
             }
             MinusGamesGuiMessage::Fullscreen => {
                 return window::get_latest()
@@ -312,7 +311,7 @@ impl MinusGamesGui {
                 } else {
                     window::get_latest()
                         .and_then(move |window| window::change_mode(window, window::Mode::Windowed))
-                }
+                };
             }
             MinusGamesGuiMessage::BackFromSettings(save) => {
                 if save {
@@ -414,6 +413,7 @@ impl MinusGamesGui {
                 column![
                     text("Games").size(TEXT),
                     text_input("Filter", &self.filter)
+                        .id(FILTER_ID)
                         .on_input(MinusGamesGuiMessage::FilterChanged)
                         .width(Fill)
                 ],
@@ -447,5 +447,34 @@ impl MinusGamesGui {
 
     pub fn get_theme(&self) -> Theme {
         self.theme.clone()
+    }
+
+    fn handle_event(&mut self, event: Event) -> Task<MinusGamesGuiMessage> {
+        if let Event::Keyboard(keyboard::Event::KeyPressed {
+            key: keyboard::Key::Named(key::Named::Tab),
+            modifiers,
+            ..
+        }) = event
+        {
+            return if modifiers.shift() {
+                widget::focus_previous()
+            } else {
+                widget::focus_next()
+            };
+        }
+        if self.state == MinusGamesState::Settings {
+            if let Event::Mouse(mouse::Event::ButtonPressed(Button::Back)) = event {
+                return Task::done(MinusGamesGuiMessage::BackFromSettings(false));
+            };
+        }
+        if let Event::Window(window::Event::CloseRequested) = event {
+            info!("Close Application!");
+            return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
+        }
+        if let Event::Window(window::Event::Resized(size)) = event {
+            self.size = size;
+            return Task::none();
+        }
+        Task::none()
     }
 }

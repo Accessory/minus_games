@@ -55,6 +55,16 @@ fn main() -> iced::Result {
         })
     });
     println!("{}", get_gui_config());
+    println!(
+        "Version: {} Build on: {}",
+        env!("VERGEN_GIT_COMMIT_DATE"),
+        env!("VERGEN_GIT_SHA")
+    );
+    println!(
+        "Build Source Date: {} - Git Hash: {}",
+        env!("CARGO_PKG_VERSION"),
+        env!("VERGEN_BUILD_DATE")
+    );
 
     OFFLINE.store(get_config().offline, Relaxed);
 

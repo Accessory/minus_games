@@ -25,11 +25,15 @@
 
     <screenshots>
         <screenshot type="default">
-            <image>https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/Screenshot_Gui_1.png</image>
+            <image>
+                https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/Screenshot_Gui_1.png
+            </image>
             <caption>Main Application</caption>
         </screenshot>
         <screenshot type="default">
-            <image>https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/Screenshot_Gui_2.png</image>
+            <image>
+                https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/Screenshot_Gui_2.png
+            </image>
             <caption>Settings</caption>
         </screenshot>
     </screenshots>
@@ -46,6 +50,11 @@
     </provides>
 
     <releases>
+        <release version="0.5.6" date="2024-10-11">
+            <description>
+                <p>General Improvements</p>
+            </description>
+        </release>
         <release version="0.5.5" date="2024-10-11">
             <description>
                 <p>Bug fixes</p>
