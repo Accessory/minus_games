@@ -46,6 +46,11 @@
     </provides>
 
     <releases>
+        <release version="0.5.7" date="2024-11-12">
+            <description>
+                <p>Fixes</p>
+            </description>
+        </release>
         <release version="0.5.6" date="2024-10-11">
             <description>
                 <p>General Improvements</p>

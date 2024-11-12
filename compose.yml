@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  minus_games_server:
+    build: .
+    volumes:
+      - /var/lib/minus_games_server/:/var/lib/minus_games_server/
+    ports:
+      - "8415:8415"
+    environment:
+      DATA_FOLDER: /var/lib/minus_games_server/data/
+      GAMES_FOLDER: /var/lib/minus_games_server/games/
+      IP: 0.0.0.0

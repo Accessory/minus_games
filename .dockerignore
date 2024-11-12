@@ -1,0 +1,16 @@
+target
+Dockerfile
+.dockerignore
+.git
+.gitignore
+other/
+.vscode/
+flatpak/
+.flatpak-builder/
+.idea/
+.env
+debug/
+target/
+build/
+*.pdb
+**/*.rs.bk

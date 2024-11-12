@@ -90,9 +90,17 @@ pub async fn download_to(download_config: DownloadConfig) {
 pub async fn download_loop(mut response: Response, to: &Path) {
     trace!("Download From: {} - To: {}", response.url(), to.display());
 
-    tokio::fs::create_dir_all(to.parent().unwrap())
-        .await
-        .unwrap();
+    let parent = to.parent().unwrap();
+    match tokio::fs::create_dir_all(to.parent().unwrap()).await {
+        Ok(_) => {}
+        Err(err) => {
+            warn!(
+                "Failed to create download directory - {} - Err: {}",
+                parent.display(),
+                err
+            );
+        }
+    }
 
     let mut download_file = match File::create(&to).await {
         Ok(file) => file,

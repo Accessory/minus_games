@@ -9,7 +9,6 @@ repository.workspace = true
 [dependencies]
 dotenvy = "0"
 clap = { version = "4", features = ["derive", "env", "string"] }
-home = "0"
 tracing = "0"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 serde = { version = "1", features = ["derive"] }
@@ -21,5 +20,4 @@ strum = "0"
 convert_case = "0"
 textdistance = "1"
 walkdir = "2"
-blake3 = "1"
 csv = "1"
