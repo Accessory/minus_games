@@ -9,7 +9,7 @@ repository.workspace = true
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7.3", features = ["codec"] }
-reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream"] }
+reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream", "rustls-tls"] }
 clap = { version = "4", features = ["derive", "env"] }
 dotenvy = "0"
 serde = { version = "1", features = ["derive"] }

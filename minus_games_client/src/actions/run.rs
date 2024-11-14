@@ -93,57 +93,54 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
         return;
     }
 
+    let path = infos
+        .get_windows_exe(get_config().client_games_folder.as_path())
+        .unwrap();
+    let path_str = path.as_os_str().to_str().unwrap();
+    let prefix = get_config().wine_prefix.as_ref().unwrap().to_str().unwrap();
+    let wine = get_config().wine_exe.as_ref().unwrap().to_str().unwrap();
+    let cwd = get_config()
+        .get_game_path(infos.folder_name.as_str())
+        .to_str()
+        .unwrap()
+        .to_string();
+    let game_id = format!("umu-{}", &infos.name).to_case(Case::Title);
+
     if has_gamemoderun() {
         send_event("Running game via wine on linux with gamemode".into()).await;
-        let path = infos
-            .get_windows_exe(get_config().client_games_folder.as_path())
-            .unwrap();
-        let path_str = path.as_os_str().to_str().unwrap();
-        let prefix = get_config().wine_prefix.as_ref().unwrap().to_str().unwrap();
-        let exe = get_config().wine_exe.as_ref().unwrap().to_str().unwrap();
-        let cwd = get_config()
-            .get_game_path(infos.folder_name.as_str())
-            .to_str()
-            .unwrap()
-            .to_string();
-
+        if get_config().verbose {
+            debug!("Running Cmd");
+            debug!(
+                r#"cd "{}" && WINEPREFIX="{}" GAMEID="{}" gamemoderun "{}" "{}""#,
+                cwd, prefix, game_id, wine, path_str
+            );
+        }
         handle_command_output(
             Command::new("gamemoderun")
                 .current_dir(&cwd)
-                .arg(exe)
-                .arg(path_str)
                 .env("WINEPREFIX", prefix)
-                .env(
-                    "GAMEID",
-                    format!("umu-{}", &infos.name).to_case(Case::Title),
-                )
+                .env("GAMEID", game_id)
+                .arg(wine)
+                .arg(path_str)
                 .output()
                 .await,
             &infos.name,
         )
     } else {
-        send_event("Running game via wine on linux without gamemode".into()).await;
-        let path = infos
-            .get_windows_exe(get_config().client_games_folder.as_path())
-            .unwrap();
-        let path_str = path.as_os_str().to_str().unwrap();
-        let prefix = get_config().wine_prefix.as_ref().unwrap().to_str().unwrap();
-        let exe = get_config().wine_exe.as_ref().unwrap().to_str().unwrap();
-        let cwd = get_config()
-            .get_game_path(infos.folder_name.as_str())
-            .to_str()
-            .unwrap()
-            .to_string();
-
+        send_event("Running game via wine on linux without gamemoderun".into()).await;
+        if get_config().verbose {
+            debug!("Running Cmd");
+            debug!(
+                r#"cd "{}" && WINEPREFIX="{}" GAMEID={} "{}" "{}""#,
+                cwd, prefix, game_id, wine, path_str
+            );
+        }
         handle_command_output(
-            Command::new(exe)
+            Command::new(wine)
                 .current_dir(&cwd)
                 .arg(path_str)
                 .env("WINEPREFIX", prefix)
-                .env(
-                    "GAMEID",
-                    format!("umu-{}", &infos.name).to_case(Case::Title),
-                )
+                .env("GAMEID", game_id)
                 .output()
                 .await,
             &infos.name,
@@ -207,15 +204,15 @@ fn handle_command_output(output: Result<Output, impl Error>, game: &str) {
     match output {
         Ok(output) => {
             if get_config().verbose {
-                debug!("Exit with status: {}", output.status);
                 debug!(
                     "Stdout:\n{}",
                     String::from_utf8(output.stdout).unwrap_or_default()
                 );
                 debug!(
-                    "Stdin:\n{}",
+                    "Stderr:\n{}",
                     String::from_utf8(output.stderr).unwrap_or_default()
                 );
+                debug!("Exit with status: {}", output.status);
             }
         }
         Err(err) => {
