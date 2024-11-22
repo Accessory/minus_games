@@ -32,11 +32,9 @@ utoipa = { version = "5", features = [
 ] }
 utoipa-swagger-ui = { version = "8", features = ["axum"] }
 chrono = { version = "0", features = ["serde"] }
-hyper = { version = "1", features = ["server"] }
 clap = { version = "4", features = ["derive", "env", "string"] }
 tower-http = { version = "0", features = ["full"] }
 tower = { version = "0" }
-home = "0"
 glob = "0"
 mime = "0"
 futures-util = "0"
@@ -46,4 +44,5 @@ minus_games_models = { path = "../minus_games_models" }
 minus_games_utils = { path = "../minus_games_utils" }
 minus_games_finder = { path = "../minus_games_finder" }
 log = "0.4.21"
+utoipauto = "0"
 url = "2"

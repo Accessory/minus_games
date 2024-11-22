@@ -131,15 +131,20 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                     .unwrap();
                 writer
                     .write_all(
-                        format!("CLIENT_FOLDER=\"{}\"{}", settings.client_folder.replace("\\", "\\\\"), NEW_LINE)
-                            .as_bytes(),
+                        format!(
+                            "CLIENT_FOLDER=\"{}\"{}",
+                            settings.client_folder.replace("\\", "\\\\"),
+                            NEW_LINE
+                        )
+                        .as_bytes(),
                     )
                     .unwrap();
                 writer
                     .write_all(
                         format!(
                             "CLIENT_GAMES_FOLDER=\"{}\"{}",
-                            settings.client_games_folder.replace("\\", "\\\\"), NEW_LINE
+                            settings.client_games_folder.replace("\\", "\\\\"),
+                            NEW_LINE
                         )
                         .as_bytes(),
                     )

@@ -1,6 +1,6 @@
 use super::sync::{download_sync_for_game, sync_all_game_files, upload_sync_for_game};
 use crate::actions::download::download_game;
-use crate::runtime::{get_config, send_event, MinusGamesClientEvents};
+use crate::runtime::{get_config, send_event, MinusGamesClientEvents, STOP_DOWNLOAD};
 #[cfg(target_family = "unix")]
 use crate::utils::{add_permissions, is_not_executable, make_executable};
 #[cfg(target_family = "unix")]
@@ -13,6 +13,7 @@ use std::os::unix::fs::PermissionsExt;
 #[cfg(target_family = "unix")]
 use std::path::Path;
 use std::process::Output;
+use std::sync::atomic::Ordering::Relaxed;
 use tokio::process::Command;
 use tracing::debug;
 use tracing::warn;
@@ -26,6 +27,11 @@ pub async fn sync_run_game(game: &str) {
 }
 
 pub async fn run_game(game: &str) {
+    if get_config().is_game_dirty(game) {
+        warn!("Game is dirty - repair required!");
+        return;
+    }
+
     let infos = match get_config().get_game_infos(game) {
         Some(infos) => infos,
         None => {
@@ -50,6 +56,7 @@ pub async fn run_game(game: &str) {
 }
 
 pub async fn run_game_synced(game: &str) {
+    STOP_DOWNLOAD.store(false, Relaxed);
     send_event(MinusGamesClientEvents::CurrentGame(game.to_string())).await;
     send_event("Sync game files.".into()).await;
     sync_all_game_files(game).await;
@@ -104,7 +111,7 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
         .to_str()
         .unwrap()
         .to_string();
-    let game_id = format!("umu-{}", &infos.name).to_case(Case::Title);
+    let game_id = format!("umu-{}", &infos.name).to_case(Case::Kebab);
 
     if has_gamemoderun() {
         send_event("Running game via wine on linux with gamemode".into()).await;

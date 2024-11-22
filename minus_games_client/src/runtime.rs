@@ -86,6 +86,7 @@ pub fn reset_client() {
 }
 
 pub static OFFLINE: AtomicBool = AtomicBool::new(false);
+pub static STOP_DOWNLOAD: AtomicBool = AtomicBool::new(false);
 
 pub async fn get_all_games() -> Vec<String> {
     let mut installed_games = get_installed_games();

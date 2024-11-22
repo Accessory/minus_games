@@ -1,8 +1,9 @@
-use crate::runtime::{get_client, send_event, MinusGamesClientEvents};
+use crate::runtime::{get_client, send_event, MinusGamesClientEvents, STOP_DOWNLOAD};
 use chrono::DateTime;
 use minus_games_utils::set_file_modified_time;
 use reqwest::Response;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -43,6 +44,9 @@ impl DownloadManager {
         ))
         .await;
         for mut config in self.download_list.drain(0..) {
+            if STOP_DOWNLOAD.load(Relaxed) {
+                break;
+            }
             let pass = semaphore.clone().acquire_owned().await.unwrap();
             config.to_final = Some(path.join(config.to.as_str()));
             // println!("{}", config.to_final.as_ref().unwrap().display());
@@ -111,6 +115,9 @@ pub async fn download_loop(mut response: Response, to: &Path) {
     };
 
     loop {
+        if STOP_DOWNLOAD.load(Relaxed) {
+            break;
+        }
         let read_result = response.chunk().await.unwrap();
 
         if let Some(bytes) = read_result {

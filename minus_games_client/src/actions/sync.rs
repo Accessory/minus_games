@@ -3,6 +3,7 @@ use crate::actions::download::download_all_files;
 use crate::offline_to_return;
 use crate::runtime::{
     get_client, get_config, get_installed_games, send_event, MinusGamesClientEvents, OFFLINE,
+    STOP_DOWNLOAD,
 };
 use chrono::{DateTime, Utc};
 use minus_games_models::game_infos::GameInfos;
@@ -27,17 +28,27 @@ pub async fn sync_all_game_files(game: &str) {
     let has_new_game_infos = get_client().download_game_infos_if_modified(game).await;
     let has_new_game_files = get_client().download_game_files_if_modified(game).await;
     send_event(MinusGamesClientEvents::FinishedSyncFileInfos).await;
-    if has_new_game_files || has_new_game_infos {
+    if has_new_game_files || has_new_game_infos || get_config().is_game_dirty(game) {
+        get_config().mark_games_as_dirty(game);
+        STOP_DOWNLOAD.store(false, Relaxed);
         sync_game_files_and_download(game).await;
+        if !STOP_DOWNLOAD.load(Relaxed) {
+            get_config().unmark_games_as_dirty(game);
+        }
     }
 }
 
 pub async fn force_sync_all_game_files(game: &str) {
     offline_to_return!();
+    get_config().mark_games_as_dirty(game);
+    STOP_DOWNLOAD.store(false, Relaxed);
     get_client().download_game_infos_if_modified(game).await;
     get_client().download_game_files_if_modified(game).await;
     send_event(MinusGamesClientEvents::FinishedSyncFileInfos).await;
     sync_game_files_and_download(game).await;
+    if !STOP_DOWNLOAD.load(Relaxed) {
+        get_config().unmark_games_as_dirty(game);
+    }
 }
 
 async fn sync_game_files_and_download(game: &str) {
@@ -188,7 +199,7 @@ fn resolve_sync_path(to_resolve: &str, game_infos: &GameInfos) -> PathBuf {
                     rtn.push(value);
                 }
             }
-            #[cfg(target_family = "unix")]
+            #[cfg(not(target_family = "windows"))]
             "$UNITY_CONFIG" => {
                 if let Some(value) = resolve_unity_config_path(game_infos) {
                     rtn.push(value);

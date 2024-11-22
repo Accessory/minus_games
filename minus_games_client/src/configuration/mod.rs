@@ -1,7 +1,8 @@
 use crate::utils::{
-    get_csv_name, get_json_name, is_or_none, is_or_none_path_buf, is_or_none_string,
+    get_csv_name, get_dirty_name, get_json_name, is_or_none, is_or_none_path_buf, is_or_none_string,
 };
 use clap::{command, Parser, Subcommand};
+use log::warn;
 use minus_games_models::game_file_info::GameFileInfo;
 use minus_games_models::game_infos::GameInfos;
 use minus_games_utils::ClientFolder;
@@ -116,6 +117,11 @@ impl Configuration {
         self.client_folder.join(csv_name)
     }
 
+    pub fn get_dirty_path_for_game(&self, game: &str) -> PathBuf {
+        let csv_name = get_dirty_name(game);
+        self.client_folder.join(csv_name)
+    }
+
     pub fn get_csv_path(&self, csv_name: &str) -> PathBuf {
         self.client_folder.join(csv_name)
     }
@@ -124,6 +130,33 @@ impl Configuration {
         let csv_path = self.get_csv_path_for_game(game);
         let mut reader = csv::ReaderBuilder::new().from_path(csv_path).ok()?;
         Some(reader.deserialize().map(|i| i.unwrap()).collect())
+    }
+
+    pub fn mark_games_as_dirty(&self, game: &str) {
+        let dirty_path = self.get_dirty_path_for_game(game);
+        match File::create(dirty_path) {
+            Ok(_) => {}
+            Err(err) => {
+                warn!("Could not mark a game as dirty! - Game: {} - {}", game, err);
+            }
+        }
+    }
+
+    pub fn unmark_games_as_dirty(&self, game: &str) {
+        let dirty_path = self.get_dirty_path_for_game(game);
+        if dirty_path.is_file() {
+            match std::fs::remove_file(dirty_path.as_path()) {
+                Ok(_) => {}
+                Err(err) => {
+                    warn!("Could not unmark a dirty game! - Game: {} - {}", game, err);
+                }
+            }
+        }
+    }
+
+    pub fn is_game_dirty(&self, game: &str) -> bool {
+        let dirty_path = self.get_dirty_path_for_game(game);
+        dirty_path.is_file()
     }
 }
 

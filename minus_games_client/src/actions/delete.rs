@@ -42,6 +42,8 @@ pub fn delete_game(game: &str, purge: bool) {
             warn!("Json not found: {}", err);
         }
     }
+
+    get_config().unmark_games_as_dirty(game);
 }
 
 pub fn delete_game_info_files(game: &str) {

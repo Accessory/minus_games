@@ -27,10 +27,11 @@ use minus_games_client::actions::run::run_game_synced;
 use minus_games_client::actions::scan::scan_for_games;
 use minus_games_client::runtime::{
     get_client, get_config, get_installed_games, reset_client, send_event, set_sender,
-    MinusGamesClientEvents,
+    MinusGamesClientEvents, STOP_DOWNLOAD,
 };
 use minus_games_models::game_infos::GameInfos;
 use settings::override_config;
+use std::sync::atomic::Ordering::Relaxed;
 use tracing::{debug, info};
 
 pub mod configuration;
@@ -354,6 +355,10 @@ impl MinusGamesGui {
                     async { scan_for_games() },
                     MinusGamesGuiMessage::FinishedRepairing,
                 );
+            }
+            MinusGamesGuiMessage::StopDownload => {
+                info!("Stop Download");
+                STOP_DOWNLOAD.store(true, Relaxed);
             }
         };
         Task::none()
