@@ -65,8 +65,7 @@ pub async fn run_game_synced(game: &str) {
     download_sync_for_game(game).await;
     send_event(format!("Run Game {game}").into()).await;
     send_event(MinusGamesClientEvents::StartGame(game.to_string())).await;
-    let run_game_copy = game.to_string();
-    run_game(&run_game_copy).await;
+    run_game(game).await;
     send_event(MinusGamesClientEvents::CloseGame(game.to_string())).await;
     send_event("Upload Saves.".into()).await;
     upload_sync_for_game(game).await;
@@ -112,20 +111,26 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
         .unwrap()
         .to_string();
     let game_id = format!("umu-{}", &infos.name).to_case(Case::Kebab);
+    let protonpath = if wine.contains("umu") {
+        "GE-Proton"
+    } else {
+        wine
+    };
 
     if has_gamemoderun() {
         send_event("Running game via wine on linux with gamemode".into()).await;
         if get_config().verbose {
             debug!("Running Cmd");
             debug!(
-                r#"cd "{}" && WINEPREFIX="{}" GAMEID="{}" gamemoderun "{}" "{}""#,
-                cwd, prefix, game_id, wine, path_str
+                r#"cd "{}" && WINEPREFIX="{}" PROTONPATH={} GAMEID="{}" gamemoderun "{}" "{}""#,
+                cwd, prefix, protonpath, game_id, wine, path_str
             );
         }
         handle_command_output(
             Command::new("gamemoderun")
                 .current_dir(&cwd)
                 .env("WINEPREFIX", prefix)
+                .env("PROTONPATH", protonpath)
                 .env("GAMEID", game_id)
                 .arg(wine)
                 .arg(path_str)
@@ -138,8 +143,8 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
         if get_config().verbose {
             debug!("Running Cmd");
             debug!(
-                r#"cd "{}" && WINEPREFIX="{}" GAMEID={} "{}" "{}""#,
-                cwd, prefix, game_id, wine, path_str
+                r#"cd "{}" && WINEPREFIX="{}" PROTONPATH={} GAMEID="{}" gamemoderun "{}" "{}""#,
+                cwd, prefix, protonpath, game_id, wine, path_str
             );
         }
         handle_command_output(
@@ -147,6 +152,7 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
                 .current_dir(&cwd)
                 .arg(path_str)
                 .env("WINEPREFIX", prefix)
+                .env("PROTONPATH", protonpath)
                 .env("GAMEID", game_id)
                 .output()
                 .await,
