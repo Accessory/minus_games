@@ -17,7 +17,7 @@ impl From<CacheFolder> for OsStr {
     fn from(_value: CacheFolder) -> Self {
         CACHE_FOLDER_PATH
             .get_or_init(|| match home::home_dir() {
-                None => PathBuf::from("./"),
+                None => std::env::current_dir().unwrap().join("cache"),
                 Some(value) => value.join(".config").join("minus_games").join("cache"),
             })
             .as_os_str()
@@ -29,12 +29,70 @@ pub struct DataFolder {}
 static DATA_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
 
 impl From<DataFolder> for OsStr {
+    #[cfg(not(debug_assertions))]
     fn from(_value: DataFolder) -> Self {
         DATA_FOLDER_PATH
-            .get_or_init(|| match home::home_dir() {
-                None => PathBuf::from("./"),
-                Some(value) => value.join(".config").join("minus_games").join("data"),
+            .get_or_init(|| match dirs::data_dir() {
+                None => std::env::current_dir().unwrap().join("data"),
+                Some(value) => value.join("minus_games").join("data"),
             })
+            .as_os_str()
+            .into()
+    }
+
+    #[cfg(debug_assertions)]
+    fn from(_value: DataFolder) -> Self {
+        DATA_FOLDER_PATH
+            .get_or_init(|| std::env::current_dir().unwrap().join("data"))
+            .as_os_str()
+            .into()
+    }
+}
+pub struct GamesFolder {}
+
+static GAMES_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
+
+impl From<GamesFolder> for OsStr {
+    #[cfg(not(debug_assertions))]
+    fn from(_value: GamesFolder) -> Self {
+        GAMES_FOLDER_PATH
+            .get_or_init(|| match dirs::data_dir() {
+                None => std::env::current_dir().unwrap().join("games"),
+                Some(value) => value.join("minus_games").join("games"),
+            })
+            .as_os_str()
+            .into()
+    }
+
+    #[cfg(debug_assertions)]
+    fn from(_value: GamesFolder) -> Self {
+        GAMES_FOLDER_PATH
+            .get_or_init(|| std::env::current_dir().unwrap().join("games"))
+            .as_os_str()
+            .into()
+    }
+}
+
+pub struct ClientGamesFolder {}
+
+static CLIENT_GAMES_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
+
+impl From<ClientGamesFolder> for OsStr {
+    #[cfg(not(debug_assertions))]
+    fn from(_value: ClientGamesFolder) -> Self {
+        CLIENT_GAMES_FOLDER_PATH
+            .get_or_init(|| match dirs::data_dir() {
+                None => std::env::current_dir().unwrap().join("client_games"),
+                Some(value) => value.join("minus_games").join("client_games"),
+            })
+            .as_os_str()
+            .into()
+    }
+
+    #[cfg(debug_assertions)]
+    fn from(_value: ClientGamesFolder) -> Self {
+        CLIENT_GAMES_FOLDER_PATH
+            .get_or_init(|| std::env::current_dir().unwrap().join("client_games"))
             .as_os_str()
             .into()
     }
@@ -45,34 +103,40 @@ pub struct ClientFolder {}
 static CLIENT_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
 
 impl From<ClientFolder> for OsStr {
+    #[cfg(debug_assertions)]
     fn from(_: ClientFolder) -> Self {
         CLIENT_FOLDER_PATH
-            .get_or_init(|| match home::home_dir() {
-                None => PathBuf::from("./"),
-                Some(value) => value
-                    .join(".config")
-                    .join("minus_games")
-                    .join("client_folder"),
+            .get_or_init(|| std::env::current_dir().unwrap().join("client"))
+            .as_os_str()
+            .into()
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn from(_: ClientFolder) -> Self {
+        CLIENT_FOLDER_PATH
+            .get_or_init(|| match dirs::config_dir() {
+                None => std::env::current_dir().unwrap().join("client_folder"),
+                Some(value) => value.join("minus_games").join("client_folder"),
             })
             .as_os_str()
             .into()
     }
 }
 
-static CWD_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
+// static CWD_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
 
-pub struct CurrentDir {}
+// pub struct CurrentDir {}
 
-impl From<CurrentDir> for OsStr {
-    fn from(_value: CurrentDir) -> Self {
-        CWD_FOLDER_PATH
-            .get_or_init(|| {
-                std::env::current_dir().expect("Could not get the current working directory")
-            })
-            .as_os_str()
-            .into()
-    }
-}
+// impl From<CurrentDir> for OsStr {
+//     fn from(_value: CurrentDir) -> Self {
+//         CWD_FOLDER_PATH
+//             .get_or_init(|| {
+//                 std::env::current_dir().expect("Could not get the current working directory")
+//             })
+//             .as_os_str()
+//             .into()
+//     }
+// }
 
 pub fn create_hash_from_string(value: &str) -> String {
     const CHARS: [char; 62] = [

@@ -1,13 +1,13 @@
 use clap::Parser;
-use minus_games_utils::CurrentDir;
 use minus_games_utils::DataFolder;
+use minus_games_utils::GamesFolder;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug, Serialize, Deserialize)]
 #[command(author, version, about, long_about = None)]
 pub struct Configuration {
-    #[arg(long, default_value = CurrentDir {}, env)]
+    #[arg(long, default_value = GamesFolder {}, env)]
     pub games_folder: PathBuf,
     #[arg(long, default_value = DataFolder {}, env)]
     pub data_folder: PathBuf,

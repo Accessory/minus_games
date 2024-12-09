@@ -6,7 +6,7 @@ use log::warn;
 use minus_games_models::game_file_info::GameFileInfo;
 use minus_games_models::game_infos::GameInfos;
 use minus_games_utils::ClientFolder;
-use minus_games_utils::CurrentDir;
+use minus_games_utils::ClientGamesFolder;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::fs::File;
@@ -74,7 +74,7 @@ pub struct Configuration {
     pub verbose: bool,
     #[arg(short, long, default_value = "false", env)]
     pub offline: bool,
-    #[arg(long, default_value = CurrentDir {}, env)]
+    #[arg(long, default_value = ClientGamesFolder {}, env)]
     pub client_games_folder: PathBuf,
     #[arg(long, env = "MINUS_GAMES_USERNAME")]
     pub username: Option<String>,

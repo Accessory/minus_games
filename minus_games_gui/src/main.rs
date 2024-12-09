@@ -49,6 +49,7 @@ fn main() -> iced::Result {
                 if ["--fullscreen"].contains(&item.as_str()) {
                     continue;
                 }
+                parse_list.push(item);
             }
 
             Configuration::parse_from(parse_list)
