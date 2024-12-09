@@ -3,7 +3,7 @@
 <component type="console-application">
     <id>io.github.accessory.minus_games_client</id>
     <url type="homepage">https://github.com/Accessory/minus_games</url>
-    <url type="faq">https://github.com/Accessory/minus_games/blob/main/other/docs/quick_start.md</url>
+    <url type="faq">https://accessory.github.io/minus_games_user_guide/</url>
     <name>Minus Games Client</name>
     <summary>Download, sync and run games</summary>
     <content_rating type="oars-1.0" />
