@@ -50,6 +50,11 @@
     </provides>
 
     <releases>
+        <release version="0.6.0" date="2024-11-22">
+            <description>
+                <p>Cleanup</p>
+            </description>
+        </release>
         <release version="0.5.8" date="2024-11-22">
             <description>
                 <p>Better Downloads</p>
