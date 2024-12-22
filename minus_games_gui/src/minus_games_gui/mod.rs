@@ -396,21 +396,28 @@ impl MinusGamesGui {
 
     fn create_ready_view(&self) -> Column<MinusGamesGuiMessage> {
         if self.game_cards.is_empty() {
-            return column![row![
-                text("No Games found...").size(50),
-                horizontal_space().width(Fill),
-                button("Reload")
-                    .on_press(MinusGamesGuiMessage::Reload)
-                    .padding(TOP_BUTTON),
-                horizontal_space().width(HALF_MARGIN_DEFAULT),
-                button("Settings")
-                    .on_press(MinusGamesGuiMessage::Settings)
-                    .padding(TOP_BUTTON),
-                horizontal_space().width(MARGIN_DEFAULT),
-                button("Quit")
-                    .on_press(MinusGamesGuiMessage::CloseApplication(()))
-                    .padding(TOP_BUTTON)
-            ]];
+            return column![
+                row![
+                    horizontal_space().width(Fill),
+                    text("No Games found...").size(50),
+                    horizontal_space().width(Fill),
+                ],
+                row![
+                    horizontal_space().width(Fill),
+                    button("Reload")
+                        .on_press(MinusGamesGuiMessage::Reload)
+                        .padding(TOP_BUTTON),
+                    horizontal_space().width(MARGIN_DEFAULT),
+                    button("Settings")
+                        .on_press(MinusGamesGuiMessage::Settings)
+                        .padding(TOP_BUTTON),
+                    horizontal_space().width(MARGIN_DEFAULT),
+                    button("Quit")
+                        .on_press(MinusGamesGuiMessage::CloseApplication(()))
+                        .padding(TOP_BUTTON),
+                    horizontal_space().width(Fill),
+                ]
+            ];
         }
         let mut rtn = Column::with_capacity(self.game_cards.len() + 1).spacing(SPACING_DEFAULT);
         rtn = rtn.push(

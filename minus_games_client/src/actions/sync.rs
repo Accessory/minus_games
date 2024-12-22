@@ -215,11 +215,50 @@ fn resolve_sync_path(to_resolve: &str, game_infos: &GameInfos) -> PathBuf {
                     rtn.push(value);
                 }
             }
+            #[cfg(target_family = "windows")]
+            "$APPDATA_ROAMING" => {
+                if let Some(value) = get_appdata_roaming() {
+                    rtn.push(value);
+                }
+            }
+            #[cfg(not(target_family = "windows"))]
+            "$APPDATA_ROAMING" => {
+                if let Some(value) = get_appdata_roaming(game_infos) {
+                    rtn.push(value);
+                }
+            }
             _ => rtn.push(part_str),
         }
     }
 
     rtn
+}
+
+#[cfg(target_family = "windows")]
+fn get_appdata_roaming() -> Option<PathBuf> {
+    let appdata = std::env::var("APPDATA").ok()?;
+    Some(PathBuf::from(appdata))
+}
+
+#[cfg(not(target_family = "windows"))]
+fn get_appdata_roaming(game_infos: &GameInfos) -> Option<PathBuf> {
+    if let Ok(app_data) = std::env::var("APPDATA") {
+        return Some(PathBuf::from(app_data));
+    }
+    let is_wine = check_if_is_wine(game_infos);
+    if is_wine {
+        let wine_prefix = get_config().wine_prefix.as_ref()?;
+        let user = std::env::var("USER").ok()?;
+        let rtn = wine_prefix
+            .join("drive_c")
+            .join("users")
+            .join(user)
+            .join("AppData")
+            .join("Roaming");
+        Some(rtn)
+    } else {
+        None
+    }
 }
 
 #[cfg(target_family = "windows")]
