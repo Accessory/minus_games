@@ -3,10 +3,13 @@ use crate::minus_games_client::MinusGamesClient;
 use crate::runtime::MinusGamesClientEvents::{LogInfoMessage, LogInfoStaticMessage};
 use crate::utils::get_folders_in_path;
 use clap::Parser;
+use log::warn;
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::Relaxed;
+use std::sync::atomic::{AtomicBool, AtomicU32};
 use tokio::sync::OnceCell;
+use tracing::debug;
 
 #[derive(Clone, strum::Display)]
 pub enum MinusGamesClientEvents {
@@ -125,6 +128,49 @@ pub fn get_installed_games() -> Vec<String> {
         .into_iter()
         .map(|i| i.file_stem().unwrap().to_str().unwrap().to_string())
         .collect()
+}
+
+pub static CURRENT_GAME_PROCESS_ID: AtomicU32 = AtomicU32::new(u32::MAX);
+
+#[cfg(target_family = "windows")]
+pub fn kill_current_running_game() {
+    let process_id = CURRENT_GAME_PROCESS_ID.load(Relaxed);
+    if process_id != u32::MAX {
+        debug!("Kill process {process_id}");
+        match std::process::Command::new("taskkill")
+            .arg("/F")
+            .arg("/PID")
+            .arg(process_id.to_string())
+            .output()
+        {
+            Ok(_) => {}
+            Err(err) => {
+                warn!("Failed to execute kill command: {}", err);
+            }
+        };
+    } else {
+        warn!("Currently no running game found");
+    }
+}
+
+#[cfg(not(target_family = "windows"))]
+pub fn kill_current_running_game() {
+    let process_id = CURRENT_GAME_PROCESS_ID.load(Relaxed);
+    if process_id != u32::MAX {
+        debug!("Kill process {process_id}");
+        match std::process::Command::new("pkill")
+            .arg("-P")
+            .arg(process_id.to_string())
+            .output()
+        {
+            Ok(_info) => {}
+            Err(err) => {
+                warn!("Failed to execute kill command: {}", err);
+            }
+        };
+    } else {
+        warn!("Currently no running game found");
+    }
 }
 
 #[macro_export]

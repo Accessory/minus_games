@@ -43,6 +43,7 @@ pub(crate) enum MinusGamesGuiMessage {
     UpdateAllGames,
     RescanGameFolder,
     StopDownload,
+    KillCurrentGame,
 }
 
 impl From<MinusGamesClientEvents> for MinusGamesGuiMessage {

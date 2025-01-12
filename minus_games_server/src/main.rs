@@ -113,9 +113,9 @@ async fn redirect_to_openapi() -> Redirect {
 }
 
 #[utoipa::path(
-get,
-path = "/health",
-responses((status = 200, description = "Server is active and available")),
+    get,
+    path = "/health",
+    responses((status = 200, description = "Server is active and available")),
 )]
 async fn health() -> Response {
     ().into_response()

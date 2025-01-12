@@ -8,6 +8,7 @@ use crate::minus_games_gui::style_constants::{
 };
 use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
+use crate::minus_games_gui::widgets::highlighter::Highlighter;
 use crate::runtime::get_gui_config;
 use iced::futures::{SinkExt, Stream};
 use iced::keyboard::key;
@@ -15,7 +16,8 @@ use iced::mouse::Button;
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{Direction, Scrollbar};
 use iced::widget::{
-    button, column, horizontal_space, row, scrollable, stack, text, text_input, Column,
+    button, column, horizontal_space, row, scrollable, stack, text, text_input, vertical_space,
+    Column,
 };
 use iced::{
     event, keyboard, mouse, stream, widget, window, Center, Element, Event, Fill, Length, Size,
@@ -26,8 +28,8 @@ use minus_games_client::actions::repair::{repair_all_games, repair_game};
 use minus_games_client::actions::run::run_game_synced;
 use minus_games_client::actions::scan::scan_for_games;
 use minus_games_client::runtime::{
-    get_client, get_config, get_installed_games, reset_client, send_event, set_sender,
-    MinusGamesClientEvents, STOP_DOWNLOAD,
+    get_client, get_config, get_installed_games, kill_current_running_game, reset_client,
+    send_event, set_sender, MinusGamesClientEvents, STOP_DOWNLOAD,
 };
 use minus_games_models::game_infos::GameInfos;
 use settings::override_config;
@@ -42,6 +44,7 @@ mod settings;
 mod style_constants;
 mod utils;
 mod views;
+mod widgets;
 
 #[derive(Default, Copy, Clone, Debug, Eq, PartialEq)]
 pub(crate) enum MinusGamesState {
@@ -199,7 +202,7 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::Delete(game) => {
                 return Task::perform(
                     async move {
-                        delete_game(&game, false);
+                        delete_game(&game, true);
                     },
                     MinusGamesGuiMessage::FinishedDelete,
                 );
@@ -360,6 +363,9 @@ impl MinusGamesGui {
                 info!("Stop Download");
                 STOP_DOWNLOAD.store(true, Relaxed);
             }
+            MinusGamesGuiMessage::KillCurrentGame => {
+                kill_current_running_game();
+            }
         };
         Task::none()
     }
@@ -419,7 +425,8 @@ impl MinusGamesGui {
                 ]
             ];
         }
-        let mut rtn = Column::with_capacity(self.game_cards.len() + 1).spacing(SPACING_DEFAULT);
+        let mut rtn = Column::with_capacity(self.game_cards.len() + 1);
+        // .spacing(SPACING_DEFAULT);
         rtn = rtn.push(
             row![
                 column![
@@ -444,13 +451,16 @@ impl MinusGamesGui {
             ]
             .align_y(Center),
         );
+        rtn = rtn.push(vertical_space().height(HALF_MARGIN_DEFAULT));
         for game_card in self.game_cards.iter() {
             if game_card
                 .game
                 .to_lowercase()
                 .contains(self.filter.trim().to_lowercase().as_str())
             {
-                rtn = rtn.push(row![game_card.view()].spacing(SPACING_DEFAULT));
+                rtn = rtn.push(Highlighter::new(
+                    row![game_card.view()].spacing(SPACING_DEFAULT).into(),
+                ));
             }
         }
 
@@ -474,6 +484,9 @@ impl MinusGamesGui {
                 widget::focus_next()
             };
         }
+        // if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
+        // println!("Position {:?}", position)
+        // }
         if self.state == MinusGamesState::Settings {
             if let Event::Mouse(mouse::Event::ButtonPressed(Button::Back)) = event {
                 return Task::done(MinusGamesGuiMessage::BackFromSettings(false));

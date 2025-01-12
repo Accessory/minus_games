@@ -50,7 +50,7 @@ pub(crate) fn get_rpgm_name(game_root: &Path) -> Option<String> {
             name = name.to_case(Case::Title);
             return Some(name);
         }
-        let folder_name = game_root.iter().last().unwrap().to_str().unwrap();
+        let folder_name = game_root.iter().next_back().unwrap().to_str().unwrap();
         return Some(find_name_in_folder_name(folder_name));
     }
     None

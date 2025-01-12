@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-axum = { version = "0", features = [
+axum = { version = "0.8", features = [
     "tokio",
     "tower-log",
     "query",
@@ -16,7 +16,7 @@ axum = { version = "0", features = [
     "multipart",
     "form"
 ] }
-axum-extra = { version = "0", features = ["async-read-body","cookie"] }
+axum-extra = { version = "0.10", features = ["async-read-body", "cookie"] }
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0" }
 tracing = "0"
@@ -38,7 +38,7 @@ tower = { version = "0" }
 glob = "0"
 mime = "0"
 futures-util = "0"
-base64= "0"
+base64 = "0"
 uuid = "1"
 minus_games_models = { path = "../minus_games_models" }
 minus_games_utils = { path = "../minus_games_utils" }

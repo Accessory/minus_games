@@ -1,4 +1,3 @@
-use axum::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::http::StatusCode;
@@ -88,7 +87,6 @@ impl Display for ArcUser {
     }
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for ArcUser
 where
     S: Sync + Send,

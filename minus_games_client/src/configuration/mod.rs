@@ -80,6 +80,8 @@ pub struct Configuration {
     pub username: Option<String>,
     #[arg(long, env = "MINUS_GAMES_PASSWORD")]
     pub password: Option<String>,
+    #[arg(long, env, default_value = "false")]
+    pub no_gamemoderun: bool,
     #[command(subcommand)]
     pub action: Option<ClientActions>,
 }

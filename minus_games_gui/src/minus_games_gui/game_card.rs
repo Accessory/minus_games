@@ -1,5 +1,7 @@
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
-use crate::minus_games_gui::style_constants::{DEFAULT_MODAL_BUTTON_WIDTH, SMALL_MARGIN_DEFAULT};
+use crate::minus_games_gui::style_constants::{
+    DEFAULT_MODAL_BUTTON_WIDTH, GAME_CARD_ROW_HEIGHT, SMALL_MARGIN_DEFAULT,
+};
 use iced::widget::{button, image, row, text, Row};
 use iced::{Center, Fill, Left};
 
@@ -51,7 +53,7 @@ impl GameCard {
     }
 
     pub(crate) fn view(&self) -> Row<MinusGamesGuiMessage> {
-        let element = match &self.image {
+        let row = match &self.image {
             None => {
                 let mut row = row![
                     text(&self.title).width(Fill),
@@ -83,6 +85,6 @@ impl GameCard {
             }
         }
         .spacing(SMALL_MARGIN_DEFAULT);
-        element
+        row.height(GAME_CARD_ROW_HEIGHT)
     }
 }

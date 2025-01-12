@@ -1,6 +1,8 @@
 use super::sync::{download_sync_for_game, sync_all_game_files, upload_sync_for_game};
 use crate::actions::download::download_game;
-use crate::runtime::{get_config, send_event, MinusGamesClientEvents, STOP_DOWNLOAD};
+use crate::runtime::{
+    get_config, send_event, MinusGamesClientEvents, CURRENT_GAME_PROCESS_ID, STOP_DOWNLOAD,
+};
 #[cfg(target_family = "unix")]
 use crate::utils::{add_permissions, is_not_executable, make_executable};
 #[cfg(target_family = "unix")]
@@ -86,10 +88,15 @@ pub async fn run_windows_game_on_windows(infos: GameInfos) {
         .to_str()
         .unwrap()
         .to_string();
-    handle_command_output(
-        Command::new(path_str).current_dir(&cwd).output().await,
-        &infos.name,
-    )
+
+    let child = Command::new(path_str)
+        .current_dir(&cwd)
+        .spawn()
+        .expect("Failed to spawn a child process!");
+
+    CURRENT_GAME_PROCESS_ID.store(child.id().expect("Failed to get the process id"), Relaxed);
+    handle_command_output(child.wait_with_output().await, &infos.name);
+    CURRENT_GAME_PROCESS_ID.store(u32::MAX, Relaxed);
 }
 
 #[cfg(target_family = "unix")]
@@ -126,18 +133,19 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
                 cwd, prefix, protonpath, game_id, wine, path_str
             );
         }
-        handle_command_output(
-            Command::new("gamemoderun")
-                .current_dir(&cwd)
-                .env("WINEPREFIX", prefix)
-                .env("PROTONPATH", protonpath)
-                .env("GAMEID", game_id)
-                .arg(wine)
-                .arg(path_str)
-                .output()
-                .await,
-            &infos.name,
-        )
+        let child = Command::new("gamemoderun")
+            .current_dir(&cwd)
+            .env("WINEPREFIX", prefix)
+            .env("PROTONPATH", protonpath)
+            .env("GAMEID", game_id)
+            .arg(wine)
+            .arg(path_str)
+            .spawn()
+            .expect("Failed to spawn a child process!");
+
+        CURRENT_GAME_PROCESS_ID.store(child.id().expect("Failed to get the process id"), Relaxed);
+        handle_command_output(child.wait_with_output().await, &infos.name);
+        CURRENT_GAME_PROCESS_ID.store(u32::MAX, Relaxed);
     } else {
         send_event("Running game via wine on linux without gamemoderun".into()).await;
         if get_config().verbose {
@@ -147,17 +155,19 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
                 cwd, prefix, protonpath, game_id, wine, path_str
             );
         }
-        handle_command_output(
-            Command::new(wine)
-                .current_dir(&cwd)
-                .arg(path_str)
-                .env("WINEPREFIX", prefix)
-                .env("PROTONPATH", protonpath)
-                .env("GAMEID", game_id)
-                .output()
-                .await,
-            &infos.name,
-        )
+
+        let child = Command::new(wine)
+            .current_dir(&cwd)
+            .arg(path_str)
+            .env("WINEPREFIX", prefix)
+            .env("PROTONPATH", protonpath)
+            .env("GAMEID", game_id)
+            .spawn()
+            .expect("Failed to spawn a child process!");
+
+        CURRENT_GAME_PROCESS_ID.store(child.id().expect("Failed to get the process id"), Relaxed);
+        handle_command_output(child.wait_with_output().await, &infos.name);
+        CURRENT_GAME_PROCESS_ID.store(u32::MAX, Relaxed);
     }
 }
 
@@ -207,10 +217,14 @@ pub async fn run_linux_game_on_linux(infos: GameInfos) {
         add_permissions(cwd_path, exe_stem);
     }
 
-    handle_command_output(
-        Command::new(path_str).current_dir(&cwd).output().await,
-        &infos.name,
-    )
+    let child = Command::new(path_str)
+        .current_dir(&cwd)
+        .spawn()
+        .expect("Failed to spawn a child process");
+
+    CURRENT_GAME_PROCESS_ID.store(child.id().expect("Failed to get the process id"), Relaxed);
+    handle_command_output(child.wait_with_output().await, &infos.name);
+    CURRENT_GAME_PROCESS_ID.store(u32::MAX, Relaxed);
 }
 
 fn handle_command_output(output: Result<Output, impl Error>, game: &str) {

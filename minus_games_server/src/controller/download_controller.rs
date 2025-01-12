@@ -11,7 +11,7 @@ use tower_http::services::ServeDir;
 
 pub async fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
-        .nest_service("/", download_service(app_state.clone()).await)
+        .fallback_service(download_service(app_state.clone()).await)
         .layer(axum::middleware::from_fn(check_download_access))
         .layer(AuthLayer::new(
             app_state.user_handler.clone(),

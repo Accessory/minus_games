@@ -57,7 +57,7 @@ pub fn run(config: Configuration) -> ExitCode {
         .collect();
 
     for folder in root_folders {
-        let folder_name = folder.iter().last().unwrap().to_str().unwrap();
+        let folder_name = folder.iter().next_back().unwrap().to_str().unwrap();
 
         if config
             .filter
@@ -172,7 +172,7 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
         return None;
     }
 
-    let folder_name = game_path.iter().last()?.to_str()?.to_string();
+    let folder_name = game_path.iter().next_back()?.to_str()?.to_string();
 
     Some(GameInfos {
         name,

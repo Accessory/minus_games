@@ -11,8 +11,8 @@ use utoipa::ToSchema;
 
 pub async fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/upload-saves/:game", post(post_save_files))
-        .route("/upload-save/:game", post(post_save_file))
+        .route("/upload-saves/{game}", post(post_save_files))
+        .route("/upload-save/{game}", post(post_save_file))
         .route("/list", get(get_games_list))
         .nest_service("/data", data_service(app_state.clone()).await)
         .layer(AuthLayer::new(

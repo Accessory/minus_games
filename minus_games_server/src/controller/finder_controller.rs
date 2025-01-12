@@ -12,7 +12,7 @@ use utoipa::ToSchema;
 
 pub async fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/rerun-finder-for/:game", post(post_rerun_finder_for))
+        .route("/rerun-finder-for/{game}", post(post_rerun_finder_for))
         .route("/rerun-finder-for-game", post(post_rerun_finder_for_game))
         .route("/rerun-finder", post(post_rerun_finder))
         .route("/rerun-finder-all", post(post_rerun_finder_all))

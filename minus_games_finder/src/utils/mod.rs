@@ -133,7 +133,7 @@ pub fn find_all_possible_game_exe_files(game_folder: &Path) -> Vec<String> {
 }
 
 pub fn get_title_from_parent_folder(root: &Path) -> Option<String> {
-    let folder_name = root.iter().last().unwrap().to_str().unwrap();
+    let folder_name = root.iter().next_back().unwrap().to_str().unwrap();
     Some(find_name_in_folder_name(
         folder_name.to_case(Case::Title).as_str(),
     ))
