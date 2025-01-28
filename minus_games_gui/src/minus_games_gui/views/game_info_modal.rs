@@ -11,7 +11,7 @@ use std::sync::atomic::Ordering::Relaxed;
 pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGamesGuiMessage>> {
     let game_infos_option = get_config().get_game_infos(game);
     let mut column = Column::new();
-    column = column.push(text(game).size(24));
+    column = column.push(text(game).size(24).shaping(text::Shaping::Advanced));
     if let Some(game_infos) = &game_infos_option {
         column = column.push(text(format!("Engine: {}", game_infos.engine)));
         column = column.push(text(format!(

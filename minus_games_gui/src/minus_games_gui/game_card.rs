@@ -56,7 +56,9 @@ impl GameCard {
         let row = match &self.image {
             None => {
                 let mut row = row![
-                    text(&self.title).width(Fill),
+                    text(&self.title)
+                        .width(Fill)
+                        .shaping(text::Shaping::Advanced),
                     text(&self.content).width(Fill).align_x(Left),
                     // horizontal_space().width(Fill),
                     button(text("Play").width(Fill).align_x(Center))

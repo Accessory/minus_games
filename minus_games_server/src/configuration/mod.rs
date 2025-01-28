@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use clap::Parser;
 use minus_games_utils::DataFolder;
 use minus_games_utils::GamesFolder;
@@ -19,6 +20,35 @@ pub struct Configuration {
     pub cache_folder: Option<PathBuf>,
     #[arg(long)]
     pub config_file: Option<String>,
+}
+
+impl Configuration {
+    pub fn get_game_list(&self) -> Vec<String> {
+        let path = self
+            .data_folder
+            .join("*.json")
+            .to_str()
+            .unwrap()
+            .to_string();
+        let mut rtn: Vec<String> = Vec::new();
+        for entry in glob::glob(&path).unwrap() {
+            rtn.push(
+                entry
+                    .unwrap()
+                    .file_stem()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
+            );
+        }
+        rtn
+    }
+    pub fn get_modification_date_for_game(&self, name: &str) -> DateTime<Utc> {
+        let path = self.data_folder.join(format!("{name}.json"));
+        let system_time = path.metadata().unwrap().modified().unwrap();
+        DateTime::<Utc>::from(system_time)
+    }
 }
 
 impl std::fmt::Display for Configuration {

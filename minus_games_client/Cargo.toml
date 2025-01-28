@@ -23,7 +23,7 @@ dialoguer = "0"
 indicatif = "0"
 mime = "0"
 chrono = "0"
-dirs = "5"
+dirs = "6"
 base64 = "0"
 convert_case = "0"
 minus_games_utils = { path = "../minus_games_utils" }

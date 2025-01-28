@@ -1,5 +1,6 @@
 pub mod game_file_info;
 pub mod game_infos;
+pub mod game_list;
 pub mod rpgm_package;
 pub mod sync_file_info;
 

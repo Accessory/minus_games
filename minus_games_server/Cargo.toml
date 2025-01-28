@@ -14,7 +14,8 @@ axum = { version = "0.8", features = [
     "json",
     "macros",
     "multipart",
-    "form"
+    "form",
+    "http2"
 ] }
 axum-extra = { version = "0.10", features = ["async-read-body", "cookie"] }
 tokio = { version = "1", features = ["full"] }
@@ -30,7 +31,7 @@ utoipa = { version = "5", features = [
     "uuid",
     "openapi_extensions",
 ] }
-utoipa-swagger-ui = { version = "8", features = ["axum"] }
+utoipa-swagger-ui = { version = "9", features = ["axum"] }
 chrono = { version = "0", features = ["serde"] }
 clap = { version = "4", features = ["derive", "env", "string"] }
 tower-http = { version = "0", features = ["full"] }

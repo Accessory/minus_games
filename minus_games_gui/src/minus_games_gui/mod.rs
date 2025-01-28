@@ -152,7 +152,16 @@ impl MinusGamesGui {
         // send_event("Create Cards".into()).await;
         debug!("Create Cards");
         let installed_games = get_installed_games();
-        let server_games = get_client().get_games_list().await.unwrap_or_default();
+        let mut server_games_with_date = get_client()
+            .get_games_with_date_list()
+            .await
+            .unwrap_or_default();
+        server_games_with_date.sort_unstable_by(|l, r| r.date.cmp(&l.date));
+        let mut server_games: Vec<String> = Vec::with_capacity(server_games_with_date.len());
+
+        for game in server_games_with_date {
+            server_games.push(game.name);
+        }
 
         let mut rtn = Vec::new();
         for game in &installed_games {
@@ -291,6 +300,7 @@ impl MinusGamesGui {
 
             MinusGamesGuiMessage::CloseApplication(_) => {
                 info!("Client event listener closed!");
+
                 return window::get_latest().and_then(window::close);
             }
             MinusGamesGuiMessage::Event(event) => {

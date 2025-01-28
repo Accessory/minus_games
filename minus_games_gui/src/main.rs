@@ -92,6 +92,8 @@ fn main() -> iced::Result {
                 .subscription(MinusGamesGui::batch_subscription)
                 .window(window_settings)
                 .theme(MinusGamesGui::get_theme)
+                // .font(include_bytes!("../fonts/NoteSansJp/NotoSansJP-Regular.ttf"))
+                // .default_font(Font::with_name("Noto Sans JP"))
                 .run_with(MinusGamesGui::init)
         }
         Mode::Cli => {

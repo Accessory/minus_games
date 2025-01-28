@@ -13,4 +13,4 @@ walkdir = "2"
 filetime = "0"
 argon2 = { version = "0" }
 rand_core = { version = "0", features = ["getrandom"] }
-dirs = "5"
+dirs = "6"

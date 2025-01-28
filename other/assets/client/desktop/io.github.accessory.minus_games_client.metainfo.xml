@@ -50,6 +50,11 @@
     </provides>
 
     <releases>
+        <release version="0.7.0" date="2025-01-28">
+            <description>
+                <p>Add game sorting and better text handling.</p>
+            </description>
+        </release>
         <release version="0.6.3" date="2024-11-22">
             <description>
                 <p>Add hover effect and games are stoppable now.</p>

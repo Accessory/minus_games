@@ -6,6 +6,7 @@ use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use chrono::{DateTime, Utc};
 use log::{debug, warn};
+use minus_games_models::game_list::GamesWithDate;
 use minus_games_models::sync_file_info::SyncFileInfo;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, IF_MODIFIED_SINCE};
 use reqwest::{multipart, Body, Client, Response, StatusCode, Url};
@@ -282,6 +283,29 @@ impl MinusGamesClient {
             client,
             url: Url::parse(url).unwrap(),
         }
+    }
+
+    pub async fn get_games_with_date_list(&self) -> Option<Vec<GamesWithDate>> {
+        offline_to_none!();
+        let url = self.url.join("/games/list-with-date").unwrap();
+        let result = match self.client.get(url).send().await {
+            Ok(response) => response,
+            Err(_) => {
+                OFFLINE.store(true, Relaxed);
+                return None;
+            }
+        };
+
+        if !result.status().is_success() {
+            warn!(
+                "Failed to get games list: {} - {}",
+                result.status(),
+                result.text().await.unwrap()
+            );
+            return None;
+        }
+
+        result.json().await.ok()?
     }
 
     pub async fn get_games_list(&self) -> Option<Vec<String>> {
