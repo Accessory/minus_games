@@ -13,7 +13,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
             column![
                 vertical_space().height(MARGIN_DEFAULT),
                 text("Downloading").size(50),
-                text(format!("Game: {}", cgi.name)),
+                text(format!("Game: {}", cgi.folder_name)),
                 text(format!("Engine: {}", cgi.engine)),
                 text(format!("Linux support: {}", cgi.supported_platforms.linux)),
                 text(format!(
