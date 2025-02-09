@@ -42,7 +42,7 @@
 
     <categories>
         <category>Game</category>
-        <category>Utility</category>
+        <category>PackageManager</category>
     </categories>
 
     <provides>
