@@ -8,7 +8,11 @@ use iced::{Center, Color, Element, Fill};
 use minus_games_client::runtime::{get_config, OFFLINE};
 use std::sync::atomic::Ordering::Relaxed;
 
-pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGamesGuiMessage>> {
+pub(crate) fn create_modal(
+    game: &str,
+    is_on_server: bool,
+    width: f32,
+) -> impl Into<Element<MinusGamesGuiMessage>> {
     let game_infos_option = get_config().get_game_infos(game);
     let mut column = Column::new();
     column = column.push(text(game).size(24).shaping(text::Shaping::Advanced));
@@ -30,8 +34,8 @@ pub(crate) fn create_modal(game: &str, width: f32) -> impl Into<Element<MinusGam
                     ModalCallback::DeleteGame(game.to_string()),
                 ))),
         );
-        column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
-        if !OFFLINE.load(Relaxed) {
+        if !OFFLINE.load(Relaxed) && is_on_server {
+            column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
             if get_config().is_game_dirty(game) {
                 column = column.push(
                     button(text("Continue Download").width(Fill).align_x(Center))

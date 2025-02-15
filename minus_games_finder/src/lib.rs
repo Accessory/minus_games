@@ -9,8 +9,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use strum::IntoEnumIterator;
 use tracing::{error, info, trace, warn};
+use strum::IntoEnumIterator;
 
 pub mod configuration;
 mod engine_descriptions;

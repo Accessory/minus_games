@@ -16,7 +16,7 @@ serde_json = "1"
 glob = "0"
 minus_games_utils = { path = "../minus_games_utils" }
 minus_games_models = { path = "../minus_games_models" }
-strum = "0"
+strum = { version = "0", features = ["derive"] }
 convert_case = "0"
 textdistance = "1"
 walkdir = "2"

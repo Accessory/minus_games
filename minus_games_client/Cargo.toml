@@ -17,7 +17,7 @@ serde_json = "1"
 csv = "1"
 tracing = "0"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-strum = "0"
+strum = { version = "0", features = ["derive"] }
 walkdir = "2"
 dialoguer = "0"
 indicatif = "0"

@@ -1,7 +1,7 @@
 use crate::minus_games_gui::game_card::GameCard;
 use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::views::settings_view::SettingInput;
-use iced::Event;
+use iced::{Event, Rectangle};
 use minus_games_client::runtime::MinusGamesClientEvents;
 use tracing::info;
 
@@ -20,7 +20,7 @@ pub(crate) enum MinusGamesGuiMessage {
     Play(String),
     Delete(String),
     Repair(String),
-    OpenGameModal(String),
+    OpenGameModal(String, bool),
     FinishedPlay(()),
     FinishedDelete(()),
     FinishedRepairing(()),
@@ -44,6 +44,12 @@ pub(crate) enum MinusGamesGuiMessage {
     RescanGameFolder,
     StopDownload,
     KillCurrentGame,
+    EnterMouseArea(usize),
+    CurrentPositionUp,
+    CurrentPositionDown,
+    StartCurrentPosition,
+    ScrollTo(usize),
+    UpdateScrollAreaSize(Option<Rectangle>),
 }
 
 impl From<MinusGamesClientEvents> for MinusGamesGuiMessage {

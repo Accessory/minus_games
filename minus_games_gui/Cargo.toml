@@ -19,7 +19,8 @@ tokio = { version = "1", features = ["full"] }
 clap = { version = "4", features = ["derive", "env", "string"] }
 image = { version = "0", features = ["jpeg"] }
 open = "5"
-strum = "0"
+strum = { version = "0", features = ["derive"] }
+gilrs = {version = "0", features = []}
 
 [build-dependencies]
 vergen = { version = "9", features = ["build"] }

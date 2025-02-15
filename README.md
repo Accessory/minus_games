@@ -4,7 +4,7 @@ Minus Games is a Suite to Distribute Games from a server to a client. It consist
 
 - minus_games_server
 - minus_games_client
-- minus_games_Gui
+- minus_games_gui
 - minus_games_finder
 - minus_games_updater
 

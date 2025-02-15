@@ -4,52 +4,34 @@ use iced::advanced::{renderer, Layout};
 use iced::mouse::Cursor;
 use iced::{Background, Color, Element, Length, Rectangle, Size};
 
-pub struct Highlighter<'a, Message, Theme, Renderer> {
+pub struct AlwaysHighlighter<'a, Message, Theme, Renderer> {
     base: Element<'a, Message, Theme, Renderer>,
 }
 
-impl<'a, Message, Theme, Renderer> Highlighter<'a, Message, Theme, Renderer> {
+impl<'a, Message, Theme, Renderer> AlwaysHighlighter<'a, Message, Theme, Renderer> {
     pub fn new(
         base: Element<'a, Message, Theme, Renderer>,
-    ) -> Highlighter<'a, Message, Theme, Renderer> {
+    ) -> AlwaysHighlighter<'a, Message, Theme, Renderer> {
         Self { base }
     }
 }
 
-impl<'a, Message: 'a, Theme: 'a, Renderer> From<Highlighter<'a, Message, Theme, Renderer>>
+impl<'a, Message: 'a, Theme: 'a, Renderer> From<AlwaysHighlighter<'a, Message, Theme, Renderer>>
     for Element<'a, Message, Theme, Renderer>
 where
     Renderer: renderer::Renderer + 'a,
     Theme: Catalog,
 {
-    fn from(item: Highlighter<'a, Message, Theme, Renderer>) -> Self {
+    fn from(item: AlwaysHighlighter<'a, Message, Theme, Renderer>) -> Self {
         Self::new(item)
     }
 }
 
 trait Catalog {
-    // type Class<'a>;
-    // fn default<'a>() -> Self::Class<'a>;
     fn get_background_color(&self) -> Color;
 }
 
-// pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme) -> Style + 'a>;
-//
-// pub fn default_highlight<Theme>(theme: &iced::Theme) -> Style
-// {
-//     let palette = theme.extended_palette();
-//
-//     Style {
-//         background: palette.background.strong.color.into(),
-//     }
-// }
-
 impl Catalog for iced::Theme {
-    // type Class<'a> = StyleFn<'a, Self>;
-    //
-    // fn default<'a>() -> Self::Class<'a> {
-    //     Box::new(default_highlight::<Theme>)
-    // }
     fn get_background_color(&self) -> Color {
         self.extended_palette().background.weak.color
     }
@@ -61,7 +43,7 @@ pub struct Style {
 }
 
 impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
-    for Highlighter<'_, Message, Theme, Renderer>
+    for AlwaysHighlighter<'_, Message, Theme, Renderer>
 where
     Renderer: renderer::Renderer,
     Theme: Catalog,
@@ -86,23 +68,17 @@ where
         cursor: Cursor,
         viewport: &Rectangle,
     ) {
-        if cursor.is_over(layout.bounds()) {
-            let color = theme.get_background_color();
-            renderer.fill_quad(
-                renderer::Quad {
-                    bounds: layout.bounds(),
-                    ..renderer::Quad::default()
-                },
-                color,
-            );
-            self.base
-                .as_widget()
-                .draw(tree, renderer, theme, style, layout, cursor, viewport);
-        } else {
-            self.base
-                .as_widget()
-                .draw(tree, renderer, theme, style, layout, cursor, viewport);
-        }
+        let color = theme.get_background_color();
+        renderer.fill_quad(
+            renderer::Quad {
+                bounds: layout.bounds(),
+                ..renderer::Quad::default()
+            },
+            color,
+        );
+        self.base
+            .as_widget()
+            .draw(tree, renderer, theme, style, layout, cursor, viewport);
     }
 
     fn tag(&self) -> tree::Tag {
