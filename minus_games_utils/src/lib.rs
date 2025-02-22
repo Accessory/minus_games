@@ -123,21 +123,6 @@ impl From<ClientFolder> for OsStr {
     }
 }
 
-// static CWD_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
-
-// pub struct CurrentDir {}
-
-// impl From<CurrentDir> for OsStr {
-//     fn from(_value: CurrentDir) -> Self {
-//         CWD_FOLDER_PATH
-//             .get_or_init(|| {
-//                 std::env::current_dir().expect("Could not get the current working directory")
-//             })
-//             .as_os_str()
-//             .into()
-//     }
-// }
-
 pub fn create_hash_from_string(value: &str) -> String {
     const CHARS: [char; 62] = [
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',

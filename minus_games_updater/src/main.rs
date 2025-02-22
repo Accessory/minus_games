@@ -1,12 +1,12 @@
 use crate::configuration::{Configuration, OS};
-use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use chrono::{DateTime, Utc};
 use clap::Parser;
 use filetime::FileTime;
 use futures_util::stream::StreamExt;
 use minus_games_models::sync_file_info::SyncFileInfo;
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
+use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
 use reqwest::{Client, Url};
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::PermissionsExt;

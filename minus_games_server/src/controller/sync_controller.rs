@@ -4,13 +4,13 @@ use crate::auth::user::ArcUser;
 use axum::body::Body;
 use axum::extract::multipart::Field;
 use axum::extract::{DefaultBodyLimit, Multipart, Path, State};
-use axum::http::{header, StatusCode};
+use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use chrono::{DateTime, Utc};
 use mime::APPLICATION_OCTET_STREAM;
-use minus_games_models::sync_file_info::{create_sync_file_infos_from_path, SyncFileInfo};
+use minus_games_models::sync_file_info::{SyncFileInfo, create_sync_file_infos_from_path};
 use minus_games_utils::set_file_modified_time;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -196,7 +196,7 @@ async fn post_sync_file_for_folder(
                 return Response::builder()
                     .status(StatusCode::BAD_REQUEST)
                     .body(Body::from("Invalid field name"))
-                    .unwrap()
+                    .unwrap();
             }
         }
     }

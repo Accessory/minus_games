@@ -1,5 +1,5 @@
 use crate::actions::sync::force_sync_all_game_files;
-use crate::runtime::{get_installed_games, send_event, MinusGamesClientEvents, STOP_DOWNLOAD};
+use crate::runtime::{MinusGamesClientEvents, STOP_DOWNLOAD, get_installed_games, send_event};
 use std::sync::atomic::Ordering::Relaxed;
 
 pub async fn repair_game(game: &str) {

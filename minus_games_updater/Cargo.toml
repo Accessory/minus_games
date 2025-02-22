@@ -7,16 +7,16 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-dotenvy = "0"
-tracing = "0"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-clap = { version = "4", features = ["derive", "env"] }
+dotenvy = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream", "rustls-tls"] }
-tokio = { version = "1", features = ["full"] }
+tokio = { workspace = true }
 futures-util = { version = "0", features = ["tokio-io"]}
 minus_games_models = { path = "../minus_games_models" }
-strum = { version = "0", features = ["derive"] }
+strum = { workspace = true }
 chrono = "0"
 filetime = "0"
 base64 = "0"

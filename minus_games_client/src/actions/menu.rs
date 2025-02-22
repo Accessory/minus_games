@@ -8,8 +8,8 @@ use crate::actions::sync::{download_sync_for_game, upload_sync_for_game};
 use crate::runtime::{get_all_games, get_client, get_config, get_installed_games, send_event};
 #[cfg(target_family = "unix")]
 use crate::utils::make_executable_from_path;
-use dialoguer::theme::ColorfulTheme;
 use dialoguer::Select;
+use dialoguer::theme::ColorfulTheme;
 use tracing::info;
 
 #[cfg(target_family = "unix")]

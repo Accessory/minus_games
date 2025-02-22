@@ -1,4 +1,6 @@
 use crate::minus_games_gui::game_card::GameCard;
+use crate::minus_games_gui::handlers::gamepad_input_handler::gamepad_input_handler;
+use crate::minus_games_gui::handlers::keyboard_event_handler::handle_keyboard_events;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
@@ -10,46 +12,36 @@ use crate::minus_games_gui::style_constants::{
 use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::minus_games_gui::widgets::always_highlighter::AlwaysHighlighter;
-use crate::runtime::{
-    get_gui_config, CLOSING, CURRENT_HIGHLIGHT_POSITION, DO_NOT_HIGHLIGHT, SCROLLABLE_ID,
-};
-use gilrs::{EventType, GilrsBuilder};
+use crate::runtime::{CLOSING, SCROLLABLE_ID, get_gui_config};
 use iced::futures::{SinkExt, Stream};
-use iced::keyboard::Event::KeyPressed;
-use iced::keyboard::{key, Key};
-use iced::mouse::Button;
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{AbsoluteOffset, Direction, Scrollbar};
 use iced::widget::{
-    button, column, horizontal_space, row, scrollable, stack, text, text_input, vertical_space,
-    Column,
+    Column, button, column, horizontal_space, row, scrollable, stack, text, text_input,
+    vertical_space,
 };
-use iced::{
-    event, mouse, stream, widget, window, Center, Element, Event, Fill, Length, Rectangle, Size,
-    Subscription, Task, Theme,
-};
+use iced::{Center, Element, Fill, Length, Size, Subscription, Task, Theme, event, stream, window};
 use minus_games_client::actions::delete::delete_game;
 use minus_games_client::actions::repair::{repair_all_games, repair_game};
 use minus_games_client::actions::run::run_game_synced;
 use minus_games_client::actions::scan::scan_for_games;
 use minus_games_client::runtime::{
-    get_client, get_config, get_installed_games, kill_current_running_game, reset_client,
-    send_event, set_sender, MinusGamesClientEvents, STOP_DOWNLOAD,
+    MinusGamesClientEvents, STOP_DOWNLOAD, get_client, get_config, get_installed_games,
+    kill_current_running_game, reset_client, send_event, set_sender,
 };
 use minus_games_models::game_infos::GameInfos;
 use settings::override_config;
 use std::cmp;
 use std::sync::atomic::Ordering::Relaxed;
-use std::time::Duration;
 use tracing::{debug, info};
 
 pub mod configuration;
 mod game_card;
+mod handlers;
 mod messages;
 mod minus_games_settings;
 mod settings;
 mod style_constants;
-mod utils;
 mod views;
 mod widgets;
 
@@ -64,7 +56,7 @@ pub(crate) enum MinusGamesState {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct MinusGamesGui {
+pub(crate) struct MinusGamesGui {
     pub theme: Theme,
     pub game_cards: Vec<GameCard>,
     pub state: MinusGamesState,
@@ -77,13 +69,17 @@ pub struct MinusGamesGui {
     pub model: Option<(String, bool)>,
     pub size: Size,
     pub highlight_map: Vec<usize>,
-    pub scroll_area_size: Rectangle,
+    pub scroll_offset: AbsoluteOffset,
+    pub current_highlight_position: usize,
+    pub went_up: bool,
+    pub last_input_mouse: bool,
+    pub block_highlighting: bool,
 }
 
 const FILTER_ID: &str = "FILTER_ID";
 
 impl MinusGamesGui {
-    pub fn batch_subscription(&self) -> Subscription<MinusGamesGuiMessage> {
+    pub(crate) fn batch_subscription(&self) -> Subscription<MinusGamesGuiMessage> {
         Subscription::batch([
             self.event_subscription(),
             self.on_close(),
@@ -92,11 +88,11 @@ impl MinusGamesGui {
         ])
     }
 
-    pub fn start_fullscreen(&self) -> Subscription<MinusGamesGuiMessage> {
+    pub(crate) fn start_fullscreen(&self) -> Subscription<MinusGamesGuiMessage> {
         Subscription::run(Self::set_start_fullscreen)
     }
 
-    pub fn set_start_fullscreen() -> impl Stream<Item = MinusGamesGuiMessage> {
+    pub(crate) fn set_start_fullscreen() -> impl Stream<Item = MinusGamesGuiMessage> {
         stream::channel(1, |mut output| async move {
             if get_gui_config().fullscreen {
                 let _ = output.send(MinusGamesGuiMessage::Fullscreen).await;
@@ -104,76 +100,19 @@ impl MinusGamesGui {
         })
     }
 
-    pub fn gamepad_input(&self) -> Subscription<MinusGamesGuiMessage> {
-        Subscription::run(Self::set_gamepad_input)
+    pub(crate) fn gamepad_input(&self) -> Subscription<MinusGamesGuiMessage> {
+        Subscription::run(gamepad_input_handler)
     }
 
-    pub fn set_gamepad_input() -> impl Stream<Item = MinusGamesGuiMessage> {
-        stream::channel(30, |mut output| async move {
-            let mut gilrs = GilrsBuilder::new().set_update_state(false).build().unwrap();
-
-            // for (_id, gamepad) in gilrs.gamepads() {
-            //     println!("Gamepad: {} is {:?}", gamepad.name(), gamepad.power_info());
-            // }
-
-            loop {
-                // Examine new events
-                if let Some(gilrs::Event { event, .. }) =
-                    gilrs.next_event_blocking(Some(Duration::from_millis(250)))
-                {
-                    if CLOSING.load(Relaxed) {
-                        return;
-                    }
-                    if let EventType::ButtonPressed(button, _) = event {
-                        match button {
-                            gilrs::Button::DPadDown => {
-                                debug!("Pressed Down");
-                                output
-                                    .send(MinusGamesGuiMessage::CurrentPositionDown)
-                                    .await
-                                    .ok();
-                                output.flush().await.ok();
-                                tokio::time::sleep(Duration::from_millis(50)).await;
-                            }
-                            gilrs::Button::DPadUp => {
-                                debug!("Pressed Up");
-                                output
-                                    .send(MinusGamesGuiMessage::CurrentPositionUp)
-                                    .await
-                                    .ok();
-                                output.flush().await.ok();
-                                tokio::time::sleep(Duration::from_millis(50)).await;
-                            }
-                            gilrs::Button::South => {
-                                debug!("Pressed South");
-                                output
-                                    .send(MinusGamesGuiMessage::StartCurrentPosition)
-                                    .await
-                                    .ok();
-                                output.flush().await.ok();
-                                tokio::time::sleep(Duration::from_millis(50)).await;
-                            }
-                            _ => {}
-                        }
-                    }
-                } else {
-                    if CLOSING.load(Relaxed) {
-                        return;
-                    }
-                }
-            }
-        })
-    }
-
-    pub fn event_subscription(&self) -> Subscription<MinusGamesGuiMessage> {
+    pub(crate) fn event_subscription(&self) -> Subscription<MinusGamesGuiMessage> {
         Subscription::run(Self::run_events)
     }
 
-    pub fn on_close(&self) -> Subscription<MinusGamesGuiMessage> {
+    pub(crate) fn on_close(&self) -> Subscription<MinusGamesGuiMessage> {
         event::listen().map(MinusGamesGuiMessage::Event)
     }
 
-    pub fn run_events() -> impl Stream<Item = MinusGamesGuiMessage> {
+    pub(crate) fn run_events() -> impl Stream<Item = MinusGamesGuiMessage> {
         stream::channel(24, |mut output| async move {
             let (sender, mut receiver) =
                 tokio::sync::mpsc::channel(std::thread::available_parallelism().unwrap().get());
@@ -184,7 +123,7 @@ impl MinusGamesGui {
         })
     }
 
-    pub fn init() -> (Self, Task<MinusGamesGuiMessage>) {
+    pub(crate) fn init() -> (Self, Task<MinusGamesGuiMessage>) {
         let theme_string = get_gui_config().theme.as_str();
 
         if let Some(theme) = Theme::ALL
@@ -203,24 +142,23 @@ impl MinusGamesGui {
         (MinusGamesGui::default(), Self::start_async_init())
     }
 
-    pub fn start_async_init() -> Task<MinusGamesGuiMessage> {
+    pub(crate) fn start_async_init() -> Task<MinusGamesGuiMessage> {
         Task::perform(
             MinusGamesGui::async_init(),
             MinusGamesGuiMessage::InitComplete,
         )
     }
 
-    // pub async fn async_init() -> Arc<RwLock<tokio::sync::mpsc::Receiver<MinusGamesClientEvents>>> {
-    pub async fn async_init() {
+    // pub(crate) async fn async_init() -> Arc<RwLock<tokio::sync::mpsc::Receiver<MinusGamesClientEvents>>> {
+    pub(crate) async fn async_init() {
         info!("Async Init!");
     }
 
-    pub fn load() -> Task<MinusGamesGuiMessage> {
+    pub(crate) fn load() -> Task<MinusGamesGuiMessage> {
         Task::perform(MinusGamesGui::create_cards(), MinusGamesGuiMessage::Created)
     }
 
-    pub async fn create_cards() -> Vec<GameCard> {
-        // send_event("Create Cards".into()).await;
+    pub(crate) async fn create_cards() -> Vec<GameCard> {
         debug!("Create Cards");
         let installed_games = get_installed_games();
         let mut server_games_with_date = get_client()
@@ -263,7 +201,7 @@ impl MinusGamesGui {
         rtn
     }
 
-    pub fn update(&mut self, message: MinusGamesGuiMessage) -> Task<MinusGamesGuiMessage> {
+    pub(crate) fn update(&mut self, message: MinusGamesGuiMessage) -> Task<MinusGamesGuiMessage> {
         match message {
             MinusGamesGuiMessage::Loading => {}
             MinusGamesGuiMessage::Reload => {
@@ -376,16 +314,15 @@ impl MinusGamesGui {
                 return Self::load();
             }
             MinusGamesGuiMessage::Exit => {
-                return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication)
+                return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
             }
-
             MinusGamesGuiMessage::CloseApplication(_) => {
                 info!("Client event listener closed!");
-
+                CLOSING.store(true, Relaxed);
                 return window::get_latest().and_then(window::close);
             }
             MinusGamesGuiMessage::Event(event) => {
-                return self.handle_event(event);
+                return handle_keyboard_events(self, event);
             }
             MinusGamesGuiMessage::Fullscreen => {
                 return window::get_latest()
@@ -434,12 +371,22 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::FilterChanged(change) => {
-                self.filter = change.trim().to_lowercase().to_string();
-                self.highlight_map.clear();
-                for game_card in self.game_cards.iter() {
-                    if game_card.game.to_lowercase().contains(&self.filter) {
-                        self.highlight_map.push(game_card.position);
+                if change.is_empty() {
+                    self.filter = change;
+                    self.highlight_map = self.game_cards.iter().map(|g| g.position).collect();
+                } else if change != self.filter {
+                    self.filter = change;
+                    let used_filter = self.filter.trim().to_lowercase();
+                    self.highlight_map.clear();
+                    for game_card in self.game_cards.iter() {
+                        if game_card.game.to_lowercase().contains(&used_filter) {
+                            self.highlight_map.push(game_card.position);
+                        }
                     }
+
+                    self.current_highlight_position = 0;
+                } else {
+                    info!("Nothing changed");
                 }
             }
             MinusGamesGuiMessage::UpdateAllGames => {
@@ -464,40 +411,52 @@ impl MinusGamesGui {
                 kill_current_running_game();
             }
             MinusGamesGuiMessage::EnterMouseArea(position) => {
-                if self.model.is_none() {
+                if self.last_input_mouse && self.model.is_none() {
                     if let Some((idx, _)) = self
                         .highlight_map
                         .iter()
                         .enumerate()
-                        .find(|(_idx, &i)| i == position)
+                        .find(|&(ref _idx, &i)| i == position)
                     {
-                        CURRENT_HIGHLIGHT_POSITION.store(idx, Relaxed);
+                        self.current_highlight_position = idx;
                     }
                 }
             }
-            MinusGamesGuiMessage::CurrentPositionUp => {
-                if self.state == MinusGamesState::Ready && !self.highlight_map.is_empty() {
-                    let mut position = CURRENT_HIGHLIGHT_POSITION.load(Relaxed);
-                    if position != 0 {
-                        position = cmp::min(position - 1, self.highlight_map.len() - 1);
-                        CURRENT_HIGHLIGHT_POSITION.store(position, Relaxed);
-                        DO_NOT_HIGHLIGHT.store(true, Relaxed);
-                        return Task::done(MinusGamesGuiMessage::ScrollTo(position));
-                    }
+            MinusGamesGuiMessage::CurrentPositionUp(up) => {
+                if self.state == MinusGamesState::Ready
+                    && !self.highlight_map.is_empty()
+                    && self.current_highlight_position != 0
+                {
+                    self.last_input_mouse = false;
+                    self.current_highlight_position = cmp::min(
+                        self.current_highlight_position.saturating_sub(up),
+                        self.highlight_map.len() - 1,
+                    );
+                    self.block_highlighting = true;
+                    self.went_up = true;
+                    return Task::done(MinusGamesGuiMessage::ScrollUp(up));
                 }
             }
-            MinusGamesGuiMessage::CurrentPositionDown => {
-                if self.state == MinusGamesState::Ready && !self.highlight_map.is_empty() {
-                    let mut position = CURRENT_HIGHLIGHT_POSITION.load(Relaxed);
-                    position = cmp::min(position + 1, self.highlight_map.len() - 1);
-                    CURRENT_HIGHLIGHT_POSITION.store(position, Relaxed);
-                    DO_NOT_HIGHLIGHT.store(true, Relaxed);
-                    return Task::done(MinusGamesGuiMessage::ScrollTo(position));
+            MinusGamesGuiMessage::CurrentPositionDown(down) => {
+                if self.state == MinusGamesState::Ready
+                    && !self.highlight_map.is_empty()
+                    && self.current_highlight_position != self.highlight_map.len() - 1
+                {
+                    self.last_input_mouse = false;
+                    self.current_highlight_position = cmp::min(
+                        self.current_highlight_position
+                            .checked_add(down)
+                            .unwrap_or(self.highlight_map.len() - 1),
+                        self.highlight_map.len() - 1,
+                    );
+                    self.block_highlighting = true;
+                    self.went_up = false;
+                    return Task::done(MinusGamesGuiMessage::ScrollDown(down));
                 }
             }
             MinusGamesGuiMessage::StartCurrentPosition => {
                 if self.state == MinusGamesState::Ready {
-                    let position = CURRENT_HIGHLIGHT_POSITION.load(Relaxed);
+                    let position = self.current_highlight_position;
                     if let Some(game_card_position) = self.highlight_map.get(position) {
                         if let Some(game_card) = self.game_cards.get(*game_card_position) {
                             return Task::done(MinusGamesGuiMessage::Play(game_card.game.clone()));
@@ -505,33 +464,43 @@ impl MinusGamesGui {
                     }
                 }
             }
-            MinusGamesGuiMessage::ScrollTo(position) => {
-                let screen_y_tiles = (self.size.height / GAME_CARD_ROW_HEIGHT as f32) - 6.0;
-                // let position_top_distance = (position as u16 * GAME_CARD_ROW_HEIGHT) as f32;
+            MinusGamesGuiMessage::ScrollDown(step) => {
+                let screen_tiles = self.size.height as u16 / GAME_CARD_ROW_HEIGHT;
 
-                // info!(
-                //     "ScreenYTiles: {screen_y_tiles}, PositionTopDistance: {position_top_distance}"
-                // );
-                // info!("ScreenYTiles: {screen_y_tiles}, Position: {position}");
+                let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT;
 
-                let mut scroll_to = position as f32 - screen_y_tiles;
+                let start_tile = hidden_tiles;
+                let end_tile = start_tile + screen_tiles;
 
-                scroll_to = (scroll_to * GAME_CARD_ROW_HEIGHT as f32).max(0.0);
-
-                DO_NOT_HIGHLIGHT.store(false, Relaxed);
-                return scrollable::scroll_to(
-                    SCROLLABLE_ID.clone(),
-                    AbsoluteOffset {
-                        x: 0.0,
-                        y: scroll_to,
-                    },
-                );
-            }
-            MinusGamesGuiMessage::UpdateScrollAreaSize(area_option) => {
-                if let Some(area) = area_option {
-                    dbg!(&area);
-                    self.scroll_area_size = area;
+                self.block_highlighting = false;
+                if !self.went_up && end_tile - 6 < self.current_highlight_position as u16 {
+                    return scrollable::scroll_by(
+                        SCROLLABLE_ID.clone(),
+                        AbsoluteOffset {
+                            x: 0.0,
+                            y: step as f32 * GAME_CARD_ROW_HEIGHT as f32,
+                        },
+                    );
                 }
+            }
+            MinusGamesGuiMessage::ScrollUp(step) => {
+                let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT;
+
+                let start_tile = hidden_tiles;
+
+                self.block_highlighting = false;
+                if self.went_up && start_tile + 1 > self.current_highlight_position as u16 {
+                    return scrollable::scroll_by(
+                        SCROLLABLE_ID.clone(),
+                        AbsoluteOffset {
+                            x: 0.0,
+                            y: -(step as f32 * GAME_CARD_ROW_HEIGHT as f32),
+                        },
+                    );
+                }
+            }
+            MinusGamesGuiMessage::Scrolled(viewport) => {
+                self.scroll_offset = viewport.absolute_offset();
             }
         };
         Task::none()
@@ -541,7 +510,7 @@ impl MinusGamesGui {
         send_event(MinusGamesClientEvents::Close).await;
     }
 
-    pub fn view(&self) -> Element<MinusGamesGuiMessage> {
+    pub(crate) fn view(&self) -> Element<MinusGamesGuiMessage> {
         let to_display = match self.state {
             MinusGamesState::Loading => loading::view(),
             MinusGamesState::Ready => ready::view(self),
@@ -559,6 +528,7 @@ impl MinusGamesGui {
                     .anchor(Start),
             ))
             .id(SCROLLABLE_ID.clone())
+            .on_scroll(MinusGamesGuiMessage::Scrolled)
             .width(Fill)
             .height(Fill);
 
@@ -598,7 +568,6 @@ impl MinusGamesGui {
             ];
         }
         let mut rtn = Column::with_capacity(self.game_cards.len() + 1);
-        // .spacing(SPACING_DEFAULT);
         rtn = rtn.push(
             row![
                 column![
@@ -625,11 +594,11 @@ impl MinusGamesGui {
             .align_y(Center),
         );
         rtn = rtn.push(vertical_space().height(HALF_MARGIN_DEFAULT));
-        let position = CURRENT_HIGHLIGHT_POSITION.load(Relaxed);
+        let position = self.current_highlight_position;
 
         for (idx, game_card_position) in self.highlight_map.iter().enumerate() {
             if let Some(game_card) = self.game_cards.get(*game_card_position) {
-                if idx == position && !DO_NOT_HIGHLIGHT.load(Relaxed) {
+                if idx == position && !self.block_highlighting {
                     rtn = rtn.push(AlwaysHighlighter::new(
                         row![game_card.view()].spacing(SPACING_DEFAULT).into(),
                     ));
@@ -642,51 +611,90 @@ impl MinusGamesGui {
         rtn
     }
 
-    pub fn get_theme(&self) -> Theme {
+    pub(crate) fn get_theme(&self) -> Theme {
         self.theme.clone()
     }
 
-    fn handle_event(&mut self, event: Event) -> Task<MinusGamesGuiMessage> {
-        match event {
-            Event::Keyboard(KeyPressed {
-                key: Key::Named(named),
-                modifiers,
-                ..
-            }) => match named {
-                key::Named::Tab => {
-                    return if modifiers.shift() {
-                        widget::focus_previous()
-                    } else {
-                        widget::focus_next()
-                    };
-                }
-                key::Named::ArrowUp => {
-                    return Task::done(MinusGamesGuiMessage::CurrentPositionUp);
-                }
-                key::Named::ArrowDown => {
-                    return Task::done(MinusGamesGuiMessage::CurrentPositionDown);
-                }
-                key::Named::Enter => {
-                    return Task::done(MinusGamesGuiMessage::StartCurrentPosition);
-                }
-                _ => {}
-            },
-            Event::Mouse(mouse::Event::ButtonPressed(Button::Back)) => {
-                return Task::done(MinusGamesGuiMessage::BackFromSettings(false));
-            }
-            Event::Window(window::Event::CloseRequested) => {
-                info!("Close Application!");
-                return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
-            }
-            Event::Window(window::Event::Resized(size)) => {
-                self.size = size;
-            }
-            Event::Window(window::Event::Closed) => {
-                CLOSING.store(true, Relaxed);
-            }
-            _ => {}
-        }
-
-        Task::none()
-    }
+    // fn handle_event(&mut self, event: Event) -> Task<MinusGamesGuiMessage> {
+    //     match event {
+    //         Event::Keyboard(KeyPressed {
+    //             key: Key::Character(character),
+    //             modifiers,
+    //             ..
+    //         }) => {
+    //             if character.as_str() == "f" && modifiers.control() {
+    //                 return Task::batch([
+    //                     snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START),
+    //                     text_input::focus(FILTER_ID),
+    //                 ]);
+    //             }
+    //         }
+    //         Event::Keyboard(KeyPressed {
+    //             key: Key::Named(named),
+    //             modifiers,
+    //             ..
+    //         }) => match named {
+    //             key::Named::Tab => {
+    //                 return if modifiers.shift() {
+    //                     widget::focus_previous()
+    //                 } else {
+    //                     widget::focus_next()
+    //                 };
+    //             }
+    //             key::Named::ArrowUp => {
+    //                 return Task::done(MinusGamesGuiMessage::CurrentPositionUp);
+    //             }
+    //             key::Named::ArrowDown => {
+    //                 return Task::done(MinusGamesGuiMessage::CurrentPositionDown);
+    //             }
+    //             key::Named::Enter => {
+    //                 return Task::done(MinusGamesGuiMessage::StartCurrentPosition);
+    //             }
+    //             key::Named::Home => {
+    //                 return snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START);
+    //             }
+    //             key::Named::End => {
+    //                 return snap_to(SCROLLABLE_ID.clone(), RelativeOffset::END);
+    //             }
+    //             key::Named::PageUp => {
+    //                 return scroll_by(
+    //                     SCROLLABLE_ID.clone(),
+    //                     AbsoluteOffset {
+    //                         x: 0.0,
+    //                         y: -((GAME_CARD_ROW_HEIGHT * 3) as f32),
+    //                     },
+    //                 );
+    //             }
+    //             key::Named::PageDown => {
+    //                 return scroll_by(
+    //                     SCROLLABLE_ID.clone(),
+    //                     AbsoluteOffset {
+    //                         x: 0.0,
+    //                         y: (GAME_CARD_ROW_HEIGHT * 3) as f32,
+    //                     },
+    //                 );
+    //             }
+    //             _ => {}
+    //         },
+    //         Event::Mouse(mouse::Event::ButtonPressed(Button::Back)) => {
+    //             return Task::done(MinusGamesGuiMessage::BackFromSettings(false));
+    //         }
+    //         Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+    //             self.last_input_mouse = true;
+    //         }
+    //         Event::Window(window::Event::CloseRequested) => {
+    //             info!("Close Application!");
+    //             return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
+    //         }
+    //         Event::Window(window::Event::Resized(size)) => {
+    //             self.size = size;
+    //         }
+    //         Event::Window(window::Event::Closed) => {
+    //             CLOSING.store(true, Relaxed);
+    //         }
+    //         _ => {}
+    //     }
+    //
+    //     Task::none()
+    // }
 }

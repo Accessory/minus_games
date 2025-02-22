@@ -2,8 +2,8 @@ use crate::actions::delete::delete_game_info_files;
 use crate::actions::download::download_all_files;
 use crate::offline_to_return;
 use crate::runtime::{
-    get_client, get_config, get_installed_games, send_event, MinusGamesClientEvents, OFFLINE,
-    STOP_DOWNLOAD,
+    MinusGamesClientEvents, OFFLINE, STOP_DOWNLOAD, get_client, get_config, get_installed_games,
+    send_event,
 };
 use chrono::{DateTime, Utc};
 use minus_games_models::game_infos::GameInfos;

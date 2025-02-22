@@ -1,4 +1,4 @@
-use crate::auth::session_manager::{session_id_from_request, SessionManager, COOKIES_SESSION_NAME};
+use crate::auth::session_manager::{COOKIES_SESSION_NAME, SessionManager, session_id_from_request};
 use crate::auth::user_handler::UserHandler;
 use axum::http::header::SET_COOKIE;
 use axum::http::{HeaderValue, StatusCode};

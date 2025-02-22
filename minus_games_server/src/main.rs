@@ -10,11 +10,11 @@ use crate::controller::{
     sync_controller, updater_controller,
 };
 use crate::open_api::ApiDoc;
-use axum::http::header::CONTENT_TYPE;
+use axum::Router;
 use axum::http::StatusCode;
+use axum::http::header::CONTENT_TYPE;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::routing::get;
-use axum::Router;
 use clap::Parser;
 use log::{debug, info};
 use mime::APPLICATION_JSON;
@@ -23,8 +23,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
-use tracing::level_filters::LevelFilter;
 use tracing::Level;
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;

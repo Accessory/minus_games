@@ -1,4 +1,4 @@
-use clap::{command, Parser};
+use clap::{Parser, command};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;

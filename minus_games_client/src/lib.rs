@@ -13,7 +13,7 @@ use crate::actions::sync::{
     download_sync_for_game, download_syncs, sync_infos_for_all_games, upload_syncs,
 };
 use crate::configuration::ClientActions;
-use crate::runtime::{get_config, send_event, set_sender, MinusGamesClientEvents, OFFLINE};
+use crate::runtime::{MinusGamesClientEvents, OFFLINE, get_config, send_event, set_sender};
 use indicatif::ProgressBar;
 use std::sync::atomic::Ordering;
 use tracing::{debug, info, warn};

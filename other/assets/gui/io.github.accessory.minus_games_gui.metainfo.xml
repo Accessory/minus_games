@@ -46,6 +46,11 @@
     </provides>
 
     <releases>
+        <release version="0.7.3" date="2025-01-28">
+            <description>
+                <p>Bugfixes.</p>
+            </description>
+        </release>
         <release version="0.7.2" date="2025-01-28">
             <description>
                 <p>Add keyboard and gamepad navigation support.</p>

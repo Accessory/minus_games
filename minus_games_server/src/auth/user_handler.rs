@@ -1,8 +1,8 @@
 use crate::auth::user::User;
 use axum::extract::Request;
 use axum::http::header::AUTHORIZATION;
-use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use minus_games_utils::verify_argon2_hash;
 use std::io::BufReader;
 use std::path::PathBuf;

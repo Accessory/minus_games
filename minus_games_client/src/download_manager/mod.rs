@@ -1,10 +1,10 @@
-use crate::runtime::{get_client, send_event, MinusGamesClientEvents, STOP_DOWNLOAD};
+use crate::runtime::{MinusGamesClientEvents, STOP_DOWNLOAD, get_client, send_event};
 use chrono::DateTime;
 use minus_games_utils::set_file_modified_time;
 use reqwest::Response;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::Ordering::Relaxed;
 use std::sync::Arc;
+use std::sync::atomic::Ordering::Relaxed;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tokio::sync::Semaphore;

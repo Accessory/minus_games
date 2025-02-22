@@ -2,7 +2,7 @@ use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMess
 use crate::minus_games_gui::style_constants::{
     DEFAULT_MODAL_BUTTON_WIDTH, GAME_CARD_ROW_HEIGHT, SMALL_MARGIN_DEFAULT,
 };
-use iced::widget::{button, image, row, text, MouseArea};
+use iced::widget::{MouseArea, button, image, row, text};
 use iced::{Center, Fill, Left};
 
 #[derive(Clone, Debug, Default)]

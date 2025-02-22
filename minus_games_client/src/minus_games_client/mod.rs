@@ -1,15 +1,15 @@
 use crate::download_manager::download_loop;
 use crate::offline_to_none;
-use crate::runtime::{get_config, OFFLINE};
+use crate::runtime::{OFFLINE, get_config};
 use crate::utils::{encode_problem_chars, get_csv_name, get_json_name};
-use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use chrono::{DateTime, Utc};
 use log::{debug, warn};
 use minus_games_models::game_list::GamesWithDate;
 use minus_games_models::sync_file_info::SyncFileInfo;
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, IF_MODIFIED_SINCE};
-use reqwest::{multipart, Body, Client, Response, StatusCode, Url};
+use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue, IF_MODIFIED_SINCE};
+use reqwest::{Body, Client, Response, StatusCode, Url, multipart};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering::Relaxed;
 use std::time::SystemTime;
@@ -126,18 +126,6 @@ impl MinusGamesClient {
         let to = get_config().get_csv_path(csv_name.as_str());
         self.download_file_if_modified(from, to.as_path()).await
     }
-
-    // pub async fn download_file_list(&self, game: &str, ) {
-    //     let csv_name = get_csv_name(game);
-    //     let from = self
-    //         .url
-    //         .join("/games/data/")
-    //         .unwrap()
-    //         .join(&encode_questinmark(csv_name.as_str()))
-    //         .unwrap();
-    //     let to = get_config().get_csv_path(csv_name.as_str());
-    //     self.download_file(from, to.as_path()).await;
-    // }
 
     pub async fn download_infos(&self, game: &str) {
         let json_name = get_json_name(game);
@@ -330,30 +318,4 @@ impl MinusGamesClient {
 
         result.json().await.ok()?
     }
-
-    // pub async fn get_game_file_list(&self, game: &str) -> Option<Vec<GameFileInfo>> {
-    //     let csv_name = format!("{game}.csv");
-    //     let url = self
-    //         .url
-    //         .join("/games/data/")
-    //         .unwrap()
-    //         .join(&csv_name)
-    //         .unwrap();
-    //     let result = self
-    //         .client
-    //         .get(url)
-    //         .send()
-    //         .await
-    //         .expect("Failed to query user data");
-
-    //     if result.status() == StatusCode::NOT_FOUND {
-    //         return None;
-    //     }
-
-    //     let bytes = result.bytes().await.unwrap();
-    //     let mut reader = csv::ReaderBuilder::new().from_reader(&*bytes);
-    //     let rtn = reader.deserialize().map(|i| i.unwrap()).collect();
-
-    //     rtn
-    // }
 }

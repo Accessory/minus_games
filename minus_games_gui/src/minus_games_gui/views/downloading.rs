@@ -1,8 +1,8 @@
+use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::{LONG_BUTTON_WIDTH, MARGIN_DEFAULT};
-use crate::minus_games_gui::MinusGamesGui;
 use iced::widget::{
-    button, column, horizontal_space, progress_bar, row, text, vertical_space, Row,
+    Row, button, column, horizontal_space, progress_bar, row, text, vertical_space,
 };
 use iced::{Center, Fill, Length};
 

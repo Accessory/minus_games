@@ -88,17 +88,6 @@ pub fn save_game_file_infos(game_folder: &Path, config: &Configuration, game_inf
     csv_writer.flush().unwrap();
 }
 
-// pub fn save_cache_file_to_data_folder(cache_file: &Path,data_folder: &Path, game_infos: &GameInfos) {
-//     if !data_folder.is_dir() {
-//         std::fs::create_dir_all(data_folder).expect("Failed to create data folder");
-//     }
-//
-//     let json_name = format!("{}.json", game_infos.folder_name.as_str());
-//     let json_path = data_folder.join(json_name);
-//
-//     std::fs::copy(cache_file, json_path).unwrap();
-// }
-
 pub fn save_infos_to_data_folder(data_folder: &Path, game_infos: &GameInfos) {
     if !data_folder.is_dir() {
         std::fs::create_dir_all(data_folder).expect("Failed to create data folder");

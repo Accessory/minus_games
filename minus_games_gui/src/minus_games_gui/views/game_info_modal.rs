@@ -3,9 +3,9 @@ use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::style_constants::{
     HALF_MARGIN_DEFAULT, LONG_BUTTON_WIDTH, MARGIN_DEFAULT,
 };
-use iced::widget::{button, center, container, mouse_area, opaque, text, vertical_space, Column};
+use iced::widget::{Column, button, center, container, mouse_area, opaque, text, vertical_space};
 use iced::{Center, Color, Element, Fill};
-use minus_games_client::runtime::{get_config, OFFLINE};
+use minus_games_client::runtime::{OFFLINE, get_config};
 use std::sync::atomic::Ordering::Relaxed;
 
 pub(crate) fn create_modal(

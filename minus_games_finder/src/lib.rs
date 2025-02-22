@@ -9,8 +9,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use tracing::{error, info, trace, warn};
 use strum::IntoEnumIterator;
+use tracing::{error, info, trace, warn};
 
 pub mod configuration;
 mod engine_descriptions;
@@ -154,15 +154,7 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
 
             current_sync_folders = engine_functions.get_sync_folders(game_path);
 
-            // if let Some(sync_folders_function) = engine_functions.get_sync_folders(game_path) {
-            //     current_sync_folders = Some(sync_folders_function);
-            // }
-
             current_excludes = engine_functions.get_excludes(game_path);
-
-            // if let Some(excludes) = engine_functions.get_excludes(game_path) {
-            //     current_excludes = Some(excludes);
-            // }
         }
     }
 

@@ -1,7 +1,7 @@
 use super::sync::{download_sync_for_game, sync_all_game_files, upload_sync_for_game};
 use crate::actions::download::download_game;
 use crate::runtime::{
-    get_config, send_event, MinusGamesClientEvents, CURRENT_GAME_PROCESS_ID, STOP_DOWNLOAD,
+    CURRENT_GAME_PROCESS_ID, MinusGamesClientEvents, STOP_DOWNLOAD, get_config, send_event,
 };
 #[cfg(target_family = "unix")]
 use crate::utils::{add_permissions, is_not_executable, make_executable};

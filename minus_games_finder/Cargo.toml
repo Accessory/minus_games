@@ -7,16 +7,16 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-dotenvy = "0"
+dotenvy = { workspace = true }
 clap = { version = "4", features = ["derive", "env", "string"] }
-tracing = "0"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 glob = "0"
 minus_games_utils = { path = "../minus_games_utils" }
 minus_games_models = { path = "../minus_games_models" }
-strum = { version = "0", features = ["derive"] }
+strum = { workspace = true }
 convert_case = "0"
 textdistance = "1"
 walkdir = "2"

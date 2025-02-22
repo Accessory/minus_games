@@ -1,7 +1,7 @@
 use crate::utils::{
     get_csv_name, get_dirty_name, get_json_name, is_or_none, is_or_none_path_buf, is_or_none_string,
 };
-use clap::{command, Parser, Subcommand};
+use clap::{Parser, Subcommand, command};
 use log::warn;
 use minus_games_models::game_file_info::GameFileInfo;
 use minus_games_models::game_infos::GameInfos;

@@ -9,17 +9,17 @@ repository.workspace = true
 
 [dependencies]
 iced = { version="0.13" , features = ["image", "tokio", "svg", "advanced"] }
-dotenvy = "0"
-dirs = "6"
-tracing = "0"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dotenvy = { workspace = true }
+dirs = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 minus_games_client = { path = "../minus_games_client" }
 minus_games_models = { path = "../minus_games_models" }
-tokio = { version = "1", features = ["full"] }
-clap = { version = "4", features = ["derive", "env", "string"] }
+tokio = { workspace = true }
+clap = { workspace = true }
 image = { version = "0", features = ["jpeg"] }
 open = "5"
-strum = { version = "0", features = ["derive"] }
+strum = { workspace = true }
 gilrs = {version = "0", features = []}
 
 [build-dependencies]

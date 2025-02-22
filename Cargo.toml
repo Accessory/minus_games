@@ -18,8 +18,17 @@ panic = "abort"
 strip = "symbols"
 
 [workspace.package]
-version = "0.7.2"
-edition = "2021"
+version = "0.7.3"
+edition = "2024"
 authors = ["Accessory"]
 repository = "https://github.com/Accessory/minus_games/"
 license = "MIT"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4", features = ["derive", "env", "string"] }
+tracing = "0"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dotenvy = "0"
+dirs = "6"
+strum = { version = "0", features = ["derive"] }

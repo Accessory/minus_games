@@ -1,9 +1,9 @@
+use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, TOP_BUTTON};
-use crate::minus_games_gui::MinusGamesGui;
 use iced::widget::{
-    button, checkbox, column, horizontal_space, pick_list, row, text, text_input, vertical_space,
-    Column, Row,
+    Column, Row, button, checkbox, column, horizontal_space, pick_list, row, text, text_input,
+    vertical_space,
 };
 use iced::{Center, Fill, Theme};
 use minus_games_client::runtime::OFFLINE;

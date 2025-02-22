@@ -1,4 +1,4 @@
-use clap::{command, Parser};
+use clap::{Parser, command};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, strum::Display, strum::EnumString, Default)]

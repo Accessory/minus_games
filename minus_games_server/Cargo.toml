@@ -18,11 +18,11 @@ axum = { version = "0.8", features = [
     "http2"
 ] }
 axum-extra = { version = "0.10", features = ["async-read-body", "cookie"] }
-tokio = { version = "1", features = ["full"] }
+tokio = { workspace = true }
 tokio-util = { version = "0" }
-tracing = "0"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-dotenvy = "0"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+dotenvy = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 utoipa = { version = "5", features = [

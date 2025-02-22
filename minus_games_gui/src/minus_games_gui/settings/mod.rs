@@ -1,7 +1,7 @@
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
 use crate::minus_games_gui::views::settings_view::SettingInput;
 use crate::runtime::get_mut_gui_config;
-use minus_games_client::runtime::{get_mut_config, OFFLINE};
+use minus_games_client::runtime::{OFFLINE, get_mut_config};
 use std::{
     io::{BufWriter, Write},
     path::PathBuf,
@@ -28,14 +28,6 @@ pub(crate) fn override_config(minus_games_settings_option: Option<&MinusGamesSet
         get_mut_gui_config().theme = minus_games_settings.theme.to_string();
     }
 }
-
-// fn resolve_bool_os_str(fullscreen: bool) -> &'static str {
-//     if fullscreen {
-//         "true"
-//     } else {
-//         "false"
-//     }
-// }
 
 fn resolve_path(value: &str) -> Option<PathBuf> {
     if value.is_empty() {

@@ -1,14 +1,14 @@
 #![windows_subsystem = "windows"]
 
-use crate::minus_games_gui::configuration::Mode;
 use crate::minus_games_gui::MinusGamesGui;
+use crate::minus_games_gui::configuration::Mode;
 use crate::runtime::get_gui_config;
 use clap::Parser;
 use iced::application;
 use iced::window::icon::from_rgba;
 use minus_games_client::configuration::Configuration;
 use minus_games_client::run_cli;
-use minus_games_client::runtime::{get_config, CONFIG, OFFLINE};
+use minus_games_client::runtime::{CONFIG, OFFLINE, get_config};
 use std::sync::atomic::Ordering::Relaxed;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
@@ -92,8 +92,7 @@ fn main() -> iced::Result {
                 .subscription(MinusGamesGui::batch_subscription)
                 .window(window_settings)
                 .theme(MinusGamesGui::get_theme)
-                // .font(include_bytes!("../fonts/NoteSansJp/NotoSansJP-Regular.ttf"))
-                // .default_font(Font::with_name("Noto Sans JP"))
+                .exit_on_close_request(false)
                 .run_with(MinusGamesGui::init)
         }
         Mode::Cli => {

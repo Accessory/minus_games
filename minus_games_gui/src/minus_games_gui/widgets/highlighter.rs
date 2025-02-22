@@ -1,6 +1,6 @@
 use iced::advanced::layout::{Limits, Node};
-use iced::advanced::widget::{tree, Tree, Widget};
-use iced::advanced::{renderer, Layout};
+use iced::advanced::widget::{Tree, Widget, tree};
+use iced::advanced::{Layout, renderer};
 use iced::mouse::Cursor;
 use iced::{Background, Color, Element, Length, Rectangle, Size};
 
@@ -28,28 +28,10 @@ where
 }
 
 trait Catalog {
-    // type Class<'a>;
-    // fn default<'a>() -> Self::Class<'a>;
     fn get_background_color(&self) -> Color;
 }
 
-// pub type StyleFn<'a, Theme> = Box<dyn Fn(&Theme) -> Style + 'a>;
-//
-// pub fn default_highlight<Theme>(theme: &iced::Theme) -> Style
-// {
-//     let palette = theme.extended_palette();
-//
-//     Style {
-//         background: palette.background.strong.color.into(),
-//     }
-// }
-
 impl Catalog for iced::Theme {
-    // type Class<'a> = StyleFn<'a, Self>;
-    //
-    // fn default<'a>() -> Self::Class<'a> {
-    //     Box::new(default_highlight::<Theme>)
-    // }
     fn get_background_color(&self) -> Color {
         self.extended_palette().background.weak.color
     }

@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-strum = { version = "0", features = ["derive"] }
+strum = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 blake3 = "1"

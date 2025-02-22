@@ -1,11 +1,11 @@
 use crate::app_state::AppState;
 use crate::auth::auth_layer::AuthLayer;
 use crate::auth::user::ArcUser;
+use axum::Router;
 use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use axum::Router;
 use std::sync::Arc;
 use tower_http::services::ServeDir;
 

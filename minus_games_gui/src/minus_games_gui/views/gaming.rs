@@ -1,9 +1,9 @@
+use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::{LONG_BUTTON_WIDTH, MARGIN_DEFAULT};
-use crate::minus_games_gui::MinusGamesGui;
-use iced::widget::{button, column, horizontal_space, row, text, vertical_space, Row};
 use iced::Center;
 use iced::Length::Fill;
+use iced::widget::{Row, button, column, horizontal_space, row, text, vertical_space};
 
 pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage> {
     if let Some(cgi) = minus_games_gui.current_game.as_ref() {

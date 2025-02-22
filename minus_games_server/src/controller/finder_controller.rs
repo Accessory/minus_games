@@ -4,7 +4,7 @@ use crate::utils::super_user_only;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::routing::post;
-use axum::{middleware, Json, Router};
+use axum::{Json, Router, middleware};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, LazyLock};
 use tracing::info;

@@ -1,16 +1,12 @@
 use crate::minus_games_gui::configuration::GuiConfiguration;
 use clap::Parser;
 use iced::widget::scrollable;
-use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::LazyLock;
+use std::sync::atomic::AtomicBool;
 
 pub(crate) static mut GUI_CONFIG: Option<GuiConfiguration> = None;
 
 pub(crate) static CLOSING: AtomicBool = AtomicBool::new(false);
-
-pub(crate) static DO_NOT_HIGHLIGHT: AtomicBool = AtomicBool::new(false);
-
-pub(crate) static CURRENT_HIGHLIGHT_POSITION: AtomicUsize = AtomicUsize::new(0);
 
 pub(crate) static SCROLLABLE_ID: LazyLock<scrollable::Id> = LazyLock::new(scrollable::Id::unique);
 
