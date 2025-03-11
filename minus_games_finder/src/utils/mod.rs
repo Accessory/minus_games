@@ -166,7 +166,15 @@ pub fn find_possible_save_dir_in_game_root(game_root: &Path) -> Option<Vec<Strin
 pub fn get_closest_windows_exe(name: &str, folder: &Path) -> Option<String> {
     let mut files: Vec<String> = find_all_possible_game_exe_files(folder);
     if files.is_empty() {
-        None
+        if folder.join("bin").exists() {
+            files.extend(find_all_possible_game_exe_files(folder));
+        }
+        if files.is_empty() {
+            let idx = find_closest_string(name, &files);
+            Some(files.remove(idx))
+        } else {
+            None
+        }
     } else {
         let idx = find_closest_string(name, &files);
         Some(files.remove(idx))

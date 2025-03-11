@@ -74,7 +74,7 @@ pub(crate) fn create_modal(
 
     let modal_content = container(column)
         .style(container::bordered_box)
-        .padding(HALF_MARGIN_DEFAULT)
+        .padding(HALF_MARGIN_DEFAULT as u16)
         .align_x(Center)
         .align_y(Center)
         .width(width * 0.66);

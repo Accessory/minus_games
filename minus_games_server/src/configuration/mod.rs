@@ -49,6 +49,14 @@ impl Configuration {
         let system_time = path.metadata().unwrap().modified().unwrap();
         DateTime::<Utc>::from(system_time)
     }
+
+    pub fn does_game_has_header_image(&self, name: &str) -> bool {
+        self.data_folder
+            .join("additions")
+            .join(name)
+            .join("header.jpg")
+            .is_file()
+    }
 }
 
 impl std::fmt::Display for Configuration {

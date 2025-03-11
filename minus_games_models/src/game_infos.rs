@@ -14,7 +14,14 @@ pub struct GameInfos {
     pub windows_exe: Option<String>,
     pub sync_folders: Option<Vec<String>>,
     pub excludes: Option<Vec<String>>,
+    // pub additions: Option<Additions>,
 }
+
+// #[derive(Serialize, Deserialize, Default, Debug, Clone)]
+// #[serde(rename_all = "PascalCase")]
+// pub struct Additions {
+//     pub header: bool,
+// }
 
 impl GameInfos {
     pub fn is_excluded(&self, file_path: &str) -> bool {

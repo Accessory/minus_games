@@ -5,7 +5,8 @@ use crate::utils::get_folders_in_path;
 use clap::Parser;
 use log::warn;
 use std::ffi::OsString;
-use std::path::PathBuf;
+use std::io::{BufWriter, Write};
+use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::atomic::{AtomicBool, AtomicU32};
 use tokio::sync::OnceCell;
@@ -79,6 +80,25 @@ pub fn get_client() -> &'static MinusGamesClient {
             )
         })
     }
+}
+
+pub async fn download_file_from_to(link: &str, to: &Path) -> bool {
+    let mut response = get_client().get(link).await;
+
+    if !response.status().is_success() {
+        return false;
+    }
+
+    if let Ok(to_write_to) = std::fs::File::create(to) {
+        let mut buf_writer = BufWriter::new(to_write_to);
+        while let Ok(Some(chunk)) = response.chunk().await {
+            if let Err(err) = buf_writer.write(&chunk) {
+                warn!("Failed to write to file: {}", err);
+            }
+        }
+    }
+
+    false
 }
 
 pub fn reset_client() {

@@ -11,6 +11,7 @@ use tower_http::services::ServeDir;
 
 pub async fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
+        .nest_service("/additions", additions_service(app_state.clone()).await)
         .fallback_service(download_service(app_state.clone()).await)
         .layer(axum::middleware::from_fn(check_download_access))
         .layer(AuthLayer::new(
@@ -20,9 +21,28 @@ pub async fn new_router(app_state: Arc<AppState>) -> Router {
         ))
 }
 
+#[utoipa::path(
+    get,
+    path = "/additions/{game}/{file}",
+    params(("game", description = "Game"), ("file", description = "Additional Game File")),
+    responses((status = 200, description = "File"), (status = 404, description = "File not Found")),
+    context_path = "/download"
+)]
+async fn additions_service(app_state: Arc<AppState>) -> ServeDir {
+    ServeDir::new(app_state.clone().config.data_folder.join("additions"))
+        .append_index_html_on_directories(false)
+}
+
 async fn check_download_access(user: ArcUser, request: Request, next: Next) -> Response {
     if !user.is_superuser {
-        let game_name_encoded = request.uri().path().split("/").nth(1).unwrap_or_default();
+        let game_name_encoded = request
+            .uri()
+            .path()
+            .split("/")
+            .skip(1)
+            .find(|&i| i != "additions")
+            .unwrap_or_default();
+
         let game_name_decoded = url::form_urlencoded::parse(game_name_encoded.as_bytes())
             .next()
             .unwrap()

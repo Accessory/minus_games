@@ -9,8 +9,8 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug, strum::Display, Default, Serialize, Deserialize, strum::EnumIter, Copy, Clone)]
 pub enum GameEngine {
-    FinalFantasyPixelRemaster,
     RenPy,
+    FinalFantasyPixelRemaster,
     RPGMaker,
     RPGMakerMZ,
     Unreal,

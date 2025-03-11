@@ -43,6 +43,8 @@ pub fn delete_game(game: &str, purge: bool) {
         }
     }
 
+    std::fs::remove_dir_all(get_config().get_game_additions_path(game)).ok();
+
     get_config().unmark_games_as_dirty(game);
 }
 

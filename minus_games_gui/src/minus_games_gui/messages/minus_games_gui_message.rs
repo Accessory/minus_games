@@ -2,6 +2,7 @@ use crate::minus_games_gui::game_card::GameCard;
 use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::views::settings_view::SettingInput;
 use iced::Event;
+use iced::futures::channel::mpsc::Sender;
 use iced::widget::scrollable;
 use minus_games_client::runtime::MinusGamesClientEvents;
 use tracing::info;
@@ -52,6 +53,9 @@ pub(crate) enum MinusGamesGuiMessage {
     ScrollUp(usize),
     ScrollDown(usize),
     Scrolled(scrollable::Viewport),
+    LazyImageDownloaderReady(Sender<(String, bool, usize)>),
+    LazyImageUpdateCard(usize, iced::widget::image::Handle),
+    FinishedProcessingImages(()),
 }
 
 impl From<MinusGamesClientEvents> for MinusGamesGuiMessage {

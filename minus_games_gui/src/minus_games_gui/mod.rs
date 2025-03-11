@@ -1,27 +1,32 @@
 use crate::minus_games_gui::game_card::GameCard;
 use crate::minus_games_gui::handlers::gamepad_input_handler::gamepad_input_handler;
-use crate::minus_games_gui::handlers::keyboard_event_handler::handle_keyboard_events;
+use crate::minus_games_gui::handlers::keyboard_event_handler::handle_system_events;
+use crate::minus_games_gui::handlers::lazy_image_download_handler::lazy_image_download_handler;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
 use crate::minus_games_gui::settings::{handle_change_event, save_new_settings};
 use crate::minus_games_gui::style_constants::{
     DOUBLE_MARGIN_DEFAULT, GAME_CARD_ROW_HEIGHT, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT,
-    SPACING_DEFAULT, TEXT, TOP_BUTTON,
+    SPACING_DEFAULT, TEXT,
 };
+use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
 use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::minus_games_gui::widgets::always_highlighter::AlwaysHighlighter;
 use crate::runtime::{CLOSING, SCROLLABLE_ID, get_gui_config};
+use iced::futures::channel::mpsc;
+use iced::futures::channel::mpsc::Sender;
 use iced::futures::{SinkExt, Stream};
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{AbsoluteOffset, Direction, Scrollbar};
 use iced::widget::{
-    Column, button, column, horizontal_space, row, scrollable, stack, text, text_input,
+    Button, Column, column, horizontal_space, row, scrollable, stack, text, text_input,
     vertical_space,
 };
 use iced::{Center, Element, Fill, Length, Size, Subscription, Task, Theme, event, stream, window};
 use minus_games_client::actions::delete::delete_game;
+use minus_games_client::actions::other::move_additions_header_to_tmp;
 use minus_games_client::actions::repair::{repair_all_games, repair_game};
 use minus_games_client::actions::run::run_game_synced;
 use minus_games_client::actions::scan::scan_for_games;
@@ -74,6 +79,7 @@ pub(crate) struct MinusGamesGui {
     pub went_up: bool,
     pub last_input_mouse: bool,
     pub block_highlighting: bool,
+    pub lazy_image_downloader_sender: Option<Sender<(String, bool, usize)>>,
 }
 
 const FILTER_ID: &str = "FILTER_ID";
@@ -85,6 +91,7 @@ impl MinusGamesGui {
             self.on_close(),
             self.start_fullscreen(),
             self.gamepad_input(),
+            self.lazy_image_download(),
         ])
     }
 
@@ -93,11 +100,18 @@ impl MinusGamesGui {
     }
 
     pub(crate) fn set_start_fullscreen() -> impl Stream<Item = MinusGamesGuiMessage> {
-        stream::channel(1, |mut output| async move {
-            if get_gui_config().fullscreen {
-                let _ = output.send(MinusGamesGuiMessage::Fullscreen).await;
-            }
-        })
+        stream::channel(
+            1,
+            |mut output: mpsc::Sender<MinusGamesGuiMessage>| async move {
+                if get_gui_config().fullscreen {
+                    let _ = output.send(MinusGamesGuiMessage::Fullscreen).await;
+                }
+            },
+        )
+    }
+
+    pub(crate) fn lazy_image_download(&self) -> Subscription<MinusGamesGuiMessage> {
+        Subscription::run(lazy_image_download_handler)
     }
 
     pub(crate) fn gamepad_input(&self) -> Subscription<MinusGamesGuiMessage> {
@@ -113,14 +127,17 @@ impl MinusGamesGui {
     }
 
     pub(crate) fn run_events() -> impl Stream<Item = MinusGamesGuiMessage> {
-        stream::channel(24, |mut output| async move {
-            let (sender, mut receiver) =
-                tokio::sync::mpsc::channel(std::thread::available_parallelism().unwrap().get());
-            set_sender(sender).await;
-            while let Some(event) = receiver.recv().await {
-                let _ = output.send(event.into()).await;
-            }
-        })
+        stream::channel(
+            24,
+            |mut output: mpsc::Sender<MinusGamesGuiMessage>| async move {
+                let (sender, mut receiver) =
+                    tokio::sync::mpsc::channel(std::thread::available_parallelism().unwrap().get());
+                set_sender(sender).await;
+                while let Some(event) = receiver.recv().await {
+                    let _ = output.send(event.into()).await;
+                }
+            },
+        )
     }
 
     pub(crate) fn init() -> (Self, Task<MinusGamesGuiMessage>) {
@@ -158,43 +175,88 @@ impl MinusGamesGui {
         Task::perform(MinusGamesGui::create_cards(), MinusGamesGuiMessage::Created)
     }
 
+    fn apply_filter(&mut self, change: String, force: bool) {
+        if change.is_empty() {
+            self.filter = change;
+            self.highlight_map = self.game_cards.iter().map(|g| g.position).collect();
+        } else if force || change != self.filter {
+            self.filter = change;
+            let used_filter = self.filter.trim().to_lowercase();
+            self.highlight_map.clear();
+            for game_card in self.game_cards.iter() {
+                if game_card.game.to_lowercase().contains(&used_filter) {
+                    self.highlight_map.push(game_card.position);
+                }
+            }
+
+            self.current_highlight_position = 0;
+        } else {
+            info!("Nothing changed");
+        }
+    }
+
     pub(crate) async fn create_cards() -> Vec<GameCard> {
         debug!("Create Cards");
         let installed_games = get_installed_games();
         let mut server_games_with_date = get_client()
-            .get_games_with_date_list()
+            .get_games_with_infos()
             .await
             .unwrap_or_default();
         server_games_with_date.sort_unstable_by(|l, r| r.date.cmp(&l.date));
         let mut server_games: Vec<String> = Vec::with_capacity(server_games_with_date.len());
+        let mut has_header_list: Vec<bool> = Vec::with_capacity(server_games_with_date.len());
 
         for game in server_games_with_date {
             server_games.push(game.name);
+            has_header_list.push(game.header);
         }
 
         let mut rtn = Vec::new();
         for game in &installed_games {
-            let content = if server_games.contains(game) {
-                "Installed - On Server"
-            } else {
-                "Installed"
-            };
+            // let content = if server_games.contains(game) {
+            //     "󰋊 \n"
+            // } else {
+            //     "󰋊"
+            // };
+
+            let image_option = get_config()
+                .get_header_option(game)
+                .map(iced::widget::image::Handle::from_path);
+
+            let has_header = image_option.is_some();
+
             let game_card = GameCard::new(
                 game.to_string(),
-                content.into(),
+                // content.into(),
                 true,
                 rtn.len(),
+                image_option,
                 server_games.contains(game),
+                has_header,
             );
             rtn.push(game_card);
         }
 
-        for game in &server_games {
+        for (idx, game) in server_games.iter().enumerate() {
             if installed_games.contains(game) {
                 continue;
             }
-            let game_card =
-                GameCard::new(game.to_string(), "On Server".into(), false, rtn.len(), true);
+
+            let image_option = get_config()
+                .get_header_option(game)
+                .map(iced::widget::image::Handle::from_path);
+
+            let has_header = image_option.is_some() || has_header_list[idx];
+
+            let game_card = GameCard::new(
+                game.to_string(),
+                // "\n".into(),
+                false,
+                rtn.len(),
+                image_option,
+                true,
+                has_header,
+            );
             rtn.push(game_card);
         }
 
@@ -212,9 +274,38 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::Created(game_cards) => {
                 self.game_cards = game_cards;
                 self.state = MinusGamesState::Ready;
+
+                let mut to_send = Vec::new();
+
+                for game_card in self.game_cards.iter() {
+                    if game_card.image.is_none() && game_card.is_on_server && game_card.has_header {
+                        to_send.push((
+                            game_card.game.clone(),
+                            game_card.is_installed,
+                            game_card.position,
+                        ));
+                    }
+                }
+
+                let mut inner_sender = self.lazy_image_downloader_sender.clone();
+                let image_task = Task::perform(
+                    async move {
+                        if let Some(sender) = inner_sender.as_mut() {
+                            for send in to_send {
+                                sender.send(send).await.ok();
+                            }
+                        }
+                        debug!("Finished sending game card image paths");
+                    },
+                    MinusGamesGuiMessage::FinishedProcessingImages,
+                );
+
+                self.apply_filter(self.filter.clone(), true);
+
                 return Task::batch([
                     text_input::focus(FILTER_ID),
-                    Task::done(MinusGamesGuiMessage::FilterChanged(self.filter.clone())),
+                    // Task::done(MinusGamesGuiMessage::FilterChanged(self.filter.clone(),true)),
+                    image_task,
                 ]);
             }
             MinusGamesGuiMessage::Play(game) => {
@@ -230,6 +321,7 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::Delete(game) => {
                 return Task::perform(
                     async move {
+                        move_additions_header_to_tmp(&game);
                         delete_game(&game, true);
                     },
                     MinusGamesGuiMessage::FinishedDelete,
@@ -322,11 +414,11 @@ impl MinusGamesGui {
                 return window::get_latest().and_then(window::close);
             }
             MinusGamesGuiMessage::Event(event) => {
-                return handle_keyboard_events(self, event);
+                return handle_system_events(self, event);
             }
             MinusGamesGuiMessage::Fullscreen => {
                 return window::get_latest()
-                    .and_then(move |window| window::change_mode(window, window::Mode::Fullscreen));
+                    .and_then(move |window| window::set_mode(window, window::Mode::Fullscreen));
             }
             MinusGamesGuiMessage::Settings => {
                 self.settings = Some(MinusGamesSettings::from_config_with_theme(
@@ -337,12 +429,11 @@ impl MinusGamesGui {
             }
             MinusGamesGuiMessage::ApplyScreenSettings => {
                 return if get_gui_config().fullscreen {
-                    window::get_latest().and_then(move |window| {
-                        window::change_mode(window, window::Mode::Fullscreen)
-                    })
+                    window::get_latest()
+                        .and_then(move |window| window::set_mode(window, window::Mode::Fullscreen))
                 } else {
                     window::get_latest()
-                        .and_then(move |window| window::change_mode(window, window::Mode::Windowed))
+                        .and_then(move |window| window::set_mode(window, window::Mode::Windowed))
                 };
             }
             MinusGamesGuiMessage::BackFromSettings(save) => {
@@ -371,23 +462,7 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::FilterChanged(change) => {
-                if change.is_empty() {
-                    self.filter = change;
-                    self.highlight_map = self.game_cards.iter().map(|g| g.position).collect();
-                } else if change != self.filter {
-                    self.filter = change;
-                    let used_filter = self.filter.trim().to_lowercase();
-                    self.highlight_map.clear();
-                    for game_card in self.game_cards.iter() {
-                        if game_card.game.to_lowercase().contains(&used_filter) {
-                            self.highlight_map.push(game_card.position);
-                        }
-                    }
-
-                    self.current_highlight_position = 0;
-                } else {
-                    info!("Nothing changed");
-                }
+                self.apply_filter(change, false);
             }
             MinusGamesGuiMessage::UpdateAllGames => {
                 self.state = MinusGamesState::Loading;
@@ -465,9 +540,9 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::ScrollDown(step) => {
-                let screen_tiles = self.size.height as u16 / GAME_CARD_ROW_HEIGHT;
+                let screen_tiles = self.size.height as u16 / GAME_CARD_ROW_HEIGHT as u16;
 
-                let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT;
+                let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT as u16;
 
                 let start_tile = hidden_tiles;
                 let end_tile = start_tile + screen_tiles;
@@ -484,7 +559,7 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::ScrollUp(step) => {
-                let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT;
+                let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT as u16;
 
                 let start_tile = hidden_tiles;
 
@@ -500,7 +575,20 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::Scrolled(viewport) => {
+                // info!("Scroll offset: {}", viewport.absolute_offset().y);
                 self.scroll_offset = viewport.absolute_offset();
+            }
+            MinusGamesGuiMessage::LazyImageDownloaderReady(sender) => {
+                self.lazy_image_downloader_sender = Some(sender);
+            }
+            MinusGamesGuiMessage::LazyImageUpdateCard(card_id, handle) => {
+                if let Some(card) = self.game_cards.get_mut(card_id) {
+                    card.image = Some(handle);
+                }
+                return Task::done(MinusGamesGuiMessage::FinishedProcessingImages(()));
+            }
+            MinusGamesGuiMessage::FinishedProcessingImages(_) => {
+                debug!("Finished Processing Images. There are now lazy loaded");
             }
         };
         Task::none()
@@ -533,7 +621,7 @@ impl MinusGamesGui {
             .height(Fill);
 
         match &self.model {
-            None => content.into(),
+            None => stack!(content).into(),
             Some((game, is_on_server)) => stack!(
                 content,
                 create_modal(game, *is_on_server, self.size.width).into()
@@ -552,17 +640,11 @@ impl MinusGamesGui {
                 ],
                 row![
                     horizontal_space().width(Fill),
-                    button("Reload")
-                        .on_press(MinusGamesGuiMessage::Reload)
-                        .padding(TOP_BUTTON),
+                    create_reload_button(),
                     horizontal_space().width(MARGIN_DEFAULT),
-                    button("Settings")
-                        .on_press(MinusGamesGuiMessage::Settings)
-                        .padding(TOP_BUTTON),
+                    create_settings_button(),
                     horizontal_space().width(MARGIN_DEFAULT),
-                    button("Quit")
-                        .on_press(MinusGamesGuiMessage::CloseApplication(()))
-                        .padding(TOP_BUTTON),
+                    create_quit_button(),
                     horizontal_space().width(Fill),
                 ]
             ];
@@ -579,17 +661,11 @@ impl MinusGamesGui {
                         .width(Fill)
                 ],
                 horizontal_space().width(DOUBLE_MARGIN_DEFAULT),
-                button("Reload")
-                    .on_press(MinusGamesGuiMessage::Reload)
-                    .padding(TOP_BUTTON),
+                create_reload_button(),
                 horizontal_space().width(HALF_MARGIN_DEFAULT),
-                button("Settings")
-                    .on_press(MinusGamesGuiMessage::Settings)
-                    .padding(TOP_BUTTON),
+                create_settings_button(),
                 horizontal_space().width(MARGIN_DEFAULT),
-                button("Quit")
-                    .on_press(MinusGamesGuiMessage::CloseApplication(()))
-                    .padding(TOP_BUTTON)
+                create_quit_button(),
             ]
             .align_y(Center),
         );
@@ -614,87 +690,11 @@ impl MinusGamesGui {
     pub(crate) fn get_theme(&self) -> Theme {
         self.theme.clone()
     }
+}
 
-    // fn handle_event(&mut self, event: Event) -> Task<MinusGamesGuiMessage> {
-    //     match event {
-    //         Event::Keyboard(KeyPressed {
-    //             key: Key::Character(character),
-    //             modifiers,
-    //             ..
-    //         }) => {
-    //             if character.as_str() == "f" && modifiers.control() {
-    //                 return Task::batch([
-    //                     snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START),
-    //                     text_input::focus(FILTER_ID),
-    //                 ]);
-    //             }
-    //         }
-    //         Event::Keyboard(KeyPressed {
-    //             key: Key::Named(named),
-    //             modifiers,
-    //             ..
-    //         }) => match named {
-    //             key::Named::Tab => {
-    //                 return if modifiers.shift() {
-    //                     widget::focus_previous()
-    //                 } else {
-    //                     widget::focus_next()
-    //                 };
-    //             }
-    //             key::Named::ArrowUp => {
-    //                 return Task::done(MinusGamesGuiMessage::CurrentPositionUp);
-    //             }
-    //             key::Named::ArrowDown => {
-    //                 return Task::done(MinusGamesGuiMessage::CurrentPositionDown);
-    //             }
-    //             key::Named::Enter => {
-    //                 return Task::done(MinusGamesGuiMessage::StartCurrentPosition);
-    //             }
-    //             key::Named::Home => {
-    //                 return snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START);
-    //             }
-    //             key::Named::End => {
-    //                 return snap_to(SCROLLABLE_ID.clone(), RelativeOffset::END);
-    //             }
-    //             key::Named::PageUp => {
-    //                 return scroll_by(
-    //                     SCROLLABLE_ID.clone(),
-    //                     AbsoluteOffset {
-    //                         x: 0.0,
-    //                         y: -((GAME_CARD_ROW_HEIGHT * 3) as f32),
-    //                     },
-    //                 );
-    //             }
-    //             key::Named::PageDown => {
-    //                 return scroll_by(
-    //                     SCROLLABLE_ID.clone(),
-    //                     AbsoluteOffset {
-    //                         x: 0.0,
-    //                         y: (GAME_CARD_ROW_HEIGHT * 3) as f32,
-    //                     },
-    //                 );
-    //             }
-    //             _ => {}
-    //         },
-    //         Event::Mouse(mouse::Event::ButtonPressed(Button::Back)) => {
-    //             return Task::done(MinusGamesGuiMessage::BackFromSettings(false));
-    //         }
-    //         Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-    //             self.last_input_mouse = true;
-    //         }
-    //         Event::Window(window::Event::CloseRequested) => {
-    //             info!("Close Application!");
-    //             return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
-    //         }
-    //         Event::Window(window::Event::Resized(size)) => {
-    //             self.size = size;
-    //         }
-    //         Event::Window(window::Event::Closed) => {
-    //             CLOSING.store(true, Relaxed);
-    //         }
-    //         _ => {}
-    //     }
-    //
-    //     Task::none()
-    // }
+fn create_reload_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
+    create_config_button("󰑓", MinusGamesGuiMessage::Reload)
+}
+fn create_settings_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
+    create_config_button("", MinusGamesGuiMessage::Settings)
 }

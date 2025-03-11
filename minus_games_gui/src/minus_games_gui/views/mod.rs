@@ -1,3 +1,4 @@
+pub(crate) mod buttons_helper;
 pub(crate) mod downloading;
 pub(crate) mod game_info_modal;
 pub(crate) mod gaming;

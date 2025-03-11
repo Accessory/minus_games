@@ -4,8 +4,8 @@ use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::configuration::Mode;
 use crate::runtime::get_gui_config;
 use clap::Parser;
-use iced::application;
 use iced::window::icon::from_rgba;
+use iced::{Font, application};
 use minus_games_client::configuration::Configuration;
 use minus_games_client::run_cli;
 use minus_games_client::runtime::{CONFIG, OFFLINE, get_config};
@@ -73,7 +73,12 @@ fn main() -> iced::Result {
     let filter = if get_config().verbose {
         EnvFilter::default().add_directive(LevelFilter::DEBUG.into())
     } else {
-        EnvFilter::default().add_directive(LevelFilter::INFO.into())
+        EnvFilter::default()
+            .add_directive(LevelFilter::INFO.into())
+            .add_directive("iced=WARN".parse().unwrap())
+            .add_directive("wgpu_core=WARN".parse().unwrap())
+            .add_directive("wgpu_hal=WARN".parse().unwrap())
+            .add_directive("iced_futures=WARN".parse().unwrap())
     };
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
@@ -85,14 +90,21 @@ fn main() -> iced::Result {
                 icon: Some(
                     from_rgba(image.into_rgba8().to_vec(), 128, 128).expect("Failed to load icon"),
                 ),
+                // size: iced::Size::new(1280.0, 800.0),
+                // max_size: Some(iced::Size::new(1280.0, 800.0)),
                 ..Default::default()
             };
 
             application("Minus Games", MinusGamesGui::update, MinusGamesGui::view)
                 .subscription(MinusGamesGui::batch_subscription)
                 .window(window_settings)
+                // .scale_factor(|_state| 2.0)
                 .theme(MinusGamesGui::get_theme)
                 .exit_on_close_request(false)
+                .font(include_bytes!(
+                    "./minus_games_gui/assets/fonts/MonaspiceArNerdFont-Regular.otf"
+                ))
+                .default_font(Font::with_name("MonaspiceAr Nerd Font"))
                 .run_with(MinusGamesGui::init)
         }
         Mode::Cli => {

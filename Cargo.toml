@@ -18,7 +18,7 @@ panic = "abort"
 strip = "symbols"
 
 [workspace.package]
-version = "0.7.3"
+version = "0.8.0"
 edition = "2024"
 authors = ["Accessory"]
 repository = "https://github.com/Accessory/minus_games/"
@@ -32,3 +32,11 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dotenvy = "0"
 dirs = "6"
 strum = { version = "0", features = ["derive"] }
+reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream", "rustls-tls"] }
+
+[profile.dev.package.iced]
+opt-level = 3
+[profile.dev.package.image]
+opt-level = 3
+[profile.dev.package."*"]
+opt-level = 3

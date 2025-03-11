@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
-iced = { version="0.13" , features = ["image", "tokio", "svg", "advanced"] }
+iced = { git = "https://github.com/iced-rs/iced.git", features = ["image", "tokio", "svg", "advanced"] }
 dotenvy = { workspace = true }
 dirs = { workspace = true }
 tracing = { workspace = true }
@@ -20,7 +20,7 @@ clap = { workspace = true }
 image = { version = "0", features = ["jpeg"] }
 open = "5"
 strum = { workspace = true }
-gilrs = {version = "0", features = []}
+gilrs = { version = "0", features = [] }
 
 [build-dependencies]
 vergen = { version = "9", features = ["build"] }

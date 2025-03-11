@@ -1,9 +1,10 @@
 use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
-use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, TOP_BUTTON};
+use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT};
+use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
 use iced::widget::{
-    Column, Row, button, checkbox, column, horizontal_space, pick_list, row, text, text_input,
-    vertical_space,
+    Button, Column, Row, button, checkbox, column, horizontal_space, pick_list, row, text,
+    text_input, vertical_space,
 };
 use iced::{Center, Fill, Theme};
 use minus_games_client::runtime::OFFLINE;
@@ -137,17 +138,11 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
             row![
                 text("Settings").size(50),
                 horizontal_space(),
-                button("Save")
-                    .on_press(MinusGamesGuiMessage::BackFromSettings(true))
-                    .padding(TOP_BUTTON),
+                create_save_button(),
                 horizontal_space().width(HALF_MARGIN_DEFAULT),
-                button("Back")
-                    .on_press(MinusGamesGuiMessage::BackFromSettings(false))
-                    .padding(TOP_BUTTON),
+                create_back_button(),
                 horizontal_space().width(MARGIN_DEFAULT),
-                button("Quit")
-                    .on_press(MinusGamesGuiMessage::CloseApplication(()))
-                    .padding(TOP_BUTTON),
+                create_quit_button()
             ],
             vertical_space().height(MARGIN_DEFAULT),
             settings,
@@ -172,4 +167,12 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
         horizontal_space().width(MARGIN_DEFAULT),
     ]
     .height(Fill)
+}
+
+fn create_save_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
+    create_config_button("", MinusGamesGuiMessage::BackFromSettings(true))
+}
+
+fn create_back_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
+    create_config_button("", MinusGamesGuiMessage::BackFromSettings(false))
 }

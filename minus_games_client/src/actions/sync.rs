@@ -44,6 +44,9 @@ pub async fn force_sync_all_game_files(game: &str) {
     STOP_DOWNLOAD.store(false, Relaxed);
     get_client().download_game_infos_if_modified(game).await;
     get_client().download_game_files_if_modified(game).await;
+    get_client()
+        .download_game_additions_header_file_if_modified(game)
+        .await;
     send_event(MinusGamesClientEvents::FinishedSyncFileInfos).await;
     sync_game_files_and_download(game).await;
     if !STOP_DOWNLOAD.load(Relaxed) {

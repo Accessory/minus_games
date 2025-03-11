@@ -5,7 +5,7 @@ use axum::extract::{Multipart, Path, State};
 use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use minus_games_models::game_list::GamesWithDate;
+use minus_games_models::game_list::{GamesWithDate, GamesWithInfos};
 use std::sync::Arc;
 use tower_http::services::ServeDir;
 use utoipa::ToSchema;
@@ -16,6 +16,7 @@ pub async fn new_router(app_state: Arc<AppState>) -> Router {
         .route("/upload-save/{game}", post(post_save_file))
         .route("/list", get(get_games_list))
         .route("/list-with-date", get(get_ordered_games_list))
+        .route("/list-with-infos", get(get_ordered_games_infos_list))
         .nest_service("/data", data_service(app_state.clone()).await)
         .layer(AuthLayer::new(
             app_state.user_handler.clone(),
@@ -129,6 +130,29 @@ pub async fn get_ordered_games_list(
     for name in filtered_game_list {
         let modification_date = app_state.config.get_modification_date_for_game(&name);
         rtn.push(GamesWithDate::new(name, modification_date));
+    }
+    Json(rtn)
+}
+
+#[utoipa::path(
+    get,
+    path = "/list-with-infos",
+    responses((status = 200, description = "List all existing Games with infos", body = Vec < GamesWithDate >)),
+    context_path = "/games",
+    security(("basic-auth" = []))
+)]
+#[axum::debug_handler]
+pub async fn get_ordered_games_infos_list(
+    State(app_state): State<Arc<AppState>>,
+    user: ArcUser,
+) -> Json<Vec<GamesWithInfos>> {
+    let game_list = app_state.config.get_game_list();
+    let filtered_game_list = user.filter_games_list(game_list);
+    let mut rtn = Vec::with_capacity(filtered_game_list.len());
+    for name in filtered_game_list {
+        let modification_date = app_state.config.get_modification_date_for_game(&name);
+        let header_exists = app_state.config.does_game_has_header_image(&name);
+        rtn.push(GamesWithInfos::new(name, modification_date, header_exists));
     }
     Json(rtn)
 }

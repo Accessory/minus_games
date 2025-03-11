@@ -8,6 +8,7 @@ use minus_games_models::game_infos::GameInfos;
 use minus_games_utils::ClientFolder;
 use minus_games_utils::ClientGamesFolder;
 use serde::{Deserialize, Serialize};
+use std::env;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::io::BufReader;
@@ -159,6 +160,43 @@ impl Configuration {
     pub fn is_game_dirty(&self, game: &str) -> bool {
         let dirty_path = self.get_dirty_path_for_game(game);
         dirty_path.is_file()
+    }
+
+    pub fn get_header_option(&self, game: &str) -> Option<PathBuf> {
+        let header_path = self.get_game_additions_path(game).join("header.jpg");
+        if header_path.exists() {
+            Some(header_path)
+        } else {
+            let tmp_image_path = env::temp_dir()
+                .join("minus_games_gui")
+                .join("additions")
+                .join(game)
+                .join("header.jpg");
+            if tmp_image_path.exists() {
+                Some(tmp_image_path)
+            } else {
+                None
+            }
+        }
+    }
+
+    pub fn get_game_additions_path(&self, game: &str) -> PathBuf {
+        self.client_folder.join("additions").join(game)
+    }
+
+    pub fn get_game_additions_header_path(&self, game: &str) -> PathBuf {
+        self.get_game_additions_path(game).join("header.jpg")
+    }
+
+    pub fn get_game_additions_tmp_folder(&self, game: &str) -> PathBuf {
+        env::temp_dir()
+            .join("minus_games_gui")
+            .join("additions")
+            .join(game)
+    }
+
+    pub fn get_game_additions_header_tmp_folder(&self, game: &str) -> PathBuf {
+        self.get_game_additions_tmp_folder(game).join("header.jpg")
     }
 }
 

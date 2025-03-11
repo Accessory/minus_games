@@ -10,7 +10,7 @@ use iced::{Event, Task, mouse, widget, window};
 use std::sync::atomic::Ordering::Relaxed;
 use tracing::info;
 
-pub(crate) fn handle_keyboard_events(
+pub(crate) fn handle_system_events(
     minus_games_gui: &mut MinusGamesGui,
     event: Event,
 ) -> Task<MinusGamesGuiMessage> {

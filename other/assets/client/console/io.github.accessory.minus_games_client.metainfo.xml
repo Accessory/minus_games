@@ -45,6 +45,11 @@
     </provides>
 
     <releases>
+        <release version="0.7.4" date="2025-01-28">
+            <description>
+                <p>Display images when possible.</p>
+            </description>
+        </release>
         <release version="0.7.3" date="2025-01-28">
             <description>
                 <p>Bugfixes.</p>

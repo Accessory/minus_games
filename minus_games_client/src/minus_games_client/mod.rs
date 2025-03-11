@@ -6,7 +6,7 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use chrono::{DateTime, Utc};
 use log::{debug, warn};
-use minus_games_models::game_list::GamesWithDate;
+use minus_games_models::game_list::GamesWithInfos;
 use minus_games_models::sync_file_info::SyncFileInfo;
 use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue, IF_MODIFIED_SINCE};
 use reqwest::{Body, Client, Response, StatusCode, Url, multipart};
@@ -127,6 +127,18 @@ impl MinusGamesClient {
         self.download_file_if_modified(from, to.as_path()).await
     }
 
+    pub async fn download_game_additions_header_file_if_modified(&self, game: &str) -> bool {
+        let from = self
+            .url
+            .join(&format!(
+                "/download/additions/{}/header.jpg",
+                encode_problem_chars(game)
+            ))
+            .unwrap();
+        let to = get_config().get_game_additions_header_path(game);
+        self.download_file_if_modified(from, to.as_path()).await
+    }
+
     pub async fn download_infos(&self, game: &str) {
         let json_name = get_json_name(game);
         let from = self
@@ -163,6 +175,17 @@ impl MinusGamesClient {
             .join(&format!("{}/{folder_hash}/", encode_problem_chars(game)))
             .unwrap()
             .join(file_path)
+            .unwrap();
+        self.download_file(url, to).await;
+    }
+
+    pub async fn download_game_additions_header_file(&self, game: &str, to: &Path) {
+        let url = self
+            .url
+            .join(&format!(
+                "/download/additions/{}/header.jpg",
+                encode_problem_chars(game)
+            ))
             .unwrap();
         self.download_file(url, to).await;
     }
@@ -273,9 +296,32 @@ impl MinusGamesClient {
         }
     }
 
-    pub async fn get_games_with_date_list(&self) -> Option<Vec<GamesWithDate>> {
+    // pub async fn get_games_with_date_list(&self) -> Option<Vec<GamesWithDate>> {
+    //     offline_to_none!();
+    //     let url = self.url.join("/games/list-with-date").unwrap();
+    //     let result = match self.client.get(url).send().await {
+    //         Ok(response) => response,
+    //         Err(_) => {
+    //             OFFLINE.store(true, Relaxed);
+    //             return None;
+    //         }
+    //     };
+    //
+    //     if !result.status().is_success() {
+    //         warn!(
+    //             "Failed to get games list: {} - {}",
+    //             result.status(),
+    //             result.text().await.unwrap()
+    //         );
+    //         return None;
+    //     }
+    //
+    //     result.json().await.ok()?
+    // }
+
+    pub async fn get_games_with_infos(&self) -> Option<Vec<GamesWithInfos>> {
         offline_to_none!();
-        let url = self.url.join("/games/list-with-date").unwrap();
+        let url = self.url.join("/games/list-with-infos").unwrap();
         let result = match self.client.get(url).send().await {
             Ok(response) => response,
             Err(_) => {

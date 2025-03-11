@@ -1,8 +1,8 @@
 use iced::advanced::layout::{Limits, Node};
-use iced::advanced::widget::{Tree, Widget, tree};
-use iced::advanced::{Layout, renderer};
+use iced::advanced::widget::{Operation, Tree, Widget, tree};
+use iced::advanced::{Clipboard, Layout, Shell, mouse, renderer};
 use iced::mouse::Cursor;
-use iced::{Background, Color, Element, Length, Rectangle, Size};
+use iced::{Background, Color, Element, Event, Length, Rectangle, Size};
 
 pub struct AlwaysHighlighter<'a, Message, Theme, Renderer> {
     base: Element<'a, Message, Theme, Renderer>,
@@ -97,42 +97,14 @@ where
         self.base.as_widget().diff(tree);
     }
 
-    fn operate(
-        &self,
-        state: &mut Tree,
-        layout: Layout<'_>,
-        renderer: &Renderer,
-        operation: &mut dyn iced::advanced::widget::Operation,
-    ) {
-        self.base
-            .as_widget()
-            .operate(state, layout, renderer, operation);
-    }
-
-    fn on_event(
-        &mut self,
-        state: &mut Tree,
-        event: iced::Event,
-        layout: Layout<'_>,
-        cursor: iced::advanced::mouse::Cursor,
-        renderer: &Renderer,
-        clipboard: &mut dyn iced::advanced::Clipboard,
-        shell: &mut iced::advanced::Shell<'_, Message>,
-        viewport: &Rectangle,
-    ) -> iced::advanced::graphics::core::event::Status {
-        self.base.as_widget_mut().on_event(
-            state, event, layout, cursor, renderer, clipboard, shell, viewport,
-        )
-    }
-
     fn mouse_interaction(
         &self,
         state: &Tree,
         layout: Layout<'_>,
-        cursor: iced::advanced::mouse::Cursor,
+        cursor: mouse::Cursor,
         viewport: &Rectangle,
         renderer: &Renderer,
-    ) -> iced::advanced::mouse::Interaction {
+    ) -> mouse::Interaction {
         self.base
             .as_widget()
             .mouse_interaction(state, layout, cursor, viewport, renderer)
@@ -148,5 +120,33 @@ where
         self.base
             .as_widget_mut()
             .overlay(state, layout, renderer, translation)
+    }
+
+    fn operate(
+        &self,
+        state: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
+        self.base
+            .as_widget()
+            .operate(state, layout, renderer, operation);
+    }
+
+    fn update(
+        &mut self,
+        state: &mut Tree,
+        event: &Event,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        renderer: &Renderer,
+        clipboard: &mut dyn Clipboard,
+        shell: &mut Shell<'_, Message>,
+        viewport: &Rectangle,
+    ) {
+        self.base.as_widget_mut().update(
+            state, event, layout, cursor, renderer, clipboard, shell, viewport,
+        )
     }
 }

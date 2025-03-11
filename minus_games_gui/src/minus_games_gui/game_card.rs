@@ -1,79 +1,198 @@
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::{
-    DEFAULT_MODAL_BUTTON_WIDTH, GAME_CARD_ROW_HEIGHT, SMALL_MARGIN_DEFAULT,
+    GAME_CARD_IMAGE_HEIGHT, GAME_CARD_IMAGE_ROW_WIDTH, GAME_CARD_ROW_HEIGHT, READY_BUTTON_HEIGHT,
+    READY_BUTTON_WIDTH, SMALL_MARGIN_DEFAULT, TEXT, TINY_MARGIN_DEFAULT,
 };
-use iced::widget::{MouseArea, button, image, row, text};
-use iced::{Center, Fill, Left};
+use iced::ContentFit::Cover;
+use iced::widget::svg::Status;
+use iced::widget::text::Shaping::Advanced;
+use iced::widget::{
+    Column, MouseArea, Row, button, center, container, horizontal_space, image, row, svg, text,
+};
+use iced::{Center, Element, Fill, Left, Theme, border, gradient};
+use std::sync::LazyLock;
 
 #[derive(Clone, Debug, Default)]
 pub struct GameCard {
     pub game: String,
     pub title: String,
-    pub content: String,
+    // pub content: String,
     pub is_installed: bool,
     pub image: Option<image::Handle>,
     pub position: usize,
     pub is_on_server: bool,
+    pub has_header: bool,
 }
+
+static INSTALLED: LazyLock<svg::Handle> =
+    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/installed.svg")));
+
+static ON_SERVER: LazyLock<svg::Handle> =
+    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/on-server.svg")));
 
 impl GameCard {
     pub(crate) fn new(
         game: String,
-        content: String,
+        // content: String,
         is_installed: bool,
         position: usize,
+        image: Option<image::Handle>,
         is_on_server: bool,
+        has_header: bool,
     ) -> Self {
         Self {
             game: game.clone(),
             title: game,
-            content,
+            // content,
             is_installed,
-            image: None,
+            image,
             position,
             is_on_server,
+            has_header,
         }
     }
 
-    pub(crate) fn view(&self) -> MouseArea<MinusGamesGuiMessage> {
-        let row = match &self.image {
-            None => {
-                let mut row = row![
-                    text(&self.title)
-                        .width(Fill)
-                        .shaping(text::Shaping::Advanced),
-                    text(&self.content).width(Fill).align_x(Left),
-                    button(text("Play").width(Fill).align_x(Center))
-                        .width(DEFAULT_MODAL_BUTTON_WIDTH)
-                        .on_press(MinusGamesGuiMessage::Play(self.game.clone())),
-                ]
-                .align_y(Center);
+    // pub(crate) fn get_shortened_title(&self) -> &str {
+    //     if self.title.len() < 71 {
+    //         self.title.as_str()
+    //     } else {
+    //         self.title.split_at(71).0
+    //     }
+    // }
 
-                row = if self.is_installed {
-                    row.push(
-                        button(text("More").width(Fill).align_x(Center))
-                            .width(DEFAULT_MODAL_BUTTON_WIDTH)
-                            .on_press(MinusGamesGuiMessage::OpenGameModal(
-                                self.game.clone(),
-                                self.is_on_server,
-                            )),
-                    )
-                } else {
-                    row.push(
-                        button(text("Download").width(Fill).align_x(Center))
-                            .width(DEFAULT_MODAL_BUTTON_WIDTH)
-                            .on_press(MinusGamesGuiMessage::Repair(self.game.clone())),
-                    )
-                };
-                row
-            }
-            Some(img) => {
-                row![text(&self.title), image(img), button("Play")]
-            }
-        }
-        .spacing(SMALL_MARGIN_DEFAULT);
+    pub(crate) fn view(&self) -> MouseArea<MinusGamesGuiMessage> {
+        let row = self.create_row();
 
         MouseArea::new(row.height(GAME_CARD_ROW_HEIGHT))
             .on_enter(MinusGamesGuiMessage::EnterMouseArea(self.position))
     }
+
+    fn create_image(&self) -> Element<MinusGamesGuiMessage> {
+        let element: Element<MinusGamesGuiMessage> = if let Some(image) = self.image.as_ref() {
+            iced::widget::image(image)
+                .content_fit(Cover)
+                .height(GAME_CARD_IMAGE_HEIGHT)
+                .width(GAME_CARD_IMAGE_ROW_WIDTH)
+                .into()
+        } else {
+            center(
+                text(self.title.chars().next().unwrap_or(' '))
+                    .width(Fill)
+                    .align_x(Center)
+                    .shaping(Advanced),
+            )
+            .style(|theme: &Theme| {
+                let palette = theme.extended_palette();
+                let style = container::Style::default();
+
+                // style.text_color = Some(palette.secondary.strong.text);
+                style
+                    .border(border::color(palette.background.weak.color).width(1))
+                    .background(
+                        gradient::Linear::new(1.0)
+                            .add_stop(0.0, palette.background.weak.color)
+                            .add_stop(0.5, palette.background.strong.color)
+                            .add_stop(1.0, palette.background.weak.color),
+                    )
+            })
+            .width(GAME_CARD_IMAGE_ROW_WIDTH)
+            .into()
+        };
+        element
+    }
+
+    fn create_installed_part(&self) -> Column<MinusGamesGuiMessage> {
+        // let top = if self.is_installed { "󰋊" } else { " " };
+        // let bottom = if self.is_on_server { "" } else { " " };
+        let mut column = Column::with_capacity(2);
+
+        if self.is_installed {
+            column = column.push(svg(INSTALLED.clone()).style(Self::set_svg_style))
+        }
+
+        if self.is_on_server {
+            column = column.push(svg(ON_SERVER.clone()).style(Self::set_svg_style))
+        }
+
+        column.width(TEXT)
+    }
+
+    fn set_svg_style(theme: &Theme, _status: Status) -> svg::Style {
+        let palette = theme.extended_palette();
+        svg::Style {
+            color: Some(palette.background.base.text),
+        }
+    }
+
+    fn create_row(&self) -> Row<MinusGamesGuiMessage> {
+        let mut row = row![
+            horizontal_space().width(TINY_MARGIN_DEFAULT),
+            self.create_image(),
+            row![
+                text(&self.title)
+                    .width(Fill)
+                    .align_x(Left)
+                    .shaping(Advanced)
+                    .height(TEXT * 2),
+                self.create_installed_part()
+            ],
+            // Play
+            button(
+                text("")
+                    .height(READY_BUTTON_HEIGHT)
+                    .width(TEXT)
+                    .center()
+                    .shaping(Advanced)
+            )
+            .width(READY_BUTTON_WIDTH)
+            .on_press(MinusGamesGuiMessage::Play(self.game.clone())),
+        ];
+
+        row = if self.is_installed {
+            row.push(
+                // More
+                button(
+                    text("󰍜")
+                        .height(READY_BUTTON_HEIGHT)
+                        .width(Fill)
+                        .center()
+                        .shaping(Advanced),
+                )
+                .width(READY_BUTTON_WIDTH)
+                .on_press(MinusGamesGuiMessage::OpenGameModal(
+                    self.game.clone(),
+                    self.is_on_server,
+                )),
+            )
+        } else {
+            row.push(
+                // Download
+                button(
+                    text("")
+                        .height(READY_BUTTON_HEIGHT)
+                        .width(Fill)
+                        .center()
+                        .shaping(Advanced),
+                )
+                .width(READY_BUTTON_WIDTH)
+                .on_press(MinusGamesGuiMessage::Repair(self.game.clone())),
+            )
+        };
+        row = row.push(horizontal_space().width(TINY_MARGIN_DEFAULT));
+        row.spacing(SMALL_MARGIN_DEFAULT).align_y(Center)
+    }
 }
+
+// fn color_from_string(input: &str) -> Color {
+//     let mut hasher = DefaultHasher::new();
+//     input.hash(&mut hasher);
+//     let hash = hasher.finish();
+//
+//     // Extract color components.  This is a very basic mapping; you'll
+//     // likely want to improve it (see more robust methods below).
+//     let r = (hash & 0xFF) as u8;
+//     let g = ((hash >> 8) & 0xFF) as u8;
+//     let b = ((hash >> 16) & 0xFF) as u8;
+//
+//     Color::from_rgb8(r, g, b)
+// }

@@ -166,6 +166,17 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
 
     let folder_name = game_path.iter().next_back()?.to_str()?.to_string();
 
+    // let additions = if data_folder
+    //     .join("additions")
+    //     .join(&folder_name)
+    //     .join("header.jpg")
+    //     .is_file()
+    // {
+    //     Some(Additions { header: true })
+    // } else {
+    //     None
+    // };
+
     Some(GameInfos {
         name,
         folder_name,
@@ -178,6 +189,7 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
         windows_exe: current_windows_exe,
         sync_folders: current_sync_folders,
         excludes: current_excludes,
+        // additions,
     })
 }
 
