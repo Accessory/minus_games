@@ -17,6 +17,8 @@ pub struct GuiConfiguration {
     pub mode: Mode,
     #[arg(long, env = "MINUS_GAMES_GUI_THEME", default_value = "Light")]
     pub theme: String,
+    #[arg(long, env = "MINUS_GAMES_GUI_SCALE")]
+    pub scale: Option<f64>,
 }
 
 impl Display for GuiConfiguration {

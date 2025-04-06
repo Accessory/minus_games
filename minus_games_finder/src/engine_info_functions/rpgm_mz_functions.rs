@@ -2,7 +2,7 @@ use crate::engine_info_functions::EngineInfoFunctions;
 use crate::utils::get_game_exe_or_exe;
 use std::path::Path;
 
-use super::rpgm_utils::{get_rpgm_linux_exe, get_rpgm_name};
+use super::game_finding_utils::{get_linux_exe, get_rpgm_name};
 
 #[derive(Copy, Clone)]
 pub struct RPGMMZFunctions {}
@@ -13,7 +13,7 @@ impl EngineInfoFunctions for RPGMMZFunctions {
     }
 
     fn get_linux_exe(&self, game_root: &Path) -> Option<String> {
-        get_rpgm_linux_exe(self, game_root)
+        get_linux_exe(self, game_root)
     }
 
     fn get_windows_exe(&self, game_root: &Path) -> Option<String> {

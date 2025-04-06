@@ -1,3 +1,4 @@
+use crate::constants::{ADDITIONS, HEADER_JPG, INFOS};
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use clap::builder::OsStr;
@@ -8,6 +9,8 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::time::SystemTime;
 use walkdir::WalkDir;
+
+pub mod constants;
 
 pub struct CacheFolder {}
 
@@ -164,7 +167,7 @@ pub fn create_file_list(folder: &Path) -> Vec<PathBuf> {
 }
 
 pub fn set_file_modified_time(to: &Path, time: SystemTime) {
-    set_file_mtime(to, time.into()).unwrap();
+    set_file_mtime(to, time.into()).ok();
 }
 
 pub fn create_argon2_hash(text: &str) -> String {
@@ -187,6 +190,44 @@ pub fn verify_argon2_hash(password: &str, hash: &str) -> bool {
     argon2
         .verify_password(password.as_bytes(), &parsed_hash)
         .is_ok()
+}
+
+pub fn create_game_infos_name(game: &str) -> String {
+    format!("{game}.json")
+}
+
+pub fn get_csv_name(game: &str) -> String {
+    format!("{game}.csv")
+}
+
+pub fn get_dirty_name(game: &str) -> String {
+    format!("{game}.dirty")
+}
+
+pub fn create_last_time_played_name(game: &str) -> String {
+    format!("{game}.played")
+}
+
+pub fn get_game_infos_path(data_dir: &Path, game: &str) -> PathBuf {
+    data_dir.join(INFOS).join(create_game_infos_name(game))
+}
+
+pub fn get_csv_path(data_dir: &Path, game: &str) -> PathBuf {
+    data_dir.join(INFOS).join(get_csv_name(game))
+}
+
+pub fn get_dirty_path(data_dir: &Path, game: &str) -> PathBuf {
+    data_dir.join(INFOS).join(get_dirty_name(game))
+}
+
+pub fn get_last_time_played_path(data_dir: &Path, game: &str) -> PathBuf {
+    data_dir
+        .join(INFOS)
+        .join(create_last_time_played_name(game))
+}
+
+pub fn get_header_path(data_dir: PathBuf, game: &str) -> PathBuf {
+    data_dir.join(ADDITIONS).join(game).join(HEADER_JPG)
 }
 
 #[cfg(test)]

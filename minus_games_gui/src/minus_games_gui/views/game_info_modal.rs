@@ -3,6 +3,7 @@ use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::style_constants::{
     HALF_MARGIN_DEFAULT, LONG_BUTTON_WIDTH, MARGIN_DEFAULT,
 };
+use crate::minus_games_gui::views::game_helper::create_info_game_line_with;
 use iced::widget::{Column, button, center, container, mouse_area, opaque, text, vertical_space};
 use iced::{Center, Color, Element, Fill};
 use minus_games_client::runtime::{OFFLINE, get_config};
@@ -17,15 +18,20 @@ pub(crate) fn create_modal(
     let mut column = Column::new();
     column = column.push(text(game).size(24).shaping(text::Shaping::Advanced));
     if let Some(game_infos) = &game_infos_option {
-        column = column.push(text(format!("Engine: {}", game_infos.engine)));
-        column = column.push(text(format!(
-            "Linux support: {}",
-            game_infos.supported_platforms.linux
-        )));
-        column = column.push(text(format!(
-            "Windows support: {}",
-            game_infos.supported_platforms.windows
-        )));
+        // column = column.push(text(format!("Engine: {}", game_infos.engine)));
+        // column = column.push(text(format!(
+        //     "Linux support: {}",
+        //     game_infos.supported_platforms.linux
+        // )));
+        // column = column.push(text(format!(
+        //     "Windows support: {}",
+        //     game_infos.supported_platforms.windows
+        // )));
+        column = column.push(create_info_game_line_with(
+            game_infos.engine.to_string(),
+            game_infos.supports_linux(),
+            game_infos.supports_windows(),
+        ));
         column = column.push(vertical_space().height(MARGIN_DEFAULT));
         column = column.push(
             button(text("Delete").width(Fill).align_x(Center))

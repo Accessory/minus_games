@@ -5,18 +5,20 @@ use crate::minus_games_gui::configuration::Mode;
 use crate::runtime::get_gui_config;
 use clap::Parser;
 use iced::window::icon::from_rgba;
-use iced::{Font, application};
+use iced::{Font, Settings, application};
 use minus_games_client::configuration::Configuration;
 use minus_games_client::run_cli;
 use minus_games_client::runtime::{CONFIG, OFFLINE, get_config};
+use std::process::ExitCode;
 use std::sync::atomic::Ordering::Relaxed;
+use tracing::error;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
 mod minus_games_gui;
 mod runtime;
 
-fn main() -> iced::Result {
+fn main() -> ExitCode {
     if let Some(config_dir) = dirs::config_local_dir() {
         let config_path = config_dir.join("minus_games_gui").join("config");
         if config_path.exists() {
@@ -58,13 +60,13 @@ fn main() -> iced::Result {
     println!("{}", get_gui_config());
     println!(
         "Version: {} Build on: {}",
-        env!("VERGEN_GIT_COMMIT_DATE"),
-        env!("VERGEN_GIT_SHA")
+        env!("CARGO_PKG_VERSION"),
+        env!("VERGEN_BUILD_DATE")
     );
     println!(
         "Build Source Date: {} - Git Hash: {}",
-        env!("CARGO_PKG_VERSION"),
-        env!("VERGEN_BUILD_DATE")
+        env!("VERGEN_GIT_COMMIT_DATE"),
+        env!("VERGEN_GIT_SHA")
     );
 
     OFFLINE.store(get_config().offline, Relaxed);
@@ -82,6 +84,11 @@ fn main() -> iced::Result {
     };
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
+    if let Err(err) = get_config().create_necessary_folders() {
+        error!("Failed to create all necessary directories. Error: {}", err);
+        return ExitCode::FAILURE;
+    }
+
     match get_gui_config().mode {
         Mode::Gui => {
             static ICON: &[u8] = include_bytes!("../../other/assets/common/MinusGames.jpg");
@@ -95,17 +102,32 @@ fn main() -> iced::Result {
                 ..Default::default()
             };
 
-            application("Minus Games", MinusGamesGui::update, MinusGamesGui::view)
-                .subscription(MinusGamesGui::batch_subscription)
-                .window(window_settings)
-                // .scale_factor(|_state| 2.0)
-                .theme(MinusGamesGui::get_theme)
-                .exit_on_close_request(false)
-                .font(include_bytes!(
-                    "./minus_games_gui/assets/fonts/MonaspiceArNerdFont-Regular.otf"
-                ))
-                .default_font(Font::with_name("MonaspiceAr Nerd Font"))
-                .run_with(MinusGamesGui::init)
+            let settings = Settings {
+                id: Some("minus_games_gui".to_string()),
+                ..Default::default()
+            };
+
+            let result = application(
+                MinusGamesGui::title,
+                MinusGamesGui::update,
+                MinusGamesGui::view,
+            )
+            .settings(settings)
+            .subscription(MinusGamesGui::batch_subscription)
+            .window(window_settings)
+            .scale_factor(|minus_games_gui| minus_games_gui.scale.unwrap_or(1.0))
+            .theme(MinusGamesGui::get_theme)
+            .exit_on_close_request(false)
+            .font(include_bytes!(
+                "./minus_games_gui/assets/fonts/MonaspiceArNerdFont-Regular.otf"
+            ))
+            .default_font(Font::with_name("MonaspiceAr Nerd Font"))
+            .run_with(MinusGamesGui::init);
+
+            if let Err(err) = result {
+                error!("Failed to create a {}", err);
+                return ExitCode::FAILURE;
+            }
         }
         Mode::Cli => {
             tokio::runtime::Builder::new_multi_thread()
@@ -113,7 +135,8 @@ fn main() -> iced::Result {
                 .build()
                 .expect("Could not create a tokio runtime")
                 .block_on(async { run_cli().await });
-            Ok(())
         }
     }
+
+    ExitCode::SUCCESS
 }

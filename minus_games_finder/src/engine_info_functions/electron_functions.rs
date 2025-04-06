@@ -1,15 +1,15 @@
 use crate::engine_info_functions::EngineInfoFunctions;
-use crate::utils::get_game_exe_or_exe;
+use crate::utils::{get_game_exe_or_exe, get_title_from_parent_folder};
 use std::path::Path;
 
-use super::game_finding_utils::{get_linux_exe, get_rpgm_name};
+use super::game_finding_utils::get_linux_exe;
 
 #[derive(Copy, Clone)]
-pub struct RPGMFunctions {}
+pub struct Electron {}
 
-impl EngineInfoFunctions for RPGMFunctions {
+impl EngineInfoFunctions for Electron {
     fn get_game_name(&self, game_root: &Path) -> Option<String> {
-        get_rpgm_name(game_root)
+        get_title_from_parent_folder(game_root)
     }
 
     fn get_linux_exe(&self, game_root: &Path) -> Option<String> {
@@ -25,6 +25,6 @@ impl EngineInfoFunctions for RPGMFunctions {
     }
 
     fn get_excludes(&self, _: &Path) -> Option<Vec<String>> {
-        Some(vec!["config.rpgsave".into()])
+        None
     }
 }

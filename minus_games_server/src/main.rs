@@ -18,7 +18,7 @@ use axum::routing::get;
 use clap::Parser;
 use log::{debug, info};
 use mime::APPLICATION_JSON;
-use std::ops::Deref;
+use minus_games_models::other::Boolean;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tower::ServiceBuilder;
@@ -72,7 +72,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/health", get(health))
-        .nest("/me", me_route(app_state.clone()).await)
+        .merge(me_route(app_state.clone()).await)
         .nest(
             "/games",
             game_controller::new_router(app_state.clone()).await,
@@ -101,11 +101,14 @@ async fn main() {
 }
 
 async fn me_route(app_state: Arc<AppState>) -> Router {
-    Router::new().route("/", get(me)).layer(AuthLayer::new(
-        app_state.user_handler.clone(),
-        app_state.session_manager.clone(),
-        app_state.clear_sessions.clone(),
-    ))
+    Router::new()
+        .route("/me", get(me))
+        .route("/sync", get(sync))
+        .layer(AuthLayer::new(
+            app_state.user_handler.clone(),
+            app_state.session_manager.clone(),
+            app_state.clear_sessions.clone(),
+        ))
 }
 
 async fn redirect_to_openapi() -> Redirect {
@@ -124,7 +127,7 @@ async fn health() -> Response {
 #[utoipa::path(
     get,
     path = "/me",
-    responses((status = 200, description = "Server is active and available", body = User)),
+    responses((status = 200, description = "Get my configuration and settings", body = User)),
     security(("basic-auth" = []))
 )]
 async fn me(user: ArcUser) -> Response {
@@ -132,7 +135,23 @@ async fn me(user: ArcUser) -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header(CONTENT_TYPE, APPLICATION_JSON.as_ref())
-        .body(serde_json::to_string(user.deref()).unwrap())
+        .body(user.to_json_string())
+        .unwrap()
+        .into_response()
+}
+
+#[utoipa::path(
+    get,
+    path = "/sync",
+    responses((status = 200, description = "Get if the current user can sync saves", body = bool, content_type = "application/json")),
+    security(("basic-auth" = []))
+)]
+async fn sync(user: ArcUser) -> Response {
+    debug!("User {} can sync: {}", user.username, user.sync);
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(CONTENT_TYPE, APPLICATION_JSON.as_ref())
+        .body(Boolean::create_json_string(user.sync))
         .unwrap()
         .into_response()
 }

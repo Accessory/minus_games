@@ -3,7 +3,7 @@ use convert_case::{Case, Casing};
 use glob::MatchOptions;
 use minus_games_models::game_file_info::GameFileInfo;
 use minus_games_models::game_infos::GameInfos;
-use minus_games_utils::create_file_list;
+use minus_games_utils::{create_file_list, get_csv_path, get_game_infos_path};
 use std::ffi::OsStr;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -68,8 +68,7 @@ pub fn find_closest_string(close_to: &str, list: &[String]) -> usize {
 pub fn save_game_file_infos(game_folder: &Path, config: &Configuration, game_infos: &GameInfos) {
     let file_list = create_file_list(game_folder);
 
-    let csv_name = format!("{}.csv", game_infos.folder_name.as_str());
-    let csv_path = config.data_folder.join(csv_name);
+    let csv_path = get_csv_path(&config.data_folder, game_infos.folder_name.as_str());
     if let Err(err) = std::fs::create_dir_all(config.data_folder.as_path()) {
         warn!("Failed to create client data folder: {}", err);
         return;
@@ -89,13 +88,7 @@ pub fn save_game_file_infos(game_folder: &Path, config: &Configuration, game_inf
 }
 
 pub fn save_infos_to_data_folder(data_folder: &Path, game_infos: &GameInfos) {
-    if !data_folder.is_dir() {
-        std::fs::create_dir_all(data_folder).expect("Failed to create data folder");
-    }
-
-    let json_name = format!("{}.json", game_infos.folder_name.as_str());
-    let json_path = data_folder.join(json_name);
-
+    let json_path = get_game_infos_path(data_folder, game_infos.folder_name.as_str());
     std::fs::write(json_path, game_infos.to_string()).expect("Unable to write game infos to file");
 }
 
@@ -213,7 +206,7 @@ pub fn get_game_exe_or_exe(folder: &Path) -> Option<String> {
     if game_exe.is_file() {
         return Some(GAME_EXE.into());
     }
-    glob_for_file(folder, "*.exe")
+    glob_for_possible_exe(folder)
 }
 
 pub fn get_closest_exe_from_folder(folder: &Path, name: &str) -> Option<String> {
@@ -238,6 +231,35 @@ pub fn glob_for_file(root: &Path, to_join: &str) -> Option<String> {
     if let Some(first) = results.next() {
         let res = first.unwrap();
         return Some(res.file_name().unwrap().to_str().unwrap().to_string());
+    }
+    None
+}
+
+pub fn glob_for_possible_exe(root: &Path) -> Option<String> {
+    let options = MatchOptions {
+        case_sensitive: false,
+        require_literal_separator: false,
+        require_literal_leading_dot: false,
+    };
+    let glob_str = root.join("*.exe").to_str().unwrap().to_string();
+    let results = glob::glob_with(&glob_str, options).unwrap();
+
+    for entry in results {
+        let res = entry.unwrap();
+        let file_name = res.file_name().unwrap().to_str().unwrap();
+
+        if ![
+            "chrome-sandbox.exe",
+            "crashpad_handler.exe",
+            "chrome_crashpad_handler.exe",
+            "UnityCrashHandler64.exe",
+        ]
+        .contains(&file_name)
+        {
+            continue;
+        }
+
+        return Some(file_name.to_string());
     }
     None
 }

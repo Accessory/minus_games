@@ -25,7 +25,7 @@ pub fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/{game}/{folder_hash}", get(get_sync_files_for_folder))
         .route("/{game}/{folder_hash}", post(post_sync_file_for_folder))
-        .route("/{game}/{folder_hash}/{file_path}", get(get_sync_file))
+        .route("/{game}/{folder_hash}/{*file_path}", get(get_sync_file))
         .layer(DefaultBodyLimit::max(1024 * 1024 * 512))
         .layer(AuthLayer::new(
             app_state.user_handler.clone(),

@@ -3,6 +3,7 @@ use axum::extract::Request;
 use axum::http::header::AUTHORIZATION;
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
+use log::warn;
 use minus_games_utils::verify_argon2_hash;
 use std::io::BufReader;
 use std::path::PathBuf;
@@ -51,7 +52,19 @@ impl UserHandler {
         let user_file = std::fs::File::open(user_file_path).ok()?;
         let reader = BufReader::new(user_file);
 
-        let user: User = serde_json::from_reader(reader).ok()?;
+        let user: User = match serde_json::from_reader(reader) {
+            Ok(user) => user,
+            Err(err) => {
+                warn!(
+                    "Failed to parse user data in json file : {} With Error: {}",
+                    self.user_files_path
+                        .join(format!("{username}.json"))
+                        .display(),
+                    err
+                );
+                return None;
+            }
+        };
         if verify_argon2_hash(password, user.password.as_str()) {
             return Some(user);
         }

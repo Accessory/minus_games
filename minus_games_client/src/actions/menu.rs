@@ -206,7 +206,7 @@ pub async fn select_game_to_download() {
     if let Some(selection) = selection {
         let game = games.get(selection).unwrap();
         if !get_config()
-            .get_json_path_from_game(game)
+            .get_game_infos_path_from_game(game)
             .as_path()
             .is_file()
         {
@@ -268,7 +268,7 @@ pub async fn select_game() {
     if let Some(selection) = selection {
         let game = installed_games.get(selection).unwrap();
         if !get_config()
-            .get_json_path_from_game(game)
+            .get_game_infos_path_from_game(game)
             .as_path()
             .is_file()
         {

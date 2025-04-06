@@ -6,6 +6,7 @@ use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
+use minus_games_utils::constants::ADDITIONS;
 use std::sync::Arc;
 use tower_http::services::ServeDir;
 
@@ -29,7 +30,7 @@ pub async fn new_router(app_state: Arc<AppState>) -> Router {
     context_path = "/download"
 )]
 async fn additions_service(app_state: Arc<AppState>) -> ServeDir {
-    ServeDir::new(app_state.clone().config.data_folder.join("additions"))
+    ServeDir::new(app_state.clone().config.data_folder.join(ADDITIONS))
         .append_index_html_on_directories(false)
 }
 
@@ -40,7 +41,7 @@ async fn check_download_access(user: ArcUser, request: Request, next: Next) -> R
             .path()
             .split("/")
             .skip(1)
-            .find(|&i| i != "additions")
+            .find(|&i| i != ADDITIONS)
             .unwrap_or_default();
 
         let game_name_decoded = url::form_urlencoded::parse(game_name_encoded.as_bytes())

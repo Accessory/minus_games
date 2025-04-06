@@ -1,3 +1,8 @@
+use self::{
+    other_functions::OtherFunctions, unreal_functions::UnrealFunctions,
+    wolf_rpg_engine_functions::WolfRPGEditorEngineFunctions,
+};
+use crate::engine_info_functions::electron_functions::Electron;
 use crate::engine_info_functions::final_fantasy_pixel_remaster_functions::FinalFantasyPixelRemasterFunctions;
 use crate::engine_info_functions::kirikiri_functions::KirikiriFunctions;
 use crate::engine_info_functions::ren_py_functions::RenPyFunctions;
@@ -6,19 +11,14 @@ use crate::engine_info_functions::rpgm_mz_functions::RPGMMZFunctions;
 use crate::engine_info_functions::unity_functions::UnityFunctions;
 use minus_games_models::GameEngine;
 use std::path::Path;
-
-use self::{
-    other_functions::OtherFunctions, unreal_functions::UnrealFunctions,
-    wolf_rpg_engine_functions::WolfRPGEditorEngineFunctions,
-};
-
+mod electron_functions;
 mod final_fantasy_pixel_remaster_functions;
+mod game_finding_utils;
 mod kirikiri_functions;
 mod other_functions;
 mod ren_py_functions;
 mod rpgm_functions;
 mod rpgm_mz_functions;
-mod rpgm_utils;
 mod unity_functions;
 mod unreal_functions;
 mod wolf_rpg_engine_functions;
@@ -54,6 +54,7 @@ pub fn get_engine_info_function_for_engine(
         GameEngine::Unity => Some(Box::new(UnityFunctions {})),
         GameEngine::UnityOld => Some(Box::new(UnityFunctions {})),
         GameEngine::WolfRPGEditor => Some(Box::new(WolfRPGEditorEngineFunctions {})),
+        GameEngine::Electron => Some(Box::new(Electron {})),
         GameEngine::Kirikiri => Some(Box::new(KirikiriFunctions {})),
         GameEngine::FinalFantasyPixelRemaster => {
             Some(Box::new(FinalFantasyPixelRemasterFunctions {}))

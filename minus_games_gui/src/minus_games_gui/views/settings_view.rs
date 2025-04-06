@@ -1,12 +1,12 @@
 use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
-use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT};
+use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, TEXT};
 use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
 use iced::widget::{
-    Button, Column, Row, button, checkbox, column, horizontal_space, pick_list, row, text,
+    Button, Column, Row, button, checkbox, column, horizontal_space, pick_list, row, slider, text,
     text_input, vertical_space,
 };
-use iced::{Center, Fill, Theme};
+use iced::{Bottom, Center, Fill, Theme};
 use minus_games_client::runtime::OFFLINE;
 use std::sync::atomic::Ordering::Relaxed;
 
@@ -21,25 +21,41 @@ pub enum SettingInput {
     WinePrefix(String),
     Verbose(bool),
     Offline(bool),
+    Sync(bool),
     Fullscreen(bool),
     Username(String),
     Password(String),
     Theme(Theme),
+    Scale(f64),
 }
 
 macro_rules! add_setting_input {
     ($g:ident,$i:ident, $n1:literal, $n2:tt, $n3:tt) => {
         $i.push(text(concat!($n1, ":")))
-            .push(
-                text_input("", $g.settings.as_ref().unwrap().$n2.as_str())
+            .push(row![
+                text_input("", $g.$i.as_ref().unwrap().$n2.as_str())
                     .on_input(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(i))),
-            )
+                // horizontal_space().width(MARGIN_DEFAULT),
+                // Clear
+                button("").on_press(MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(
+                    "".to_string()
+                ))),
+            ])
             .push(vertical_space().height(MARGIN_DEFAULT))
     };
 }
 
+macro_rules! add_checkbox_input {
+    ($g:ident,$i:ident, $n1:literal, $n2:tt, $n3:tt) => {
+        checkbox($n1, $g.$i.as_ref().unwrap().$n2)
+            .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(i)))
+    };
+}
+
 pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage> {
-    let mut settings = Column::with_capacity(3 * 9 + 3);
+    let mut settings = Column::with_capacity(3 * 9 + 4);
+    settings = add_setting_input!(minus_games_gui, settings, "Username", username, Username);
+    settings = add_setting_input!(minus_games_gui, settings, "Password", password, Password);
     settings = add_setting_input!(
         minus_games_gui,
         settings,
@@ -72,45 +88,86 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
             WinePrefix
         );
     }
+    let row = Row::with_capacity(5)
+        .push(add_checkbox_input!(
+            minus_games_gui,
+            settings,
+            "Verbose",
+            verbose,
+            Verbose
+        ))
+        .push(horizontal_space().width(MARGIN_DEFAULT))
+        .push(add_checkbox_input!(
+            minus_games_gui,
+            settings,
+            "Offline",
+            offline,
+            Offline
+        ))
+        .push(horizontal_space().width(MARGIN_DEFAULT))
+        .push(add_checkbox_input!(
+            minus_games_gui,
+            settings,
+            "Sync Filegames",
+            sync,
+            Sync
+        ))
+        .push(horizontal_space().width(MARGIN_DEFAULT))
+        .push(add_checkbox_input!(
+            minus_games_gui,
+            settings,
+            "Fullscreen",
+            fullscreen,
+            Fullscreen
+        ));
     settings = settings
-        .push(
-            checkbox(
-                "Verbose:",
-                minus_games_gui.settings.as_ref().unwrap().verbose,
-            )
-            .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Verbose(i))),
-        )
+        .push(row)
         .push(vertical_space().height(MARGIN_DEFAULT));
     settings = settings
         .push(
-            checkbox(
-                "Offline:",
-                minus_games_gui.settings.as_ref().unwrap().offline,
-            )
-            .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Offline(i))),
+            row![
+                text("Scale:"),
+                slider(
+                    0.25..=8.0,
+                    minus_games_gui.settings.as_ref().unwrap().scale,
+                    |value| MinusGamesGuiMessage::ChangeSetting(SettingInput::Scale(value)),
+                )
+                .step(0.25),
+                text(format!(
+                    "{:.2}",
+                    minus_games_gui.settings.as_ref().unwrap().scale
+                )),
+            ]
+            .spacing(MARGIN_DEFAULT),
         )
         .push(vertical_space().height(MARGIN_DEFAULT));
-    settings = settings
-        .push(
-            checkbox(
-                "Fullscreen:",
-                minus_games_gui.settings.as_ref().unwrap().fullscreen,
-            )
-            .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Fullscreen(i))),
-        )
-        .push(vertical_space().height(MARGIN_DEFAULT));
-    settings = add_setting_input!(minus_games_gui, settings, "Username", username, Username);
-    settings = settings
-        .push(text("Password:"))
-        .push(
-            text_input(
-                "",
-                minus_games_gui.settings.as_ref().unwrap().password.as_str(),
-            )
-            .on_input(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Password(i)))
-            .secure(true),
-        )
-        .push(vertical_space().height(MARGIN_DEFAULT));
+    // settings = settings
+    //     .push(
+    //         checkbox(
+    //             "Verbose:",
+    //             minus_games_gui.settings.as_ref().unwrap().verbose,
+    //         )
+    //         .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Verbose(i))),
+    //     )
+    //     .push(vertical_space().height(MARGIN_DEFAULT));
+    // settings = settings
+    //     .push(
+    //         checkbox(
+    //             "Offline:",
+    //             minus_games_gui.settings.as_ref().unwrap().offline,
+    //         )
+    //         .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Offline(i))),
+    //     )
+    //     .push(vertical_space().height(MARGIN_DEFAULT));
+    // settings = settings
+    //     .push(
+    //         checkbox(
+    //             "Fullscreen:",
+    //             minus_games_gui.settings.as_ref().unwrap().fullscreen,
+    //         )
+    //         .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Fullscreen(i))),
+    //     )
+    //     .push(vertical_space().height(MARGIN_DEFAULT));
     settings = settings.push(pick_list(
         Theme::ALL,
         Some(&minus_games_gui.settings.as_ref().unwrap().theme),
@@ -136,14 +193,15 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
         column![
             vertical_space().height(MARGIN_DEFAULT),
             row![
-                text("Settings").size(50),
+                text("Settings").size(TEXT),
                 horizontal_space(),
                 create_save_button(),
                 horizontal_space().width(HALF_MARGIN_DEFAULT),
                 create_back_button(),
                 horizontal_space().width(MARGIN_DEFAULT),
                 create_quit_button()
-            ],
+            ]
+            .align_y(Bottom),
             vertical_space().height(MARGIN_DEFAULT),
             settings,
             action_row,
@@ -156,7 +214,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage>
             .align_x(Center)
             .width(Fill),
             column![text!(
-                "Git Commit Date: {} - Git Sha: {}",
+                "Git Commit Date: {} - Git Hash: {}",
                 env!("VERGEN_GIT_COMMIT_DATE"),
                 env!("VERGEN_GIT_SHA")
             )]

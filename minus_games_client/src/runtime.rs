@@ -4,6 +4,7 @@ use crate::runtime::MinusGamesClientEvents::{LogInfoMessage, LogInfoStaticMessag
 use crate::utils::get_folders_in_path;
 use clap::Parser;
 use log::warn;
+use minus_games_utils::constants::INFOS;
 use std::ffi::OsString;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -109,6 +110,8 @@ pub fn reset_client() {
 }
 
 pub static OFFLINE: AtomicBool = AtomicBool::new(false);
+pub static SYNC: AtomicBool = AtomicBool::new(true);
+pub static SYNC_TESTED: AtomicBool = AtomicBool::new(false);
 pub static STOP_DOWNLOAD: AtomicBool = AtomicBool::new(false);
 
 pub async fn get_all_games() -> Vec<String> {
@@ -133,6 +136,7 @@ pub fn get_installed_games() -> Vec<String> {
 
     let configs: Vec<PathBuf> = get_config()
         .client_folder
+        .join(INFOS)
         .read_dir()
         .expect("Failed to read game folder")
         .map(|rd| rd.unwrap().path())
@@ -208,6 +212,22 @@ macro_rules! offline_to_return {
     () => {
         if OFFLINE.load(Relaxed) {
             debug!("Client is offline!");
+            return;
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! sync_to_return {
+    () => {
+        if !SYNC_TESTED.load(Relaxed) {
+            SYNC_TESTED.store(true, SeqCst);
+            let result = get_client().can_sync().await;
+            SYNC.store(!result, SeqCst);
+        }
+
+        if !SYNC.load(Relaxed) {
+            warn!("Client has deactivated the savegame file sync!");
             return;
         }
     };

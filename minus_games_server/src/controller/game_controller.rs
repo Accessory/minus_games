@@ -5,7 +5,10 @@ use axum::extract::{Multipart, Path, State};
 use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use minus_games_models::game_list::{GamesWithDate, GamesWithInfos};
+use log::warn;
+use minus_games_models::game_list::{
+    GamesWithDate, GamesWithGameInfos, GamesWithInfos, GamesWithMinimalGameInfos,
+};
 use std::sync::Arc;
 use tower_http::services::ServeDir;
 use utoipa::ToSchema;
@@ -17,6 +20,14 @@ pub async fn new_router(app_state: Arc<AppState>) -> Router {
         .route("/list", get(get_games_list))
         .route("/list-with-date", get(get_ordered_games_list))
         .route("/list-with-infos", get(get_ordered_games_infos_list))
+        .route(
+            "/list-with-game-infos",
+            get(get_ordered_with_games_infos_list),
+        )
+        .route(
+            "/list-with-minimal-game-infos",
+            get(get_ordered_with_minimal_games_infos_list),
+        )
         .nest_service("/data", data_service(app_state.clone()).await)
         .layer(AuthLayer::new(
             app_state.user_handler.clone(),
@@ -137,7 +148,7 @@ pub async fn get_ordered_games_list(
 #[utoipa::path(
     get,
     path = "/list-with-infos",
-    responses((status = 200, description = "List all existing Games with infos", body = Vec < GamesWithDate >)),
+    responses((status = 200, description = "List all existing Games with infos", body = Vec < GamesWithInfos >)),
     context_path = "/games",
     security(("basic-auth" = []))
 )]
@@ -153,6 +164,70 @@ pub async fn get_ordered_games_infos_list(
         let modification_date = app_state.config.get_modification_date_for_game(&name);
         let header_exists = app_state.config.does_game_has_header_image(&name);
         rtn.push(GamesWithInfos::new(name, modification_date, header_exists));
+    }
+    Json(rtn)
+}
+
+#[utoipa::path(
+    get,
+    path = "/list-with-game-infos",
+    responses((status = 200, description = "List all existing Games with infos", body = Vec < GamesWithGameInfos >)),
+    context_path = "/games",
+    security(("basic-auth" = []))
+)]
+#[axum::debug_handler]
+pub async fn get_ordered_with_games_infos_list(
+    State(app_state): State<Arc<AppState>>,
+    user: ArcUser,
+) -> Json<Vec<GamesWithGameInfos>> {
+    let game_list = app_state.config.get_game_list();
+    let filtered_game_list = user.filter_games_list(game_list);
+    let mut rtn = Vec::with_capacity(filtered_game_list.len());
+    for name in filtered_game_list {
+        let modification_date = app_state.config.get_modification_date_for_game(&name);
+        let header_exists = app_state.config.does_game_has_header_image(&name);
+        if let Some(game_infos) = app_state.get_game_infos(&name) {
+            rtn.push(GamesWithGameInfos::new(
+                name,
+                modification_date,
+                header_exists,
+                game_infos,
+            ));
+        } else {
+            warn!("There are no game infos for {}", name);
+        }
+    }
+    Json(rtn)
+}
+
+#[utoipa::path(
+    get,
+    path = "/list-with-minimal-game-infos",
+    responses((status = 200, description = "List all existing Games with infos", body = Vec < GamesWithMinimalGameInfos >)),
+    context_path = "/games",
+    security(("basic-auth" = []))
+)]
+#[axum::debug_handler]
+pub async fn get_ordered_with_minimal_games_infos_list(
+    State(app_state): State<Arc<AppState>>,
+    user: ArcUser,
+) -> Json<Vec<GamesWithMinimalGameInfos>> {
+    let game_list = app_state.config.get_game_list();
+    let filtered_game_list = user.filter_games_list(game_list);
+    let mut rtn = Vec::with_capacity(filtered_game_list.len());
+    for name in filtered_game_list {
+        let modification_date = app_state.config.get_modification_date_for_game(&name);
+        let header_exists = app_state.config.does_game_has_header_image(&name);
+        if let Some(game_infos) = app_state.get_game_infos(&name) {
+            rtn.push(GamesWithMinimalGameInfos::new(
+                name,
+                modification_date,
+                header_exists,
+                game_infos.into(),
+            ));
+        } else {
+            warn!("There are no game infos for {}", name);
+        }
     }
     Json(rtn)
 }

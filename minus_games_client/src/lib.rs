@@ -13,7 +13,7 @@ use crate::actions::sync::{
     download_sync_for_game, download_syncs, sync_infos_for_all_games, upload_syncs,
 };
 use crate::configuration::ClientActions;
-use crate::runtime::{MinusGamesClientEvents, OFFLINE, get_config, send_event, set_sender};
+use crate::runtime::{MinusGamesClientEvents, OFFLINE, SYNC, get_config, send_event, set_sender};
 use indicatif::ProgressBar;
 use std::sync::atomic::Ordering;
 use tracing::{debug, info, warn};
@@ -34,6 +34,7 @@ pub async fn run_cli() {
 
     // Offline
     OFFLINE.store(get_config().offline, Ordering::Relaxed);
+    SYNC.store(get_config().sync, Ordering::Relaxed);
 
     // Init EventManager
     let (sender, mut receiver) =

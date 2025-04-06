@@ -1,6 +1,6 @@
 use clap::Parser;
 use minus_games_utils::DataFolder;
-use minus_games_utils::GamesFolder;
+use minus_games_utils::{GamesFolder, get_csv_path, get_game_infos_path};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -40,18 +40,17 @@ impl Configuration {
         }
     }
 
-    fn get_json_path_from_game(&self, game_folder_name: &str) -> PathBuf {
-        let json_name = format!("{game_folder_name}.json");
-        self.data_folder.join(json_name)
+    fn get_game_infos_path_from_game(&self, game_folder_name: &str) -> PathBuf {
+        get_game_infos_path(&self.data_folder, game_folder_name)
     }
 
     fn get_csv_path_from_game(&self, game_folder_name: &str) -> PathBuf {
-        let csv_name = format!("{game_folder_name}.csv");
-        self.data_folder.join(csv_name)
+        get_csv_path(&self.data_folder, game_folder_name)
     }
 
     pub fn does_game_infos_exists(&self, game: &str) -> bool {
-        self.get_json_path_from_game(game).is_file() && self.get_csv_path_from_game(game).is_file()
+        self.get_game_infos_path_from_game(game).is_file()
+            && self.get_csv_path_from_game(game).is_file()
     }
 }
 

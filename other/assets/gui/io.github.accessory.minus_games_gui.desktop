@@ -4,3 +4,4 @@ Exec=minus_games_gui
 Type=Application
 Icon=io.github.accessory.minus_games_gui
 Categories=Game
+StartupWMClass=minus_games_gui

@@ -13,4 +13,4 @@ serde_json = { version = "1" }
 blake3 = "1"
 chrono = { version = "0", features = ["serde"] }
 minus_games_utils = { path = "../minus_games_utils" }
-utoipa = { version = "5", features = ["chrono"] }
+utoipa = { workspace = true }

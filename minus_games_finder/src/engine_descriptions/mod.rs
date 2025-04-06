@@ -52,6 +52,22 @@ static RPGM: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescription {
     }),
 });
 
+static ELECTRON: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescription {
+    engine_type: GameEngine::Electron,
+    main_files: vec!["snapshot_blob.bin".into()],
+    main_folders: vec!["resources".into()],
+    platform_windows: Some(PlatformDescription {
+        platform: Platform::Windows,
+        look_for_files: vec!["*.exe".into()],
+        look_for_folders: vec![],
+    }),
+    platform_linux: Some(PlatformDescription {
+        platform: Platform::Linux,
+        look_for_files: vec![],
+        look_for_folders: vec![],
+    }),
+});
+
 static RPGM_MZ: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescription {
     engine_type: GameEngine::RPGMakerMZ,
     main_files: vec!["package.json".into()],
@@ -160,6 +176,7 @@ pub fn get_game_description_for_engine(
         GameEngine::Unity => Some(&*UNITY),
         GameEngine::UnityOld => Some(&*UNITY_OLD),
         GameEngine::WolfRPGEditor => Some(&*WOLF_RPG_EDITOR),
+        GameEngine::Electron => Some(&*ELECTRON),
         GameEngine::Kirikiri => Some(&*KIRIKIRI),
         GameEngine::Other => Some(&*OTHER),
     }

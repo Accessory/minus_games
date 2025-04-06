@@ -2,6 +2,7 @@ use crate::auth::session_manager::SessionManager;
 use crate::auth::user_handler::UserHandler;
 use crate::configuration::Configuration;
 use axum::extract::multipart::Field;
+use minus_games_models::game_infos::GameInfos;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs::File;
@@ -17,6 +18,10 @@ pub struct AppState {
 }
 
 impl AppState {
+    pub fn get_game_infos(&self, game: &str) -> Option<GameInfos> {
+        self.config.get_game_infos(game)
+    }
+
     pub fn does_game_exist(&self, game: &str) -> bool {
         let json_name = format!("{game}.json");
         self.config.data_folder.join(json_name).is_file()

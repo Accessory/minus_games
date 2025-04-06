@@ -1,13 +1,17 @@
 pub mod game_file_info;
 pub mod game_infos;
 pub mod game_list;
+pub mod other;
 pub mod rpgm_package;
 pub mod sync_file_info;
 
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
+use utoipa::ToSchema;
 
-#[derive(Debug, strum::Display, Default, Serialize, Deserialize, strum::EnumIter, Copy, Clone)]
+#[derive(
+    Debug, strum::Display, Default, Serialize, Deserialize, strum::EnumIter, Copy, Clone, ToSchema,
+)]
 pub enum GameEngine {
     RenPy,
     FinalFantasyPixelRemaster,
@@ -18,6 +22,7 @@ pub enum GameEngine {
     UnityOld,
     WolfRPGEditor,
     Kirikiri,
+    Electron,
     #[default]
     Other,
 }

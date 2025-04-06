@@ -5,23 +5,25 @@ use crate::minus_games_gui::handlers::lazy_image_download_handler::lazy_image_do
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
-use crate::minus_games_gui::settings::{handle_change_event, save_new_settings};
+use crate::minus_games_gui::settings::{
+    handle_change_event, override_gui_config, save_new_settings,
+};
 use crate::minus_games_gui::style_constants::{
-    DOUBLE_MARGIN_DEFAULT, GAME_CARD_ROW_HEIGHT, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT,
-    SPACING_DEFAULT, TEXT,
+    GAME_CARD_ROW_HEIGHT, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SPACING_DEFAULT, TEXT,
 };
 use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
 use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::minus_games_gui::widgets::always_highlighter::AlwaysHighlighter;
-use crate::runtime::{CLOSING, SCROLLABLE_ID, get_gui_config};
+use crate::runtime::{CLOSING, SCROLLABLE_ID, get_gui_config, get_mut_gui_config};
+use iced::Bottom;
 use iced::futures::channel::mpsc;
 use iced::futures::channel::mpsc::Sender;
 use iced::futures::{SinkExt, Stream};
 use iced::widget::scrollable::Anchor::Start;
-use iced::widget::scrollable::{AbsoluteOffset, Direction, Scrollbar};
+use iced::widget::scrollable::{AbsoluteOffset, Direction, RelativeOffset, Scrollbar};
 use iced::widget::{
-    Button, Column, column, horizontal_space, row, scrollable, stack, text, text_input,
+    Button, Column, button, column, horizontal_space, row, scrollable, stack, text, text_input,
     vertical_space,
 };
 use iced::{Center, Element, Fill, Length, Size, Subscription, Task, Theme, event, stream, window};
@@ -34,7 +36,7 @@ use minus_games_client::runtime::{
     MinusGamesClientEvents, STOP_DOWNLOAD, get_client, get_config, get_installed_games,
     kill_current_running_game, reset_client, send_event, set_sender,
 };
-use minus_games_models::game_infos::GameInfos;
+use minus_games_models::game_infos::{GameInfos, MinimalGameInfos};
 use settings::override_config;
 use std::cmp;
 use std::sync::atomic::Ordering::Relaxed;
@@ -63,6 +65,7 @@ pub(crate) enum MinusGamesState {
 #[derive(Debug, Clone, Default)]
 pub(crate) struct MinusGamesGui {
     pub theme: Theme,
+    pub scale: Option<f64>,
     pub game_cards: Vec<GameCard>,
     pub state: MinusGamesState,
     pub files_to_download: usize,
@@ -85,6 +88,25 @@ pub(crate) struct MinusGamesGui {
 const FILTER_ID: &str = "FILTER_ID";
 
 impl MinusGamesGui {
+    pub(crate) fn title(&self) -> String {
+        match self.state {
+            MinusGamesState::Loading => "Loading - Minus Games".to_string(),
+            MinusGamesState::Ready => "Minus Games".to_string(),
+            MinusGamesState::Downloading => match self.current_game.as_ref() {
+                None => "Downloading - Minus Games".to_string(),
+                Some(value) => {
+                    format!("Downloading - {} - Minus Games", value.folder_name)
+                }
+            },
+            MinusGamesState::Gaming => match self.current_game.as_ref() {
+                None => "Gaming - Minus Games".to_string(),
+                Some(value) => {
+                    format!("Gaming - {} - Minus Games", value.folder_name)
+                }
+            },
+            MinusGamesState::Settings => "Settings - Minus Games".to_string(),
+        }
+    }
     pub(crate) fn batch_subscription(&self) -> Subscription<MinusGamesGuiMessage> {
         Subscription::batch([
             self.event_subscription(),
@@ -162,7 +184,7 @@ impl MinusGamesGui {
     pub(crate) fn start_async_init() -> Task<MinusGamesGuiMessage> {
         Task::perform(
             MinusGamesGui::async_init(),
-            MinusGamesGuiMessage::InitComplete,
+            MinusGamesGuiMessage::InitWindow,
         )
     }
 
@@ -197,27 +219,39 @@ impl MinusGamesGui {
 
     pub(crate) async fn create_cards() -> Vec<GameCard> {
         debug!("Create Cards");
-        let installed_games = get_installed_games();
-        let mut server_games_with_date = get_client()
-            .get_games_with_infos()
+        let mut installed_games = get_installed_games();
+
+        installed_games.sort_by_key(|game| get_config().get_game_last_action_date(game));
+        installed_games.reverse();
+
+        let mut minimal_game_infos = get_client()
+            .get_games_with_minimal_game_infos()
             .await
             .unwrap_or_default();
-        server_games_with_date.sort_unstable_by(|l, r| r.date.cmp(&l.date));
-        let mut server_games: Vec<String> = Vec::with_capacity(server_games_with_date.len());
-        let mut has_header_list: Vec<bool> = Vec::with_capacity(server_games_with_date.len());
+        minimal_game_infos.sort_unstable_by(|l, r| r.date.cmp(&l.date));
+        let mut server_games: Vec<String> = Vec::with_capacity(minimal_game_infos.len());
+        let mut has_header_list: Vec<bool> = Vec::with_capacity(minimal_game_infos.len());
+        let mut info_list = Vec::with_capacity(minimal_game_infos.len());
 
-        for game in server_games_with_date {
+        for game in minimal_game_infos {
             server_games.push(game.name);
             has_header_list.push(game.header);
+            info_list.push(game.minimal_game_infos);
         }
 
         let mut rtn = Vec::new();
         for game in &installed_games {
-            // let content = if server_games.contains(game) {
-            //     "󰋊 \n"
-            // } else {
-            //     "󰋊"
-            // };
+            let info: MinimalGameInfos = match server_games
+                .iter()
+                .enumerate()
+                .find(|(_idx, game_name)| game_name == &game)
+            {
+                None => match get_config().get_game_infos(game) {
+                    None => continue,
+                    Some(game_infos) => game_infos.into(),
+                },
+                Some((idx, _)) => info_list.get(idx).unwrap().clone(),
+            };
 
             let image_option = get_config()
                 .get_header_option(game)
@@ -233,6 +267,7 @@ impl MinusGamesGui {
                 image_option,
                 server_games.contains(game),
                 has_header,
+                info,
             );
             rtn.push(game_card);
         }
@@ -256,6 +291,7 @@ impl MinusGamesGui {
                 image_option,
                 true,
                 has_header,
+                info_list.get(idx).unwrap().clone(),
             );
             rtn.push(game_card);
         }
@@ -362,9 +398,35 @@ impl MinusGamesGui {
                 self.state = MinusGamesState::Ready;
                 self.current_game = None;
                 self.current_game_name = None;
-                return MinusGamesGui::load();
+                self.current_highlight_position = 0;
+                return Task::batch([
+                    Task::done(MinusGamesGuiMessage::ScrollToTop),
+                    MinusGamesGui::load(),
+                ]);
             } // _ => Task::none(),
             MinusGamesGuiMessage::Init => {}
+            MinusGamesGuiMessage::SetScale(scale) => {
+                self.scale = Some(scale);
+                get_mut_gui_config().scale = self.scale;
+            }
+            MinusGamesGuiMessage::InitWindow(_) => {
+                return if let Some(scale) = get_gui_config().scale {
+                    Task::batch([
+                        Task::done(MinusGamesGuiMessage::SetScale(scale)),
+                        Task::done(MinusGamesGuiMessage::InitComplete(())),
+                    ])
+                } else {
+                    window::get_latest().and_then(|window_id| {
+                        window::get_scale_factor(window_id).then(|f| {
+                            // println!("Scale Factor: {f}");
+                            Task::batch([
+                                Task::done(MinusGamesGuiMessage::SetScale(f as f64)),
+                                Task::done(MinusGamesGuiMessage::InitComplete(())),
+                            ])
+                        })
+                    })
+                };
+            }
             MinusGamesGuiMessage::InitComplete(_) => return Self::load(),
             MinusGamesGuiMessage::SetFilesToDownload(files_count) => {
                 self.state = MinusGamesState::Downloading;
@@ -402,8 +464,9 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::CloseGame(_) => {
                 self.current_game = None;
                 self.current_game_name = None;
+                self.current_highlight_position = 0;
                 self.state = MinusGamesState::Loading;
-                return Self::load();
+                return Task::batch([Self::load(), Task::done(MinusGamesGuiMessage::ScrollToTop)]);
             }
             MinusGamesGuiMessage::Exit => {
                 return Task::perform(Self::close(), MinusGamesGuiMessage::CloseApplication);
@@ -420,9 +483,10 @@ impl MinusGamesGui {
                 return window::get_latest()
                     .and_then(move |window| window::set_mode(window, window::Mode::Fullscreen));
             }
-            MinusGamesGuiMessage::Settings => {
+            MinusGamesGuiMessage::GotoSettings => {
                 self.settings = Some(MinusGamesSettings::from_config_with_theme(
                     get_config(),
+                    get_gui_config(),
                     self.get_theme(),
                 ));
                 self.state = MinusGamesState::Settings;
@@ -436,12 +500,33 @@ impl MinusGamesGui {
                         .and_then(move |window| window::set_mode(window, window::Mode::Windowed))
                 };
             }
+            MinusGamesGuiMessage::BackAction => match self.state {
+                MinusGamesState::Ready => {
+                    return Task::done(MinusGamesGuiMessage::CloseApplication(()));
+                }
+                MinusGamesState::Settings => {
+                    return Task::done(MinusGamesGuiMessage::BackFromSettings(false));
+                }
+                _ => {}
+            },
+            MinusGamesGuiMessage::StartAction => {
+                if self.state == MinusGamesState::Ready {
+                    return Task::done(MinusGamesGuiMessage::GotoSettings);
+                }
+            }
+            MinusGamesGuiMessage::ReloadAction => {
+                if self.state == MinusGamesState::Ready {
+                    return Task::done(MinusGamesGuiMessage::Reload);
+                }
+            }
             MinusGamesGuiMessage::BackFromSettings(save) => {
                 if save {
                     save_new_settings(self.settings.as_ref());
                     override_config(self.settings.as_ref());
+                    override_gui_config(self.settings.as_ref());
                     if let Some(settings) = self.settings.take() {
                         self.theme = settings.theme;
+                        self.scale = Some(settings.scale);
                     }
                     reset_client();
                 } else if let Some(settings) = self.settings.take() {
@@ -459,6 +544,9 @@ impl MinusGamesGui {
                     if self.theme != settings.theme {
                         self.theme = settings.theme.clone();
                     }
+                    // if !self.scale.is_some_and(|v| v == settings.scale) {
+                    //     self.scale = Some(settings.scale);
+                    // }
                 }
             }
             MinusGamesGuiMessage::FilterChanged(change) => {
@@ -540,15 +628,18 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::ScrollDown(step) => {
-                let screen_tiles = self.size.height as u16 / GAME_CARD_ROW_HEIGHT as u16;
+                let scale_game_card_row_height =
+                    (GAME_CARD_ROW_HEIGHT as f64 * self.scale.unwrap_or(1.0)) as u16;
 
-                let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT as u16;
+                let screen_tiles = self.size.height as u16 / scale_game_card_row_height;
+
+                let hidden_tiles = self.scroll_offset.y as u16 / scale_game_card_row_height;
 
                 let start_tile = hidden_tiles;
-                let end_tile = start_tile + screen_tiles;
+                let end_tile: isize = (start_tile + screen_tiles) as isize;
 
                 self.block_highlighting = false;
-                if !self.went_up && end_tile - 6 < self.current_highlight_position as u16 {
+                if !self.went_up && end_tile - 6 < self.current_highlight_position as isize {
                     return scrollable::scroll_by(
                         SCROLLABLE_ID.clone(),
                         AbsoluteOffset {
@@ -557,6 +648,9 @@ impl MinusGamesGui {
                         },
                     );
                 }
+            }
+            MinusGamesGuiMessage::ScrollToTop => {
+                return scrollable::snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START);
             }
             MinusGamesGuiMessage::ScrollUp(step) => {
                 let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT as u16;
@@ -600,7 +694,7 @@ impl MinusGamesGui {
 
     pub(crate) fn view(&self) -> Element<MinusGamesGuiMessage> {
         let to_display = match self.state {
-            MinusGamesState::Loading => loading::view(),
+            MinusGamesState::Loading => loading::view(self.size.height),
             MinusGamesState::Ready => ready::view(self),
             MinusGamesState::Downloading => downloading::view(self),
             MinusGamesState::Gaming => gaming::view(self),
@@ -651,22 +745,28 @@ impl MinusGamesGui {
         }
         let mut rtn = Column::with_capacity(self.game_cards.len() + 1);
         rtn = rtn.push(
-            row![
-                column![
+            row![column![
+                row![
                     text("Games").size(TEXT),
-                    text_input("Filter", &self.filter)
-                        .id(FILTER_ID)
-                        .on_input(MinusGamesGuiMessage::FilterChanged)
-                        .on_submit(MinusGamesGuiMessage::StartCurrentPosition)
-                        .width(Fill)
-                ],
-                horizontal_space().width(DOUBLE_MARGIN_DEFAULT),
-                create_reload_button(),
-                horizontal_space().width(HALF_MARGIN_DEFAULT),
-                create_settings_button(),
-                horizontal_space().width(MARGIN_DEFAULT),
-                create_quit_button(),
-            ]
+                    horizontal_space().width(Fill),
+                    create_reload_button(),
+                    horizontal_space().width(HALF_MARGIN_DEFAULT),
+                    create_settings_button(),
+                    horizontal_space().width(MARGIN_DEFAULT),
+                    create_quit_button(),
+                ]
+                .align_y(Bottom),
+                vertical_space().height(HALF_MARGIN_DEFAULT),
+                row![
+                        text_input("Filter", &self.filter)
+                            .id(FILTER_ID)
+                            .on_input(MinusGamesGuiMessage::FilterChanged)
+                            .on_submit(MinusGamesGuiMessage::StartCurrentPosition)
+                            .width(Fill),
+                        button("") // Clear Filter
+                            .on_press_with(|| MinusGamesGuiMessage::FilterChanged("".to_string()))
+                    ]
+            ],]
             .align_y(Center),
         );
         rtn = rtn.push(vertical_space().height(HALF_MARGIN_DEFAULT));
@@ -696,5 +796,5 @@ fn create_reload_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
     create_config_button("󰑓", MinusGamesGuiMessage::Reload)
 }
 fn create_settings_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
-    create_config_button("", MinusGamesGuiMessage::Settings)
+    create_config_button("", MinusGamesGuiMessage::GotoSettings)
 }

@@ -1,13 +1,14 @@
 use crate::download_manager::download_loop;
 use crate::offline_to_none;
 use crate::runtime::{OFFLINE, get_config};
-use crate::utils::{encode_problem_chars, get_csv_name, get_json_name};
+use crate::utils::encode_problem_chars;
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use chrono::{DateTime, Utc};
 use log::{debug, warn};
-use minus_games_models::game_list::GamesWithInfos;
+use minus_games_models::game_list::{GamesWithInfos, GamesWithMinimalGameInfos};
 use minus_games_models::sync_file_info::SyncFileInfo;
+use minus_games_utils::{create_game_infos_name, get_csv_name};
 use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue, IF_MODIFIED_SINCE};
 use reqwest::{Body, Client, Response, StatusCode, Url, multipart};
 use std::path::{Path, PathBuf};
@@ -23,6 +24,28 @@ pub struct MinusGamesClient {
 impl MinusGamesClient {
     pub async fn get(&self, url: &str) -> Response {
         self.client.get(url).send().await.unwrap()
+    }
+    pub async fn can_sync(&self) -> bool {
+        let url = self.url.join("/sync").unwrap();
+
+        let response = match self.client.get(url).send().await {
+            Ok(response) => response,
+            Err(err) => {
+                warn!("Can't check the sync status: {}", err);
+                return false;
+            }
+        };
+
+        if !response.status().is_success() {
+            warn!(
+                "Failed to check if sync savegames is possible: {} - {}",
+                response.status(),
+                response.text().await.unwrap()
+            );
+            return false;
+        }
+
+        response.text().await.is_ok_and(|r| r == "true")
     }
 
     pub async fn upload_sync_file(
@@ -104,14 +127,14 @@ impl MinusGamesClient {
     }
 
     pub async fn download_game_infos_if_modified(&self, game: &str) -> bool {
-        let json_name = get_json_name(game);
+        let json_name = create_game_infos_name(game);
         let from = self
             .url
-            .join("/games/data/")
+            .join("/games/data/infos/")
             .unwrap()
             .join(&encode_problem_chars(json_name.as_str()))
             .unwrap();
-        let to = get_config().get_json_path(json_name.as_str());
+        let to = get_config().get_game_infos_path_from_game(game);
         self.download_file_if_modified(from, to.as_path()).await
     }
 
@@ -119,11 +142,11 @@ impl MinusGamesClient {
         let csv_name = get_csv_name(game);
         let from = self
             .url
-            .join("/games/data/")
+            .join("/games/data/infos/")
             .unwrap()
             .join(&encode_problem_chars(csv_name.as_str()))
             .unwrap();
-        let to = get_config().get_csv_path(csv_name.as_str());
+        let to = get_config().get_csv_path_for_game(game);
         self.download_file_if_modified(from, to.as_path()).await
     }
 
@@ -140,23 +163,23 @@ impl MinusGamesClient {
     }
 
     pub async fn download_infos(&self, game: &str) {
-        let json_name = get_json_name(game);
+        let json_name = create_game_infos_name(game);
         let from = self
             .url
-            .join("/games/data/")
+            .join("/games/data/infos")
             .unwrap()
             .join(&encode_problem_chars(json_name.as_str()))
             .unwrap();
-        let to = get_config().get_json_path(json_name.as_str());
+        let to = get_config().get_csv_path_for_game(game);
         let handle_info = self.download_file_if_not_exists(from, to);
         let csv_name = get_csv_name(game);
         let from = self
             .url
-            .join("/games/data/")
+            .join("/games/data/infos")
             .unwrap()
             .join(&encode_problem_chars(csv_name.as_str()))
             .unwrap();
-        let to = get_config().get_csv_path(csv_name.as_str());
+        let to = get_config().get_csv_path_for_game(game);
         let handle_files = self.download_file_if_not_exists(from, to);
         tokio::join!(handle_info, handle_files);
     }
@@ -319,17 +342,26 @@ impl MinusGamesClient {
     //     result.json().await.ok()?
     // }
 
+    pub async fn get_games_with_minimal_game_infos(
+        &self,
+    ) -> Option<Vec<GamesWithMinimalGameInfos>> {
+        offline_to_none!();
+        let result = self.call_get("/games/list-with-minimal-game-infos").await?;
+        if !result.status().is_success() {
+            warn!(
+                "Failed to get games list: {} - {}",
+                result.status(),
+                result.text().await.unwrap()
+            );
+            return None;
+        }
+
+        result.json().await.ok()?
+    }
+
     pub async fn get_games_with_infos(&self) -> Option<Vec<GamesWithInfos>> {
         offline_to_none!();
-        let url = self.url.join("/games/list-with-infos").unwrap();
-        let result = match self.client.get(url).send().await {
-            Ok(response) => response,
-            Err(_) => {
-                OFFLINE.store(true, Relaxed);
-                return None;
-            }
-        };
-
+        let result = self.call_get("/games/list-with-infos").await?;
         if !result.status().is_success() {
             warn!(
                 "Failed to get games list: {} - {}",
@@ -344,14 +376,7 @@ impl MinusGamesClient {
 
     pub async fn get_games_list(&self) -> Option<Vec<String>> {
         offline_to_none!();
-        let url = self.url.join("/games/list").unwrap();
-        let result = match self.client.get(url).send().await {
-            Ok(response) => response,
-            Err(_) => {
-                OFFLINE.store(true, Relaxed);
-                return None;
-            }
-        };
+        let result = self.call_get("/games/list").await?;
 
         if !result.status().is_success() {
             warn!(
@@ -363,5 +388,16 @@ impl MinusGamesClient {
         }
 
         result.json().await.ok()?
+    }
+
+    pub async fn call_get(&self, url_part: &str) -> Option<Response> {
+        let url = self.url.join(url_part).unwrap();
+        match self.client.get(url).send().await {
+            Ok(response) => Some(response),
+            Err(_) => {
+                OFFLINE.store(true, Relaxed);
+                None
+            }
+        }
     }
 }

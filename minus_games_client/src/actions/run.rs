@@ -42,19 +42,21 @@ pub async fn run_game(game: &str) {
         }
     };
 
-    send_event(format!("Support: {}", infos.supported_platforms).into()).await;
+    send_event(format!("Support: {}", infos.get_supported_platforms()).into()).await;
+
+    get_config().mark_last_time_played(game);
 
     #[cfg(target_family = "unix")]
-    if infos.supported_platforms.linux {
+    if infos.supports_linux() {
         return run_linux_game_on_linux(infos).await;
-    } else if infos.supported_platforms.windows {
+    } else if infos.supports_windows() {
         return run_windows_game_on_linux(infos).await;
     }
     #[cfg(target_family = "windows")]
-    if infos.supported_platforms.windows {
+    if infos.supports_windows() {
         return run_windows_game_on_windows(infos).await;
     }
-    warn!("Unsupported OS {OS} - {}", infos.supported_platforms)
+    warn!("Unsupported OS {OS} - {}", infos.get_supported_platforms())
 }
 
 pub async fn run_game_synced(game: &str) {

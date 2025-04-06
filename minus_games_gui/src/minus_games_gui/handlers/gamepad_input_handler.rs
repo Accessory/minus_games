@@ -80,6 +80,27 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                 yield_now().await;
                                 tokio::time::sleep(Duration::from_millis(100)).await;
                             }
+                            Button::East => {
+                                debug!("Pressed East");
+                                output.send(MinusGamesGuiMessage::BackAction).await.ok();
+                                output.flush().await.ok();
+                                yield_now().await;
+                                tokio::time::sleep(Duration::from_millis(100)).await;
+                            }
+                            Button::Start => {
+                                debug!("Pressed Start");
+                                output.send(MinusGamesGuiMessage::StartAction).await.ok();
+                                output.flush().await.ok();
+                                yield_now().await;
+                                tokio::time::sleep(Duration::from_millis(100)).await;
+                            }
+                            Button::Select => {
+                                debug!("Pressed Select");
+                                output.send(MinusGamesGuiMessage::ReloadAction).await.ok();
+                                output.flush().await.ok();
+                                yield_now().await;
+                                tokio::time::sleep(Duration::from_millis(100)).await;
+                            }
                             _ => {
                                 // println!("Button: {:?}", button)
                             }

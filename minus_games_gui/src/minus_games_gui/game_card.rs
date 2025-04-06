@@ -4,12 +4,14 @@ use crate::minus_games_gui::style_constants::{
     READY_BUTTON_WIDTH, SMALL_MARGIN_DEFAULT, TEXT, TINY_MARGIN_DEFAULT,
 };
 use iced::ContentFit::Cover;
+use iced::advanced::Widget;
 use iced::widget::svg::Status;
 use iced::widget::text::Shaping::Advanced;
 use iced::widget::{
-    Column, MouseArea, Row, button, center, container, horizontal_space, image, row, svg, text,
+    MouseArea, Row, button, center, column, container, horizontal_space, image, row, svg, text,
 };
-use iced::{Center, Element, Fill, Left, Theme, border, gradient};
+use iced::{Center, Element, Fill, Left, Right, Shrink, Theme, border, gradient};
+use minus_games_models::game_infos::MinimalGameInfos;
 use std::sync::LazyLock;
 
 #[derive(Clone, Debug, Default)]
@@ -22,6 +24,7 @@ pub struct GameCard {
     pub position: usize,
     pub is_on_server: bool,
     pub has_header: bool,
+    pub minimal_game_infos: MinimalGameInfos,
 }
 
 static INSTALLED: LazyLock<svg::Handle> =
@@ -29,6 +32,12 @@ static INSTALLED: LazyLock<svg::Handle> =
 
 static ON_SERVER: LazyLock<svg::Handle> =
     LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/on-server.svg")));
+
+static LINUX: LazyLock<svg::Handle> =
+    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/linux.svg")));
+
+static WINDOWS: LazyLock<svg::Handle> =
+    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/windows.svg")));
 
 impl GameCard {
     pub(crate) fn new(
@@ -39,6 +48,7 @@ impl GameCard {
         image: Option<image::Handle>,
         is_on_server: bool,
         has_header: bool,
+        minimal_game_infos: MinimalGameInfos,
     ) -> Self {
         Self {
             game: game.clone(),
@@ -49,6 +59,7 @@ impl GameCard {
             position,
             is_on_server,
             has_header,
+            minimal_game_infos,
         }
     }
 
@@ -101,20 +112,33 @@ impl GameCard {
         element
     }
 
-    fn create_installed_part(&self) -> Column<MinusGamesGuiMessage> {
-        // let top = if self.is_installed { "󰋊" } else { " " };
-        // let bottom = if self.is_on_server { "" } else { " " };
-        let mut column = Column::with_capacity(2);
+    fn create_os_part(&self) -> Row<MinusGamesGuiMessage> {
+        let mut items = Row::with_capacity(2);
+
+        if self.minimal_game_infos.linux {
+            items = items.push(svg(LINUX.clone()).style(Self::set_svg_style))
+        }
+
+        if self.minimal_game_infos.windows {
+            items = items.push(svg(WINDOWS.clone()).style(Self::set_svg_style))
+        }
+        let width = TEXT * items.children().len() as u32;
+        items.width(width)
+    }
+
+    fn create_installed_part(&self) -> Row<MinusGamesGuiMessage> {
+        let mut items = Row::with_capacity(2);
 
         if self.is_installed {
-            column = column.push(svg(INSTALLED.clone()).style(Self::set_svg_style))
+            items = items.push(svg(INSTALLED.clone()).style(Self::set_svg_style))
         }
 
         if self.is_on_server {
-            column = column.push(svg(ON_SERVER.clone()).style(Self::set_svg_style))
+            items = items.push(svg(ON_SERVER.clone()).style(Self::set_svg_style))
         }
 
-        column.width(TEXT)
+        let width = TEXT * items.children().len() as u32;
+        items.width(width)
     }
 
     fn set_svg_style(theme: &Theme, _status: Status) -> svg::Style {
@@ -134,11 +158,13 @@ impl GameCard {
                     .align_x(Left)
                     .shaping(Advanced)
                     .height(TEXT * 2),
-                self.create_installed_part()
+                column![self.create_installed_part(), self.create_os_part(),]
+                    .width(Shrink)
+                    .align_x(Right)
             ],
             // Play
             button(
-                text("")
+                text("") // Play
                     .height(READY_BUTTON_HEIGHT)
                     .width(TEXT)
                     .center()
@@ -152,7 +178,7 @@ impl GameCard {
             row.push(
                 // More
                 button(
-                    text("󰍜")
+                    text("󰍜") // More
                         .height(READY_BUTTON_HEIGHT)
                         .width(Fill)
                         .center()
@@ -168,7 +194,7 @@ impl GameCard {
             row.push(
                 // Download
                 button(
-                    text("")
+                    text("") // Download
                         .height(READY_BUTTON_HEIGHT)
                         .width(Fill)
                         .center()

@@ -28,6 +28,12 @@ pub(crate) fn override_config(minus_games_settings_option: Option<&MinusGamesSet
         get_mut_gui_config().theme = minus_games_settings.theme.to_string();
     }
 }
+pub(crate) fn override_gui_config(minus_games_settings_option: Option<&MinusGamesSettings>) {
+    if let Some(minus_games_settings) = minus_games_settings_option {
+        get_mut_gui_config().scale = Some(minus_games_settings.scale);
+        get_mut_gui_config().theme = minus_games_settings.theme.to_string();
+    }
+}
 
 fn resolve_path(value: &str) -> Option<PathBuf> {
     if value.is_empty() {
@@ -74,6 +80,9 @@ pub(crate) fn handle_change_event(
             SettingInput::Offline(change) => {
                 minus_games_settings.offline = change;
             }
+            SettingInput::Sync(sync) => {
+                minus_games_settings.sync = sync;
+            }
             SettingInput::Fullscreen(change) => {
                 minus_games_settings.fullscreen = change;
             }
@@ -85,6 +94,9 @@ pub(crate) fn handle_change_event(
             }
             SettingInput::Theme(theme) => {
                 minus_games_settings.theme = theme;
+            }
+            SettingInput::Scale(scale) => {
+                minus_games_settings.scale = scale;
             }
         };
     } else {
@@ -134,7 +146,7 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                 writer
                     .write_all(
                         format!(
-                            "CLIENT_GAMES_FOLDER=\"{}\"{}",
+                            "MINUS_GAMES_CLIENT_GAMES_FOLDER=\"{}\"{}",
                             settings.client_games_folder.replace("\\", "\\\\"),
                             NEW_LINE
                         )
@@ -150,8 +162,12 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                 if !settings.wine_exe.trim().is_empty() {
                     writer
                         .write_all(
-                            format!("WINE_EXE=\"{}\"{}", settings.wine_exe.trim(), NEW_LINE)
-                                .as_bytes(),
+                            format!(
+                                "MINUS_GAMES_WINE_EXE=\"{}\"{}",
+                                settings.wine_exe.trim(),
+                                NEW_LINE
+                            )
+                            .as_bytes(),
                         )
                         .unwrap();
                 }
@@ -159,7 +175,7 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                     writer
                         .write_all(
                             format!(
-                                "WINE_PREFIX=\"{}\"{}",
+                                "MINUS_GAMES_WINE_PREFIX=\"{}\"{}",
                                 settings.wine_prefix.trim(),
                                 NEW_LINE
                             )
@@ -168,10 +184,21 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                         .unwrap();
                 }
                 writer
-                    .write_all(format!("VERBOSE=\"{}\"{}", settings.verbose, NEW_LINE).as_bytes())
+                    .write_all(
+                        format!("MINUS_GAMES_VERBOSE=\"{}\"{}", settings.verbose, NEW_LINE)
+                            .as_bytes(),
+                    )
                     .unwrap();
                 writer
-                    .write_all(format!("OFFLINE=\"{}\"{}", settings.offline, NEW_LINE).as_bytes())
+                    .write_all(
+                        format!("MINUS_GAMES_OFFLINE=\"{}\"{}", settings.offline, NEW_LINE)
+                            .as_bytes(),
+                    )
+                    .unwrap();
+                writer
+                    .write_all(
+                        format!("MINUS_GAMES_SYNC=\"{}\"{}", settings.sync, NEW_LINE).as_bytes(),
+                    )
                     .unwrap();
                 writer
                     .write_all(
@@ -206,7 +233,14 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                         )
                         .unwrap();
                 }
-
+                if settings.scale != 1.0 {
+                    writer
+                        .write_all(
+                            format!("MINUS_GAMES_GUI_SCALE=\"{}\"{}", settings.scale, NEW_LINE)
+                                .as_bytes(),
+                        )
+                        .unwrap();
+                }
                 info!(
                     "Settings successfully saved at: {}",
                     config_file_path.display()

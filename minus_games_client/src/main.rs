@@ -1,11 +1,12 @@
 use minus_games_client::configuration::ClientActions::ListJson;
 use minus_games_client::run_cli;
 use minus_games_client::runtime::get_config;
+use std::process::ExitCode;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> ExitCode {
     // Configuration
     if let Some(config_dir) = dirs::config_local_dir() {
         let config_path = config_dir.join("minus_games_client").join("config");
@@ -32,5 +33,11 @@ async fn main() {
         println!("{}", get_config());
     }
 
+    if let Err(err) = get_config().create_necessary_folders() {
+        println!("Could not create necessary folders: {err}");
+        return ExitCode::FAILURE;
+    }
+
     run_cli().await;
+    ExitCode::SUCCESS
 }

@@ -35,7 +35,7 @@ pub fn delete_game(game: &str, purge: bool) {
             warn!("CSV not found: {}", err);
         }
     };
-    let json = get_config().get_json_path_from_game(game);
+    let json = get_config().get_game_infos_path_from_game(game);
     match std::fs::remove_file(json) {
         Ok(_) => {}
         Err(err) => {
@@ -45,11 +45,12 @@ pub fn delete_game(game: &str, purge: bool) {
 
     std::fs::remove_dir_all(get_config().get_game_additions_path(game)).ok();
 
+    get_config().unmark_last_time_played(game);
     get_config().unmark_games_as_dirty(game);
 }
 
 pub fn delete_game_info_files(game: &str) {
-    let json_path = get_config().get_json_path_from_game(game);
+    let json_path = get_config().get_game_infos_path_from_game(game);
     if json_path.is_file() {
         std::fs::remove_file(json_path).unwrap();
     }

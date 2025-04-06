@@ -5,6 +5,7 @@ use crate::engine_info_functions::get_engine_info_function_for_engine;
 use crate::utils::{save_game_file_infos, save_infos_to_data_folder};
 use minus_games_models::game_infos::GameInfos;
 use minus_games_models::{GameEngine, SupportedPlatforms};
+use minus_games_utils::constants::INFOS;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
@@ -21,12 +22,13 @@ pub fn run(config: Configuration) -> ExitCode {
     info!("Start:\nConfig:\n{config}");
     if !config.games_folder.is_dir() {
         warn!("Game folder does not exist");
-        return ExitCode::from(1);
+        return ExitCode::FAILURE;
     }
 
     if config.cleanup_data_folder {
         let pattern_json = config
             .data_folder
+            .join(INFOS)
             .join("*.json")
             .as_os_str()
             .to_str()
@@ -38,6 +40,7 @@ pub fn run(config: Configuration) -> ExitCode {
 
         let pattern_csv = config
             .data_folder
+            .join(INFOS)
             .join("*.csv")
             .as_os_str()
             .to_str()
@@ -110,7 +113,7 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
             if let Some(supported_platforms) =
                 game_path_fits_game_description(game_path, engine_description)
             {
-                trace!("Game use the engine {}", engine_description.engine_type);
+                trace!("Game uses the engine {}", engine_description.engine_type);
                 current_supported_platforms = Some(supported_platforms);
                 break;
             }
@@ -167,7 +170,7 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
     let folder_name = game_path.iter().next_back()?.to_str()?.to_string();
 
     // let additions = if data_folder
-    //     .join("additions")
+    //     .join(ADDITIONS)
     //     .join(&folder_name)
     //     .join("header.jpg")
     //     .is_file()
@@ -181,10 +184,10 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
         name,
         folder_name,
         engine: current_engine_description?.engine_type,
-        supported_platforms: SupportedPlatforms {
-            windows: current_windows_exe.is_some(),
-            linux: current_linux_exe.is_some(),
-        },
+        // supported_platforms: SupportedPlatforms {
+        //     windows: current_windows_exe.is_some(),
+        //     linux: current_linux_exe.is_some(),
+        // },
         linux_exe: current_linux_exe,
         windows_exe: current_windows_exe,
         sync_folders: current_sync_folders,

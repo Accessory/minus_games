@@ -5,3 +5,4 @@ Type=Application
 Icon=io.github.accessory.minus_games_client
 Categories=Game
 Terminal=true
+StartupWMClass=minus_games_gui

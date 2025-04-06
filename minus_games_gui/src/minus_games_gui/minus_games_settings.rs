@@ -1,3 +1,4 @@
+use crate::minus_games_gui::configuration::GuiConfiguration;
 use crate::runtime::get_gui_config;
 use iced::Theme;
 use minus_games_client::configuration::Configuration;
@@ -11,15 +12,21 @@ pub(crate) struct MinusGamesSettings {
     pub wine_prefix: String,
     pub verbose: bool,
     pub offline: bool,
+    pub sync: bool,
     pub fullscreen: bool,
     pub username: String,
     pub password: String,
     pub theme: Theme,
     pub initial_theme: Theme,
+    pub scale: f64,
 }
 
 impl MinusGamesSettings {
-    pub fn from_config_with_theme(value: &Configuration, theme: Theme) -> Self {
+    pub fn from_config_with_theme(
+        value: &Configuration,
+        value_gui: &GuiConfiguration,
+        theme: Theme,
+    ) -> Self {
         Self {
             server_url: value.server_url.to_string(),
             client_folder: value.client_folder.to_str().unwrap().to_string(),
@@ -34,11 +41,13 @@ impl MinusGamesSettings {
             },
             verbose: value.verbose,
             offline: value.offline,
+            sync: value.sync,
             fullscreen: get_gui_config().fullscreen,
             username: value.username.clone().unwrap_or_default(),
             password: value.password.clone().unwrap_or_default(),
             initial_theme: theme.clone(),
             theme,
+            scale: value_gui.scale.unwrap_or(1.0),
         }
     }
 }

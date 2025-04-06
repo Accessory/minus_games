@@ -9,18 +9,6 @@ use std::path::PathBuf;
 #[cfg(target_family = "unix")]
 use tracing::debug;
 
-pub fn get_json_name(game: &str) -> String {
-    format!("{game}.json")
-}
-
-pub fn get_csv_name(game: &str) -> String {
-    format!("{game}.csv")
-}
-
-pub fn get_dirty_name(game: &str) -> String {
-    format!("{game}.dirty")
-}
-
 #[allow(dead_code)]
 #[cfg(target_family = "unix")]
 pub fn is_executable(mode: u32) -> bool {

@@ -13,7 +13,14 @@ pub struct User {
     pub password: String,
     pub include_list: Vec<String>,
     pub exclude_list: Vec<String>,
+    pub sync: bool,
     pub is_superuser: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, ToSchema)]
+struct UserShort<'a> {
+    username: &'a str,
+    sync: bool,
 }
 
 impl Default for User {
@@ -24,6 +31,7 @@ impl Default for User {
             include_list: vec![],
             exclude_list: vec![],
             is_superuser: true,
+            sync: true,
         }
     }
 }
@@ -70,6 +78,18 @@ impl ArcUser {
         }
 
         true
+    }
+
+    pub fn to_json_string(&self) -> String {
+        if self.is_superuser {
+            serde_json::to_string(&self.deref()).unwrap()
+        } else {
+            let user_short = UserShort {
+                username: &self.username,
+                sync: self.sync,
+            };
+            serde_json::to_string(&user_short).unwrap()
+        }
     }
 }
 

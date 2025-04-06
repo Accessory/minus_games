@@ -1,8 +1,11 @@
 use chrono::{DateTime, Utc};
 use clap::Parser;
+use minus_games_models::game_infos::GameInfos;
 use minus_games_utils::DataFolder;
-use minus_games_utils::GamesFolder;
+use minus_games_utils::constants::{ADDITIONS, INFOS};
+use minus_games_utils::{GamesFolder, get_game_infos_path};
 use serde::{Deserialize, Serialize};
+use std::io::BufReader;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug, Serialize, Deserialize)]
@@ -26,6 +29,7 @@ impl Configuration {
     pub fn get_game_list(&self) -> Vec<String> {
         let path = self
             .data_folder
+            .join(INFOS)
             .join("*.json")
             .to_str()
             .unwrap()
@@ -45,14 +49,25 @@ impl Configuration {
         rtn
     }
     pub fn get_modification_date_for_game(&self, name: &str) -> DateTime<Utc> {
-        let path = self.data_folder.join(format!("{name}.json"));
+        let path = self.get_game_infos_path_from_game(name);
         let system_time = path.metadata().unwrap().modified().unwrap();
         DateTime::<Utc>::from(system_time)
     }
 
+    pub fn get_game_infos_path_from_game(&self, game: &str) -> PathBuf {
+        get_game_infos_path(&self.data_folder, game)
+    }
+
+    pub fn get_game_infos(&self, game: &str) -> Option<GameInfos> {
+        let json_path = self.get_game_infos_path_from_game(game);
+        let file = std::fs::File::open(json_path).ok()?;
+        let buf = BufReader::new(file);
+        serde_json::from_reader(buf).ok()
+    }
+
     pub fn does_game_has_header_image(&self, name: &str) -> bool {
         self.data_folder
-            .join("additions")
+            .join(ADDITIONS)
             .join(name)
             .join("header.jpg")
             .is_file()

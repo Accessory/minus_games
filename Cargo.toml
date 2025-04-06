@@ -18,7 +18,7 @@ panic = "abort"
 strip = "symbols"
 
 [workspace.package]
-version = "0.8.0"
+version = "0.9.0"
 edition = "2024"
 authors = ["Accessory"]
 repository = "https://github.com/Accessory/minus_games/"
@@ -32,7 +32,13 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dotenvy = "0"
 dirs = "6"
 strum = { version = "0", features = ["derive"] }
-reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream", "rustls-tls"] }
+reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream"] }
+utoipa = { git = "https://github.com/juhaku/utoipa.git", rev = "ca6b2a583d29eeca8d335144d0c29c8426145406", features = [
+    "axum_extras",
+    "chrono",
+    "uuid",
+    "openapi_extensions",
+] }
 
 [profile.dev.package.iced]
 opt-level = 3

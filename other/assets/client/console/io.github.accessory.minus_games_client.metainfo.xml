@@ -45,6 +45,17 @@
     </provides>
 
     <releases>
+        <release version="0.9.0" date="2025-01-28">
+            <description>
+                <p>Infos handling update</p>
+            </description>
+        </release>
+        <release version="0.8.1" date="2025-01-28">
+            <description>
+                <p>Scaling.</p>
+                <p>Small improvements.</p>
+            </description>
+        </release>
         <release version="0.8.0" date="2025-01-28">
             <description>
                 <p>Update to ice 0.14-dev.</p>

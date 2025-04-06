@@ -1,16 +1,16 @@
 use crate::actions::delete::delete_game_info_files;
 use crate::actions::download::download_all_files;
-use crate::offline_to_return;
 use crate::runtime::{
-    MinusGamesClientEvents, OFFLINE, STOP_DOWNLOAD, get_client, get_config, get_installed_games,
-    send_event,
+    MinusGamesClientEvents, OFFLINE, STOP_DOWNLOAD, SYNC, SYNC_TESTED, get_client, get_config,
+    get_installed_games, send_event,
 };
+use crate::{offline_to_return, sync_to_return};
 use chrono::{DateTime, Utc};
 use minus_games_models::game_infos::GameInfos;
 use minus_games_models::sync_file_info::SyncFileInfo;
 use minus_games_utils::{create_file_list, create_hash_from_string, set_file_modified_time};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::Ordering::Relaxed;
+use std::sync::atomic::Ordering::{Relaxed, SeqCst};
 use std::time::SystemTime;
 use tracing::{debug, trace, warn};
 
@@ -74,8 +74,12 @@ async fn sync_game_files_and_download(game: &str) {
     download_all_files(game).await;
 }
 
+pub async fn test_sync() {}
+
 pub async fn download_sync_for_game(game: &str) {
     offline_to_return!();
+    sync_to_return!();
+
     send_event(MinusGamesClientEvents::DownloadSaves).await;
     let game_infos = match get_config().get_game_infos(game) {
         Some(infos) => infos,
@@ -121,7 +125,7 @@ pub async fn download_sync_for_game(game: &str) {
 #[inline]
 #[cfg(not(target_family = "windows"))]
 fn check_if_is_wine(game_infos: &GameInfos) -> bool {
-    !game_infos.supported_platforms.linux
+    !game_infos.supports_linux()
 }
 
 fn download_necessary(path: &Path, last_modified: DateTime<Utc>) -> bool {
@@ -131,6 +135,8 @@ fn download_necessary(path: &Path, last_modified: DateTime<Utc>) -> bool {
 
 pub async fn upload_sync_for_game(game: &str) {
     offline_to_return!();
+    sync_to_return!();
+
     send_event(MinusGamesClientEvents::UploadSaves).await;
     let game_infos = match get_config().get_game_infos(game) {
         Some(infos) => infos,

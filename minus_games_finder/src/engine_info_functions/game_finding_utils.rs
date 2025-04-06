@@ -7,10 +7,7 @@ use crate::utils::{find_closest_string, find_name_in_folder_name};
 
 use super::EngineInfoFunctions;
 
-pub(crate) fn get_rpgm_linux_exe(
-    eif: &impl EngineInfoFunctions,
-    game_root: &Path,
-) -> Option<String> {
+pub(crate) fn get_linux_exe(eif: &impl EngineInfoFunctions, game_root: &Path) -> Option<String> {
     if game_root.join("Game").is_file() {
         return Some("Game".into());
     }
@@ -29,6 +26,8 @@ pub(crate) fn get_rpgm_linux_exe(
             && file.file_name() != "chrome_crashpad_handler"
             && file.file_name() != "crashpad_handler"
             && file.file_name() != "CREDITS"
+            && file.file_name() != "chrome-sandbox"
+            && file.file_name() != "UnityCrashHandler64"
         {
             files.push(file_path.file_name().unwrap().to_str().unwrap().to_string());
         }
