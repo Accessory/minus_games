@@ -26,9 +26,9 @@ pub enum OS {
 #[derive(Parser, Debug, Serialize, Deserialize)]
 #[command(author, version, about, long_about = None)]
 pub struct Configuration {
-    #[arg(long, env)]
+    #[arg(long, env = "MINUS_GAMES_SERVER_URL")]
     pub server_url: String,
-    #[arg(long, env)]
+    #[arg(long, env = "MINUS_GAMES_TO")]
     pub to: Option<PathBuf>,
     #[cfg(target_family = "windows")]
     #[arg(long, default_value = "Windows", env)]

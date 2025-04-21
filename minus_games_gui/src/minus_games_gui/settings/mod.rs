@@ -130,13 +130,17 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
 
                 writer
                     .write_all(
-                        format!("SERVER_URL=\"{}\"{}", settings.server_url, NEW_LINE).as_bytes(),
+                        format!(
+                            "MINUS_GAMES_SERVER_URL=\"{}\"{}",
+                            settings.server_url, NEW_LINE
+                        )
+                        .as_bytes(),
                     )
                     .unwrap();
                 writer
                     .write_all(
                         format!(
-                            "CLIENT_FOLDER=\"{}\"{}",
+                            "MINUS_GAMES_CLIENT_FOLDER=\"{}\"{}",
                             settings.client_folder.replace("\\", "\\\\"),
                             NEW_LINE
                         )
@@ -233,14 +237,12 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                         )
                         .unwrap();
                 }
-                if settings.scale != 1.0 {
-                    writer
-                        .write_all(
-                            format!("MINUS_GAMES_GUI_SCALE=\"{}\"{}", settings.scale, NEW_LINE)
-                                .as_bytes(),
-                        )
-                        .unwrap();
-                }
+                writer
+                    .write_all(
+                        format!("MINUS_GAMES_GUI_SCALE=\"{}\"{}", settings.scale, NEW_LINE)
+                            .as_bytes(),
+                    )
+                    .unwrap();
                 info!(
                     "Settings successfully saved at: {}",
                     config_file_path.display()

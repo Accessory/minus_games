@@ -11,17 +11,17 @@ use std::path::PathBuf;
 #[derive(Parser, Debug, Serialize, Deserialize)]
 #[command(author, version, about, long_about = None)]
 pub struct Configuration {
-    #[arg(long, default_value = "127.0.0.1", env)]
+    #[arg(long, default_value = "127.0.0.1", env = "MINUS_GAMES_IP")]
     pub ip: String,
-    #[arg(long, default_value = "8415", env)]
+    #[arg(long, default_value = "8415", env = "MINUS_GAMES_PORT")]
     pub port: u16,
-    #[arg(long, default_value = GamesFolder {}, env)]
+    #[arg(long, default_value = GamesFolder {}, env = "MINUS_GAMES_GAMES_FOLDER")]
     pub games_folder: PathBuf,
-    #[arg(long, default_value = DataFolder {}, env)]
+    #[arg(long, default_value = DataFolder {}, env = "MINUS_GAMES_DATA_FOLDER")]
     pub data_folder: PathBuf,
-    #[arg(long, env)]
+    #[arg(long, env = "MINUS_GAMES_CACHE_FOLDER")]
     pub cache_folder: Option<PathBuf>,
-    #[arg(long)]
+    #[arg(long, env = "MINUS_GAMES_CONFIG_FILE")]
     pub config_file: Option<String>,
 }
 

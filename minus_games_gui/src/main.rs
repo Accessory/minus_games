@@ -8,7 +8,7 @@ use iced::window::icon::from_rgba;
 use iced::{Font, Settings, application};
 use minus_games_client::configuration::Configuration;
 use minus_games_client::run_cli;
-use minus_games_client::runtime::{CONFIG, OFFLINE, get_config};
+use minus_games_client::runtime::{CONFIG, OFFLINE, SYNC, SYNC_TESTED, get_config};
 use std::process::ExitCode;
 use std::sync::atomic::Ordering::Relaxed;
 use tracing::error;
@@ -70,6 +70,10 @@ fn main() -> ExitCode {
     );
 
     OFFLINE.store(get_config().offline, Relaxed);
+    SYNC.store(get_config().sync, Relaxed);
+    if !get_config().sync {
+        SYNC_TESTED.store(true, Relaxed);
+    }
 
     // Logging
     let filter = if get_config().verbose {
@@ -108,10 +112,11 @@ fn main() -> ExitCode {
             };
 
             let result = application(
-                MinusGamesGui::title,
+                MinusGamesGui::init,
                 MinusGamesGui::update,
                 MinusGamesGui::view,
             )
+            .title(MinusGamesGui::title)
             .settings(settings)
             .subscription(MinusGamesGui::batch_subscription)
             .window(window_settings)
@@ -122,7 +127,7 @@ fn main() -> ExitCode {
                 "./minus_games_gui/assets/fonts/MonaspiceArNerdFont-Regular.otf"
             ))
             .default_font(Font::with_name("MonaspiceAr Nerd Font"))
-            .run_with(MinusGamesGui::init);
+            .run();
 
             if let Err(err) = result {
                 error!("Failed to create a {}", err);

@@ -80,7 +80,7 @@ static RPGM_MZ: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescription
     platform_linux: Some(PlatformDescription {
         platform: Platform::Linux,
         look_for_files: vec![],
-        look_for_folders: vec!["lib/*.so".into()],
+        look_for_folders: vec![],
     }),
 });
 

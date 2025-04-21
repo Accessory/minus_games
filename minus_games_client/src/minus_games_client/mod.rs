@@ -313,10 +313,12 @@ impl MinusGamesClient {
                 .build()
                 .unwrap()
         };
-        Self {
-            client,
-            url: Url::parse(url).unwrap(),
-        }
+        let url = Url::parse(url).unwrap_or_else(|e| {
+            warn!("Failed to parse URL: {url} Error: {e}");
+            OFFLINE.store(true, Relaxed);
+            Url::parse("http://127.0.0.1:8415").unwrap()
+        });
+        Self { client, url }
     }
 
     // pub async fn get_games_with_date_list(&self) -> Option<Vec<GamesWithDate>> {

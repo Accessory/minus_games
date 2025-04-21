@@ -223,7 +223,7 @@ macro_rules! sync_to_return {
         if !SYNC_TESTED.load(Relaxed) {
             SYNC_TESTED.store(true, SeqCst);
             let result = get_client().can_sync().await;
-            SYNC.store(!result, SeqCst);
+            SYNC.store(result, SeqCst);
         }
 
         if !SYNC.load(Relaxed) {

@@ -87,7 +87,7 @@ pub struct Configuration {
     pub password: Option<String>,
     #[arg(long, default_value = "false", env = "MINUS_GAMES_NO_GAMEMODERUN")]
     pub no_gamemoderun: bool,
-    #[arg(long, default_value = "false", env = "MINUS_GAMES_SYNC")]
+    #[arg(long, default_value = "true", env = "MINUS_GAMES_SYNC")]
     pub sync: bool,
     #[command(subcommand)]
     pub action: Option<ClientActions>,
@@ -266,6 +266,7 @@ impl Display for Configuration {
         writeln!(f, "Wine Prefix: {}", is_or_none_path_buf(&self.wine_prefix))?;
         writeln!(f, "Username: {}", is_or_none_string(&self.username))?;
         writeln!(f, "Offline: {:?}", &self.offline)?;
+        writeln!(f, "Sync: {:?}", &self.sync)?;
         write!(f, "Action: {}", is_or_none(self.action.as_ref()))
     }
 }

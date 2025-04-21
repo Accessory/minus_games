@@ -7,17 +7,27 @@ use std::path::PathBuf;
 #[derive(Parser, Debug, Serialize, Deserialize)]
 #[command(author, version, about, long_about = None)]
 pub struct Configuration {
-    #[arg(long, default_value = GamesFolder {}, env)]
+    #[arg(long, default_value = GamesFolder {}, env = "MINUS_GAMES_GAMES_FOLDER")]
     pub games_folder: PathBuf,
-    #[arg(long, default_value = DataFolder {}, env)]
+    #[arg(long, default_value = DataFolder {}, env = "MINUS_GAMES_DATA_FOLDER")]
     pub data_folder: PathBuf,
-    #[arg(long, env)]
+    #[arg(long, env = "MINUS_GAMES_CACHE_FOLDER")]
     pub cache_folder: Option<PathBuf>,
-    #[arg(long, short, default_value = "true", env)]
+    #[arg(
+        long,
+        short,
+        default_value = "true",
+        env = "MINUS_GAMES_KEEP_EXISTING_CONFIGS"
+    )]
     pub keep_existing_configs: bool,
-    #[arg(long, short, default_value = "false", env)]
+    #[arg(
+        long,
+        short,
+        default_value = "false",
+        env = "MINUS_GAMES_CLEANUP_DATA_FOLDER"
+    )]
     pub cleanup_data_folder: bool,
-    #[arg(long, short, env)]
+    #[arg(long, short, env = "MINUS_GAMES_FILTER")]
     pub filter: Option<String>,
 }
 

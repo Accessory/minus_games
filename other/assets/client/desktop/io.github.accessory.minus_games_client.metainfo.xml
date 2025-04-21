@@ -50,6 +50,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.1" date="2025-01-28">
+            <description>
+                <p>Bugfixes</p>
+            </description>
+        </release>
         <release version="0.9.0" date="2025-01-28">
             <description>
                 <p>Infos handling update</p>

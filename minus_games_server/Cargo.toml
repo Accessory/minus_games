@@ -25,8 +25,8 @@ tracing-subscriber = { workspace = true }
 dotenvy = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-utoipa = {workspace = true }
-utoipa-swagger-ui = { git = "https://github.com/juhaku/utoipa.git", rev = "ca6b2a583d29eeca8d335144d0c29c8426145406", features = ["axum"] }
+utoipa = { workspace = true }
+utoipa-swagger-ui = { git = "https://github.com/juhaku/utoipa.git", rev = "2e19e9a5951a4191b3e607ee42f99bf5618c9a20", features = ["axum"] }
 chrono = { version = "0", features = ["serde"] }
 clap = { version = "4", features = ["derive", "env", "string"] }
 tower-http = { version = "0", features = ["full"] }
@@ -36,9 +36,9 @@ mime = "0"
 futures-util = "0"
 base64 = "0"
 uuid = "1"
+log = { workspace = true }
+utoipauto = "0"
+url = "2"
 minus_games_models = { path = "../minus_games_models" }
 minus_games_utils = { path = "../minus_games_utils" }
 minus_games_finder = { path = "../minus_games_finder" }
-log = "0.4.21"
-utoipauto = "0"
-url = "2"

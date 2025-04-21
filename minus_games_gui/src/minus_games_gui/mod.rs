@@ -628,18 +628,19 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::ScrollDown(step) => {
-                let scale_game_card_row_height =
-                    (GAME_CARD_ROW_HEIGHT as f64 * self.scale.unwrap_or(1.0)) as u16;
+                let screen_height = self.get_screen_height();
 
-                let screen_tiles = self.size.height as u16 / scale_game_card_row_height;
+                let ok_area = screen_height * 0.80;
+                let top = 2.0 * GAME_CARD_ROW_HEIGHT as f32
+                    + self.current_highlight_position as f32 * GAME_CARD_ROW_HEIGHT as f32
+                    - self.scroll_offset.y;
 
-                let hidden_tiles = self.scroll_offset.y as u16 / scale_game_card_row_height;
+                let bottom = top + GAME_CARD_ROW_HEIGHT as f32;
 
-                let start_tile = hidden_tiles;
-                let end_tile: isize = (start_tile + screen_tiles) as isize;
+                // trace!("ok_area: {}, top: {}, bottom: {}, screen_height: {}", ok_area, top, bottom, screen_height);
 
                 self.block_highlighting = false;
-                if !self.went_up && end_tile - 6 < self.current_highlight_position as isize {
+                if !self.went_up && ok_area < bottom {
                     return scrollable::scroll_by(
                         SCROLLABLE_ID.clone(),
                         AbsoluteOffset {
@@ -653,12 +654,21 @@ impl MinusGamesGui {
                 return scrollable::snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START);
             }
             MinusGamesGuiMessage::ScrollUp(step) => {
-                let hidden_tiles = self.scroll_offset.y as u16 / GAME_CARD_ROW_HEIGHT as u16;
-
-                let start_tile = hidden_tiles;
-
                 self.block_highlighting = false;
-                if self.went_up && start_tile + 1 > self.current_highlight_position as u16 {
+                if self.current_highlight_position == 0 {
+                    return scrollable::snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START);
+                }
+
+                let screen_height = self.get_screen_height();
+
+                let not_ok_area = screen_height * 0.17;
+                let top = 2.0 * GAME_CARD_ROW_HEIGHT as f32
+                    + self.current_highlight_position as f32 * GAME_CARD_ROW_HEIGHT as f32
+                    - self.scroll_offset.y;
+
+                // trace!("not_ok_area: {}, top: {}, screen_height: {}", not_ok_area, top, screen_height);
+
+                if self.went_up && not_ok_area > top {
                     return scrollable::scroll_by(
                         SCROLLABLE_ID.clone(),
                         AbsoluteOffset {
@@ -669,7 +679,6 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::Scrolled(viewport) => {
-                // info!("Scroll offset: {}", viewport.absolute_offset().y);
                 self.scroll_offset = viewport.absolute_offset();
             }
             MinusGamesGuiMessage::LazyImageDownloaderReady(sender) => {
@@ -748,6 +757,11 @@ impl MinusGamesGui {
             row![column![
                 row![
                     text("Games").size(TEXT),
+                    // text(format!(
+                    //     "X {}, Y {}",
+                    //     self.size.width,
+                    //     self.get_screen_height()
+                    // )),
                     horizontal_space().width(Fill),
                     create_reload_button(),
                     horizontal_space().width(HALF_MARGIN_DEFAULT),
@@ -789,6 +803,14 @@ impl MinusGamesGui {
 
     pub(crate) fn get_theme(&self) -> Theme {
         self.theme.clone()
+    }
+
+    pub(crate) fn get_screen_height(&self) -> f32 {
+        // if get_gui_config().fullscreen && std::env::var("SteamDeck").is_ok_and(|v| v == "1") {
+        //     *PRIMARY_SCREEN_DISPLAY_HEIGHT
+        // } else {
+        self.size.height / self.scale.unwrap_or(1.0) as f32
+        // }
     }
 }
 

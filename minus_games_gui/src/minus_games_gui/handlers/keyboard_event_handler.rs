@@ -86,6 +86,9 @@ pub(crate) fn handle_system_events(
         Event::Window(window::Event::Resized(size)) => {
             minus_games_gui.size = size;
         }
+        // Event::Window(window::Event::Opened { position: _, size }) => {
+        //     minus_games_gui.size = size;
+        // }
         Event::Window(window::Event::Closed) => {
             CLOSING.store(true, Relaxed);
         }
