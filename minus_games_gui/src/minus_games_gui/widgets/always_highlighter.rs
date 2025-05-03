@@ -2,7 +2,7 @@ use iced::advanced::layout::{Limits, Node};
 use iced::advanced::widget::{Operation, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Layout, Shell, mouse, renderer};
 use iced::mouse::Cursor;
-use iced::{Background, Color, Element, Event, Length, Rectangle, Size};
+use iced::{Background, Color, Element, Event, Length, Rectangle, Size, Vector};
 
 pub struct AlwaysHighlighter<'a, Message, Theme, Renderer> {
     base: Element<'a, Message, Theme, Renderer>,
@@ -113,13 +113,14 @@ where
     fn overlay<'a>(
         &'a mut self,
         state: &'a mut Tree,
-        layout: Layout<'_>,
+        layout: Layout<'a>,
         renderer: &Renderer,
-        translation: iced::Vector,
+        viewport: &Rectangle,
+        translation: Vector,
     ) -> Option<iced::advanced::overlay::Element<'a, Message, Theme, Renderer>> {
         self.base
             .as_widget_mut()
-            .overlay(state, layout, renderer, translation)
+            .overlay(state, layout, renderer, viewport, translation)
     }
 
     fn operate(

@@ -259,6 +259,7 @@ fn get_appdata_roaming(game_infos: &GameInfos) -> Option<PathBuf> {
         let wine_prefix = get_config().wine_prefix.as_ref()?;
         let user = std::env::var("USER").ok()?;
         let rtn = wine_prefix
+            .join("pfx")
             .join("drive_c")
             .join("users")
             .join(user)
@@ -277,13 +278,14 @@ fn get_local_low() -> Option<PathBuf> {
     Some(rtn)
 }
 
-#[cfg(target_family = "unix")]
+#[cfg(not(target_family = "windows"))]
 fn resolve_unity_config_path(game_infos: &GameInfos) -> Option<PathBuf> {
     let is_wine = check_if_is_wine(game_infos);
     if is_wine {
         let wine_prefix = get_config().wine_prefix.as_ref()?;
         let user = std::env::var("USER").ok()?;
         let rtn = wine_prefix
+            .join("pfx")
             .join("drive_c")
             .join("users")
             .join(user)
@@ -311,6 +313,7 @@ fn resolve_documents_path(game_infos: &GameInfos) -> Option<PathBuf> {
         let wine_prefix = get_config().wine_prefix.as_ref()?;
         let user = std::env::var("USER").ok()?;
         let rtn = wine_prefix
+            .join("pfx")
             .join("drive_c")
             .join("users")
             .join(user)
@@ -339,6 +342,7 @@ fn resolve_unreal_config_path() -> Option<PathBuf> {
     let user = std::env::var("USER").ok()?;
     Some(
         wine_prefix
+            .join("pfx")
             .join("drive_c")
             .join("users")
             .join(user)

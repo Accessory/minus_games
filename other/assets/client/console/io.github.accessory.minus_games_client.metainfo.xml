@@ -45,6 +45,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.2" date="2025-01-28">
+            <description>
+                <p>Small improvements</p>
+            </description>
+        </release>
         <release version="0.9.1" date="2025-01-28">
             <description>
                 <p>Bugfixes</p>
