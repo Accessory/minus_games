@@ -53,7 +53,7 @@ async fn check_download_access(user: ArcUser, request: Request, next: Next) -> R
             // info!("Game {}", game_name_decoded);
             return (
                 StatusCode::FORBIDDEN,
-                format!("Downloading '{}' is not allowed", game_name_decoded),
+                format!("Downloading '{game_name_decoded}' is not allowed"),
             )
                 .into_response();
         }

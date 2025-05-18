@@ -94,7 +94,7 @@ pub async fn download_file_from_to(link: &str, to: &Path) -> bool {
         let mut buf_writer = BufWriter::new(to_write_to);
         while let Ok(Some(chunk)) = response.chunk().await {
             if let Err(err) = buf_writer.write(&chunk) {
-                warn!("Failed to write to file: {}", err);
+                warn!("Failed to write to file: {err}");
             }
         }
     }
@@ -189,7 +189,7 @@ pub fn kill_current_running_game() {
         {
             Ok(_info) => {}
             Err(err) => {
-                warn!("Failed to execute kill command: {}", err);
+                warn!("Failed to execute kill command: {err}");
             }
         };
     } else {

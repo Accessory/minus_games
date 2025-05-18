@@ -194,7 +194,7 @@ pub async fn get_ordered_with_games_infos_list(
                 game_infos,
             ));
         } else {
-            warn!("There are no game infos for {}", name);
+            warn!("There are no game infos for {name}");
         }
     }
     Json(rtn)
@@ -226,7 +226,7 @@ pub async fn get_ordered_with_minimal_games_infos_list(
                 game_infos.into(),
             ));
         } else {
-            warn!("There are no game infos for {}", name);
+            warn!("There are no game infos for {name}");
         }
     }
     Json(rtn)

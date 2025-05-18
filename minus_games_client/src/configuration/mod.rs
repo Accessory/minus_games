@@ -196,7 +196,7 @@ impl Configuration {
             match std::fs::remove_file(dirty_path.as_path()) {
                 Ok(_) => {}
                 Err(err) => {
-                    warn!("Could not unmark a dirty game! - Game: {} - {}", game, err);
+                    warn!("Could not unmark a dirty game! - Game: {game} - {err}");
                 }
             }
         }
@@ -208,7 +208,7 @@ impl Configuration {
             match std::fs::remove_file(last_time_played.as_path()) {
                 Ok(_) => {}
                 Err(err) => {
-                    warn!("Could delete last time played! - Game: {} - {}", game, err);
+                    warn!("Could delete last time played! - Game: {game} - {err}");
                 }
             }
         }

@@ -93,7 +93,10 @@ pub fn save_infos_to_data_folder(data_folder: &Path, game_infos: &GameInfos) {
 }
 
 pub fn file_path_is_windows_exe(file_path: &Path) -> bool {
-    file_path.is_file() && file_path.extension().is_some_and(|e| e == "exe")
+    file_path.is_file()
+        && file_path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("exe"))
 }
 
 pub fn find_all_possible_game_exe_files(game_folder: &Path) -> Vec<String> {
@@ -162,7 +165,7 @@ pub fn get_closest_windows_exe(name: &str, folder: &Path) -> Option<String> {
         if folder.join("bin").exists() {
             files.extend(find_all_possible_game_exe_files(folder));
         }
-        if files.is_empty() {
+        if !files.is_empty() {
             let idx = find_closest_string(name, &files);
             Some(files.remove(idx))
         } else {
@@ -248,7 +251,7 @@ pub fn glob_for_possible_exe(root: &Path) -> Option<String> {
         let res = entry.unwrap();
         let file_name = res.file_name().unwrap().to_str().unwrap();
 
-        if ![
+        if [
             "chrome-sandbox.exe",
             "crashpad_handler.exe",
             "chrome_crashpad_handler.exe",

@@ -18,7 +18,7 @@ panic = "abort"
 strip = "symbols"
 
 [workspace.package]
-version = "0.9.2"
+version = "0.9.3"
 edition = "2024"
 authors = ["Accessory"]
 repository = "https://github.com/Accessory/minus_games/"
@@ -34,7 +34,7 @@ dotenvy = "0"
 dirs = "6"
 strum = { version = "0", features = ["derive"] }
 reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream"] }
-utoipa = { git = "https://github.com/juhaku/utoipa.git", rev = "ac71b2353e144998f50bfe38d37794f39c151027", features = [
+utoipa = { git = "https://github.com/juhaku/utoipa.git", rev = "d0a434ffbb16857097cdbcace8e381f2b8924656", features = [
     "axum_extras",
     "chrono",
     "uuid",

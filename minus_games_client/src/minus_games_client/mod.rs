@@ -31,7 +31,7 @@ impl MinusGamesClient {
         let response = match self.client.get(url).send().await {
             Ok(response) => response,
             Err(err) => {
-                warn!("Can't check the sync status: {}", err);
+                warn!("Can't check the sync status: {err}");
                 return false;
             }
         };
@@ -111,7 +111,7 @@ impl MinusGamesClient {
             .unwrap()
             .join(&format!("{game}/{folder_hash}"))
             .unwrap();
-        debug!("URL: {}", url);
+        debug!("URL: {url}");
         let result = self.client.get(url).send().await.ok()?;
 
         if !result.status().is_success() {
@@ -300,7 +300,7 @@ impl MinusGamesClient {
                 BASE64_STANDARD.encode(format!("{}:{}", username.unwrap(), password.unwrap()));
             headers.append(
                 AUTHORIZATION,
-                HeaderValue::from_str(&format!("Basic {}", encoded_part)).unwrap(),
+                HeaderValue::from_str(&format!("Basic {encoded_part}")).unwrap(),
             );
             reqwest::ClientBuilder::new()
                 .cookie_store(true)

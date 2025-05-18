@@ -44,7 +44,7 @@ async fn main() {
         ));
         headers.append(
             AUTHORIZATION,
-            HeaderValue::from_str(&format!("Basic {}", encoded_part)).unwrap(),
+            HeaderValue::from_str(&format!("Basic {encoded_part}")).unwrap(),
         );
         reqwest::ClientBuilder::new()
             .cookie_store(true)

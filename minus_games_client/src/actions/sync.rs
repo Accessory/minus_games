@@ -257,7 +257,7 @@ fn get_appdata_roaming(game_infos: &GameInfos) -> Option<PathBuf> {
     let is_wine = check_if_is_wine(game_infos);
     if is_wine {
         let wine_prefix = get_config().wine_prefix.as_ref()?;
-        let user = std::env::var("USER").ok()?;
+        let user = get_user()?;
         let rtn = wine_prefix
             .join("pfx")
             .join("drive_c")
@@ -283,7 +283,7 @@ fn resolve_unity_config_path(game_infos: &GameInfos) -> Option<PathBuf> {
     let is_wine = check_if_is_wine(game_infos);
     if is_wine {
         let wine_prefix = get_config().wine_prefix.as_ref()?;
-        let user = std::env::var("USER").ok()?;
+        let user = get_user()?;
         let rtn = wine_prefix
             .join("pfx")
             .join("drive_c")
@@ -297,7 +297,7 @@ fn resolve_unity_config_path(game_infos: &GameInfos) -> Option<PathBuf> {
             Ok(config) => PathBuf::from(config),
             Err(_) => {
                 let home = std::env::var("HOME").unwrap_or(".".to_string());
-                std::path::absolute(format!("{}/.config", home)).ok()?
+                std::path::absolute(format!("{home}/.config")).ok()?
             }
         };
         trace!("Config: {}", rtn.display());
@@ -311,7 +311,7 @@ fn resolve_documents_path(game_infos: &GameInfos) -> Option<PathBuf> {
     let is_wine = check_if_is_wine(game_infos);
     if is_wine {
         let wine_prefix = get_config().wine_prefix.as_ref()?;
-        let user = std::env::var("USER").ok()?;
+        let user = get_user()?;
         let rtn = wine_prefix
             .join("pfx")
             .join("drive_c")
@@ -323,7 +323,7 @@ fn resolve_documents_path(game_infos: &GameInfos) -> Option<PathBuf> {
         let rtn = match dirs::document_dir() {
             Some(path) => path,
             None => {
-                let user = std::env::var("USER").ok()?;
+                let user = get_user()?;
                 Path::new("home").join(user).join("Documents")
             }
         };
@@ -339,7 +339,7 @@ fn resolve_documents_path(_: &GameInfos) -> Option<PathBuf> {
 #[cfg(target_family = "unix")]
 fn resolve_unreal_config_path() -> Option<PathBuf> {
     let wine_prefix = get_config().wine_prefix.as_ref()?;
-    let user = std::env::var("USER").ok()?;
+    let user = get_user()?;
     Some(
         wine_prefix
             .join("pfx")
@@ -371,4 +371,16 @@ pub async fn upload_syncs() {
     for game in installed_games.iter() {
         upload_sync_for_game(game).await;
     }
+}
+
+#[cfg(not(target_family = "windows"))]
+pub fn get_user() -> Option<String> {
+    if let Some(wine_exe) = get_config().wine_exe.as_ref() {
+        if let Some(filename) = wine_exe.file_name() {
+            if filename == "umu-run" {
+                return Some("steamuser".to_string());
+            }
+        }
+    }
+    std::env::var("USER").ok()
 }

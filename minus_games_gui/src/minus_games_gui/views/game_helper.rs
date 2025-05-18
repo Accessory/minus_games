@@ -17,7 +17,7 @@ pub(crate) fn create_info_game_line_with(
     supports_linux: bool,
     supports_windows: bool,
 ) -> Column<'static, MinusGamesGuiMessage> {
-    let column = column![text(format!("Engine: {} ", engine))];
+    let column = column![text(format!("Engine: {engine} "))];
     let mut row = Row::new();
     if supports_linux {
         row = row.push(text(" ").shaping(Shaping::Advanced));

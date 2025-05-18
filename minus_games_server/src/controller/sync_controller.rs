@@ -78,7 +78,7 @@ async fn send_file(save_path: PathBuf) -> Response {
         (header::CONTENT_TYPE, APPLICATION_OCTET_STREAM.as_ref()),
         (
             header::CONTENT_DISPOSITION,
-            &format!("attachment; filename=\"{:?}\"", filename),
+            &format!("attachment; filename=\"{filename:?}\""),
         ),
     ];
 
