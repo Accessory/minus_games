@@ -6,7 +6,17 @@ use utoipauto::utoipauto;
 #[utoipauto(paths = "./minus_games_server/src")]
 #[derive(OpenApi)]
 #[openapi(
-    info(description = "Minus Game Server"),
+    tags(
+        (name = crate::TAG, description = "Main Controller Routes"),
+        (name = crate::controller::game_controller::TAG, description = "Game Controller Routes"),
+        (name = crate::controller::gui_controller::TAG, description = "Gui Controller Routes"),
+        (name = crate::controller::client_controller::TAG, description = "Client Controller Routes"),
+        (name = crate::controller::download_controller::TAG, description = "Downloader Controller Routes"),
+        (name = crate::controller::finder_controller::TAG, description = "Finder Controller Routes"),
+        (name = crate::controller::sync_controller::TAG, description = "Sync Controller Routes"),
+        (name = crate::controller::updater_controller::TAG, description = "Updater Controller Routes")
+    ),
+    info(title = "Minus Games Server", description = "Minus Game Server"),
     modifiers(&SecurityAddon)
 )]
 pub struct ApiDoc;

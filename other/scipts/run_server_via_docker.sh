@@ -1,14 +1,14 @@
 #!/bin/sh
-export DATA_FOLDER=/data/data/
-export GAMES_FOLDER=/data/games/
-export CACHE_FOLDER=/data/cache/
-export IP="0.0.0.0"
+export MINUS_GAMES_DATA_FOLDER=/data/data/
+export MINUS_GAMES_GAMES_FOLDER=/data/games/
+export MINUS_GAMES_CACHE_FOLDER=/data/cache/
+export MINUS_GAMES_IP="0.0.0.0"
 export MOUNT_FOLDER=.
 docker run \
--e DATA_FOLDER="${DATA_FOLDER}" \
--e GAMES_FOLDER="${GAMES_FOLDER}" \
--e CACHE_FOLDER="${CACHE_FOLDER}" \
--e IP="${IP}" \
+-e MINUS_GAMES_DATA_FOLDER="${MINUS_GAMES_DATA_FOLDER}" \
+-e MINUS_GAMES_GAMES_FOLDER="${MINUS_GAMES_GAMES_FOLDER}" \
+-e MINUS_GAMES_CACHE_FOLDER="${MINUS_GAMES_CACHE_FOLDER}" \
+-e MINUS_GAMES_IP="${MINUS_GAMES_IP}" \
 -v "${MOUNT_FOLDER}:/data" \
 -p 8415:8415 \
 accessory/minus_games_server

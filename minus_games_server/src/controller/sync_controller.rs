@@ -21,6 +21,8 @@ use tokio_util::io::ReaderStream;
 use tracing::info;
 use utoipa::ToSchema;
 
+pub(crate) const TAG: &str = "Sync Controller";
+
 pub fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/{game}/{folder_hash}", get(get_sync_files_for_folder))
@@ -40,7 +42,8 @@ pub fn new_router(app_state: Arc<AppState>) -> Router {
     path = "/{game}/{folder_hash}/{file_path}",
     params(("game", description = "Game name"), ("folder_hash", description = "Folder Hash"), ("file_path", description = "Path to save file")),
     responses((status = 200, description = "File"), (status = 404, description = "File not Found")),
-    context_path = "/sync"
+    context_path = "/sync",
+    tag = TAG
 )]
 #[axum::debug_handler]
 async fn get_sync_file(
@@ -86,11 +89,12 @@ async fn send_file(save_path: PathBuf) -> Response {
 }
 
 #[utoipa::path(
-get,
-path = "/{game}/{folder_hash}",
-params(("game", description = "Game name"), ("folder_hash", description = "Folder Hash")),
-responses((status = 200, description = "File", body = Option < Vec < SyncFileInfo >> ), (status = 404, description = "Folder not Found")),
-context_path = "/sync"
+    get,
+    path = "/{game}/{folder_hash}",
+    params(("game", description = "Game name"), ("folder_hash", description = "Folder Hash")),
+    responses((status = 200, description = "File", body = Option < Vec < SyncFileInfo >> ), (status = 404, description = "Folder not Found")),
+    context_path = "/sync",
+    tag = TAG
 )]
 #[axum::debug_handler]
 async fn get_sync_files_for_folder(
@@ -124,12 +128,13 @@ pub struct UploadSyncFile {
 }
 
 #[utoipa::path(
-post,
-path = "/{game}/{folder_hash}",
-params(("game", description = "Game name"), ("folder_hash", description = "Folder Hash")),
-request_body(content = UploadSyncFile, content_type = "multipart/form-data"),
-responses((status = 200 )),
-context_path = "/sync"
+    post,
+    path = "/{game}/{folder_hash}",
+    params(("game", description = "Game name"), ("folder_hash", description = "Folder Hash")),
+    request_body(content = UploadSyncFile, content_type = "multipart/form-data"),
+    responses((status = 200 )),
+    context_path = "/sync",
+    tag = TAG
 )]
 #[axum::debug_handler]
 async fn post_sync_file_for_folder(

@@ -10,6 +10,8 @@ use std::sync::{Arc, LazyLock};
 use tracing::info;
 use utoipa::ToSchema;
 
+pub(crate) const TAG: &str = "Finder Controller";
+
 pub async fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/rerun-finder-for/{game}", post(post_rerun_finder_for))
@@ -33,7 +35,8 @@ static FINDER_IS_RUNNING: LazyLock<tokio::sync::Mutex<()>> =
     path = "/rerun-finder-for/{game}",
     responses((status = 202, description = "Update the infos for a game")),
     context_path = "/finder",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn post_rerun_finder_for(
@@ -73,7 +76,8 @@ pub(crate) struct RerunFinderForGame {
     responses((status = 202, description = "Update the infos for a game")),
     context_path = "/finder",
     request_body(content = RerunFinderForGame, content_type = "application/json"),
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn post_rerun_finder_for_game(
@@ -107,7 +111,8 @@ pub async fn post_rerun_finder_for_game(
     path = "/rerun-finder",
     responses((status = 202, description = "Updates the list of available games")),
     context_path = "/finder",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn post_rerun_finder(State(app_state): State<Arc<AppState>>) -> StatusCode {
@@ -139,7 +144,8 @@ pub async fn post_rerun_finder(State(app_state): State<Arc<AppState>>) -> Status
     path = "/rerun-finder-all",
     responses((status = 202, description = "Updates the complete list of available games")),
     context_path = "/finder",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn post_rerun_finder_all(State(app_state): State<Arc<AppState>>) -> StatusCode {

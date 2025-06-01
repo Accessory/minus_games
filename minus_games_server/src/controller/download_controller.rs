@@ -10,6 +10,8 @@ use minus_games_utils::constants::ADDITIONS;
 use std::sync::Arc;
 use tower_http::services::ServeDir;
 
+pub(crate) const TAG: &str = "Download Controller";
+
 pub async fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .nest_service("/additions", additions_service(app_state.clone()).await)
@@ -27,7 +29,8 @@ pub async fn new_router(app_state: Arc<AppState>) -> Router {
     path = "/additions/{game}/{file}",
     params(("game", description = "Game"), ("file", description = "Additional Game File")),
     responses((status = 200, description = "File"), (status = 404, description = "File not Found")),
-    context_path = "/download"
+    context_path = "/download",
+    tag = TAG
 )]
 async fn additions_service(app_state: Arc<AppState>) -> ServeDir {
     ServeDir::new(app_state.clone().config.data_folder.join(ADDITIONS))
@@ -67,7 +70,8 @@ async fn check_download_access(user: ArcUser, request: Request, next: Next) -> R
     path = "/{file}",
     params(("file", description = "Filename")),
     responses((status = 200, description = "File"),(status = 404, description = "File not Found")),
-    context_path = "/download"
+    context_path = "/download",
+    tag = TAG
 )]
 async fn download_service(app_state: Arc<AppState>) -> ServeDir {
     ServeDir::new(app_state.config.games_folder.as_path()).append_index_html_on_directories(false)

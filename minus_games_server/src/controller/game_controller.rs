@@ -13,6 +13,8 @@ use std::sync::Arc;
 use tower_http::services::ServeDir;
 use utoipa::ToSchema;
 
+pub(crate) const TAG: &str = "Game Controller";
+
 pub async fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/upload-saves/{game}", post(post_save_files))
@@ -42,7 +44,8 @@ pub async fn new_router(app_state: Arc<AppState>) -> Router {
     path = "/data/{config-file}",
     params(("config-file", description = "Filename")),
     responses((status = 200, description = "File"), (status = 404, description = "File not Found")),
-    context_path = "/games"
+    context_path = "/games",
+    tag = TAG
 )]
 async fn data_service(app_state: Arc<AppState>) -> ServeDir {
     ServeDir::new(app_state.clone().config.data_folder.as_path())
@@ -67,7 +70,8 @@ pub struct UploadFiles {
     request_body(content = UploadFiles, content_type = "multipart/form-data"),
     responses((status = 200, description = "Upload successful")),
     context_path = "/games",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn post_save_files(
@@ -90,7 +94,8 @@ pub async fn post_save_files(
     request_body(content = UploadFile, content_type = "multipart/form-data"),
     responses((status = 200, description = "Upload successful")),
     context_path = "/games",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn post_save_file(
@@ -112,7 +117,8 @@ pub async fn post_save_file(
     path = "/list",
     responses((status = 200, description = "List all existing Games", body = Vec < String >)),
     context_path = "/games",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn get_games_list(
@@ -128,7 +134,8 @@ pub async fn get_games_list(
     path = "/list-with-date",
     responses((status = 200, description = "List all existing Games", body = Vec < GamesWithDate >)),
     context_path = "/games",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn get_ordered_games_list(
@@ -150,7 +157,8 @@ pub async fn get_ordered_games_list(
     path = "/list-with-infos",
     responses((status = 200, description = "List all existing Games with infos", body = Vec < GamesWithInfos >)),
     context_path = "/games",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn get_ordered_games_infos_list(
@@ -173,7 +181,8 @@ pub async fn get_ordered_games_infos_list(
     path = "/list-with-game-infos",
     responses((status = 200, description = "List all existing Games with infos", body = Vec < GamesWithGameInfos >)),
     context_path = "/games",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn get_ordered_with_games_infos_list(
@@ -205,7 +214,8 @@ pub async fn get_ordered_with_games_infos_list(
     path = "/list-with-minimal-game-infos",
     responses((status = 200, description = "List all existing Games with infos", body = Vec < GamesWithMinimalGameInfos >)),
     context_path = "/games",
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 #[axum::debug_handler]
 pub async fn get_ordered_with_minimal_games_infos_list(

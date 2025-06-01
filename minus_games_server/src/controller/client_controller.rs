@@ -7,6 +7,8 @@ use axum::{Json, Router};
 use minus_games_models::sync_file_info::SyncFileInfo;
 use std::sync::Arc;
 
+pub(crate) const TAG: &str = "Client Controller";
+
 pub fn new_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/linux/info", get(get_client_info_linux))
@@ -18,7 +20,8 @@ pub fn new_router(app_state: Arc<AppState>) -> Router {
     get,
     path = "/linux/info",
     responses((status = 200, description = "Client Info", body=SyncFileInfo),(status = 404, description = "File not Found")),
-    context_path = "/client"
+    context_path = "/client",
+    tag = TAG
 )]
 #[axum::debug_handler]
 async fn get_client_info_linux(State(app_state): State<Arc<AppState>>) -> Response {
@@ -43,7 +46,8 @@ async fn get_client_info_linux(State(app_state): State<Arc<AppState>>) -> Respon
     get,
     path = "/windows/info",
     responses((status = 200, description = "Client Info", body=SyncFileInfo),(status = 404, description = "File not Found")),
-    context_path = "/client"
+    context_path = "/client",
+    tag = TAG
 )]
 #[axum::debug_handler]
 async fn get_client_info_windows(State(app_state): State<Arc<AppState>>) -> Response {
@@ -52,7 +56,7 @@ async fn get_client_info_windows(State(app_state): State<Arc<AppState>>) -> Resp
     if !client_path.exists() {
         return (
             StatusCode::NOT_FOUND,
-            "Minus game updater not found on the server",
+            "Minus Games Updater not found on the server",
         )
             .into_response();
     }

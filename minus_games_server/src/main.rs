@@ -115,10 +115,14 @@ async fn redirect_to_openapi() -> Redirect {
     Redirect::permanent("/swagger-ui/")
 }
 
+pub(crate) const TAG: &str = "Main Controller";
+
 #[utoipa::path(
     get,
     path = "/health",
     responses((status = 200, description = "Server is active and available")),
+    tag = TAG
+
 )]
 async fn health() -> Response {
     ().into_response()
@@ -128,7 +132,8 @@ async fn health() -> Response {
     get,
     path = "/me",
     responses((status = 200, description = "Get my configuration and settings", body = User)),
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 async fn me(user: ArcUser) -> Response {
     debug!("{user}");
@@ -144,7 +149,8 @@ async fn me(user: ArcUser) -> Response {
     get,
     path = "/sync",
     responses((status = 200, description = "Get if the current user can sync saves", body = bool, content_type = "application/json")),
-    security(("basic-auth" = []))
+    security(("basic-auth" = [])),
+    tag = TAG
 )]
 async fn sync(user: ArcUser) -> Response {
     debug!("User {} can sync: {}", user.username, user.sync);

@@ -175,15 +175,35 @@ impl Configuration {
         }
     }
 
+    #[cfg(not(target_family = "windows"))]
     pub fn mark_last_time_played(&self, game: &str) {
-        let dirty_path = self.get_last_time_played_path_for_game(game);
-        match File::create(&dirty_path) {
+        let last_played = self.get_last_time_played_path_for_game(game);
+        match File::create(&last_played) {
             Ok(_) => {}
             Err(err) => {
                 warn!(
                     "Could not mark last time played! - Game: {} - Path {} - {}",
                     game,
-                    dirty_path.display(),
+                    last_played.display(),
+                    err
+                );
+            }
+        }
+    }
+
+    #[cfg(target_family = "windows")]
+    pub fn mark_last_time_played(&self, game: &str) {
+        let last_played = self.get_last_time_played_path_for_game(game);
+        if last_played.is_file() {
+            std::fs::remove_file(&last_played).unwrap();
+        }
+        match File::create(&last_played) {
+            Ok(_) => {}
+            Err(err) => {
+                warn!(
+                    "Could not mark last time played! - Game: {} - Path {} - {}",
+                    game,
+                    last_played.display(),
                     err
                 );
             }
