@@ -71,32 +71,31 @@ pub fn run(config: Configuration) -> ExitCode {
         }
 
         info!("Check path: {:?}", std::path::absolute(&folder));
-        if let Some(game_infos) = detect_game(folder.as_path()) {
-            if !config.keep_existing_configs
-                || !config.does_game_infos_exists(&game_infos.folder_name)
-            {
-                save_game_file_infos(folder.as_path(), &config, &game_infos);
-                if let Some(cache_file) = config.get_cache_file_if_exists(&game_infos.folder_name) {
-                    let file = File::open(cache_file.as_path()).unwrap();
-                    let buf = BufReader::new(file);
-                    let cached_game_infos: GameInfos = match serde_json::from_reader(buf) {
-                        Ok(infos) => infos,
-                        Err(err) => {
-                            error!(
-                                "Failed to parse cached infos: {} with {}",
-                                cache_file.display(),
-                                err
-                            );
-                            game_infos
-                        }
-                    };
+        if let Some(game_infos) = detect_game(folder.as_path())
+            && (!config.keep_existing_configs
+                || !config.does_game_infos_exists(&game_infos.folder_name))
+        {
+            save_game_file_infos(folder.as_path(), &config, &game_infos);
+            if let Some(cache_file) = config.get_cache_file_if_exists(&game_infos.folder_name) {
+                let file = File::open(cache_file.as_path()).unwrap();
+                let buf = BufReader::new(file);
+                let cached_game_infos: GameInfos = match serde_json::from_reader(buf) {
+                    Ok(infos) => infos,
+                    Err(err) => {
+                        error!(
+                            "Failed to parse cached infos: {} with {}",
+                            cache_file.display(),
+                            err
+                        );
+                        game_infos
+                    }
+                };
 
-                    save_infos_to_data_folder(config.data_folder.as_path(), &cached_game_infos);
-                    info!("Game Infos:\n{cached_game_infos}");
-                } else {
-                    save_infos_to_data_folder(config.data_folder.as_path(), &game_infos);
-                    info!("Game Infos:\n{game_infos}");
-                }
+                save_infos_to_data_folder(config.data_folder.as_path(), &cached_game_infos);
+                info!("Game Infos:\n{cached_game_infos}");
+            } else {
+                save_infos_to_data_folder(config.data_folder.as_path(), &game_infos);
+                info!("Game Infos:\n{game_infos}");
             }
         }
     }
@@ -130,35 +129,35 @@ fn detect_game(game_path: &Path) -> Option<GameInfos> {
     let mut current_sync_folders = None;
     let mut current_excludes = None;
 
-    if let Some(ced) = current_engine_description {
-        if let Some(engine_functions) = get_engine_info_function_for_engine(ced.engine_type) {
-            if let Some(name) = engine_functions.get_game_name(game_path) {
-                trace!("Game Name: {name}");
-                current_name = Some(name);
-            }
-
-            current_name.as_ref()?;
-
-            if current_supported_platforms?.windows {
-                if let Some(name) = engine_functions.get_windows_exe(game_path) {
-                    current_windows_exe = Some(name);
-                }
-            }
-
-            if current_supported_platforms?.linux {
-                if let Some(name) = engine_functions.get_linux_exe(game_path) {
-                    current_linux_exe = Some(name);
-                }
-            }
-
-            if current_windows_exe.is_none() && current_linux_exe.is_none() {
-                return None;
-            }
-
-            current_sync_folders = engine_functions.get_sync_folders(game_path);
-
-            current_excludes = engine_functions.get_excludes(game_path);
+    if let Some(ced) = current_engine_description
+        && let Some(engine_functions) = get_engine_info_function_for_engine(ced.engine_type)
+    {
+        if let Some(name) = engine_functions.get_game_name(game_path) {
+            trace!("Game Name: {name}");
+            current_name = Some(name);
         }
+
+        current_name.as_ref()?;
+
+        if current_supported_platforms?.windows
+            && let Some(name) = engine_functions.get_windows_exe(game_path)
+        {
+            current_windows_exe = Some(name);
+        }
+
+        if current_supported_platforms?.linux
+            && let Some(name) = engine_functions.get_linux_exe(game_path)
+        {
+            current_linux_exe = Some(name);
+        }
+
+        if current_windows_exe.is_none() && current_linux_exe.is_none() {
+            return None;
+        }
+
+        current_sync_folders = engine_functions.get_sync_folders(game_path);
+
+        current_excludes = engine_functions.get_excludes(game_path);
     }
 
     let name = current_name?;

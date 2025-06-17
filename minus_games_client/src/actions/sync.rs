@@ -32,6 +32,9 @@ pub async fn sync_all_game_files(game: &str) {
         get_config().mark_games_as_dirty(game);
         STOP_DOWNLOAD.store(false, Relaxed);
         sync_game_files_and_download(game).await;
+        get_client()
+            .download_game_additions_header_file_if_modified(game)
+            .await;
         if !STOP_DOWNLOAD.load(Relaxed) {
             get_config().unmark_games_as_dirty(game);
         }
@@ -60,15 +63,16 @@ async fn sync_game_files_and_download(game: &str) {
         .expect("Game File List not found");
     for info in game_file_infos {
         let file_path = get_config().client_games_folder.join(info.file_path);
-        if let Ok(metadata) = file_path.as_path().metadata() {
-            if metadata.len() != info.size && file_path.as_path().is_file() {
-                match std::fs::remove_file(&file_path) {
-                    Ok(_) => {}
-                    Err(_) => {
-                        warn!("Failed to delete file: {}", file_path.display());
-                    }
-                };
-            }
+        if let Ok(metadata) = file_path.as_path().metadata()
+            && metadata.len() != info.size
+            && file_path.as_path().is_file()
+        {
+            match std::fs::remove_file(&file_path) {
+                Ok(_) => {}
+                Err(_) => {
+                    warn!("Failed to delete the file: {}", file_path.display());
+                }
+            };
         }
     }
     download_all_files(game).await;
@@ -375,12 +379,11 @@ pub async fn upload_syncs() {
 
 #[cfg(not(target_family = "windows"))]
 pub fn get_user() -> Option<String> {
-    if let Some(wine_exe) = get_config().wine_exe.as_ref() {
-        if let Some(filename) = wine_exe.file_name() {
-            if filename == "umu-run" {
-                return Some("steamuser".to_string());
-            }
-        }
+    if let Some(wine_exe) = get_config().wine_exe.as_ref()
+        && let Some(filename) = wine_exe.file_name()
+        && filename == "umu-run"
+    {
+        return Some("steamuser".to_string());
     }
     std::env::var("USER").ok()
 }

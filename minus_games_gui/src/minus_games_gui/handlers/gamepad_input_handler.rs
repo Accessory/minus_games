@@ -137,10 +137,10 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
 }
 
 fn get_move_distance(gilrs: &Gilrs, id: GamepadId) -> usize {
-    if let Some(gamepad) = gilrs.connected_gamepad(id) {
-        if gamepad.is_pressed(Button::LeftTrigger) || gamepad.is_pressed(Button::RightTrigger) {
-            return 3;
-        }
+    if let Some(gamepad) = gilrs.connected_gamepad(id)
+        && (gamepad.is_pressed(Button::LeftTrigger) || gamepad.is_pressed(Button::RightTrigger))
+    {
+        return 3;
     }
     1
 }

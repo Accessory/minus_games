@@ -4,7 +4,7 @@ use iced::widget::{Column, Row, column, text};
 use iced::{Center, Fill};
 use minus_games_models::game_infos::GameInfos;
 
-pub(crate) fn create_info_game_line(cgi: &GameInfos) -> Column<MinusGamesGuiMessage> {
+pub(crate) fn create_info_game_line(cgi: &GameInfos) -> Column<'_, MinusGamesGuiMessage> {
     create_info_game_line_with(
         cgi.engine.to_string(),
         cgi.supports_linux(),

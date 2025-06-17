@@ -52,7 +52,7 @@ macro_rules! add_checkbox_input {
     };
 }
 
-pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage> {
+pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMessage> {
     let mut settings = Column::with_capacity(3 * 9 + 4);
     settings = add_setting_input!(minus_games_gui, settings, "Username", username, Username);
     settings = add_setting_input!(minus_games_gui, settings, "Password", password, Password);

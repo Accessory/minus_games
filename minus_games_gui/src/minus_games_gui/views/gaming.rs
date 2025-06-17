@@ -6,7 +6,7 @@ use crate::minus_games_gui::views::game_helper::create_info_game_line;
 use iced::Center;
 use iced::widget::{Row, column, horizontal_space, row, text, vertical_space};
 
-pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<MinusGamesGuiMessage> {
+pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMessage> {
     if let Some(cgi) = minus_games_gui.current_game.as_ref() {
         row![
             horizontal_space().width(MARGIN_DEFAULT),

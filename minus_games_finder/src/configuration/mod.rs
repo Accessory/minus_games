@@ -33,10 +33,10 @@ pub struct Configuration {
 
 impl Configuration {
     pub fn get_cache_file_if_exists(&self, game_folder_name: &str) -> Option<PathBuf> {
-        if let Some(cache_file) = self.get_cache_file(game_folder_name) {
-            if cache_file.exists() {
-                return Some(cache_file);
-            }
+        if let Some(cache_file) = self.get_cache_file(game_folder_name)
+            && cache_file.exists()
+        {
+            return Some(cache_file);
         }
         None
     }

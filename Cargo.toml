@@ -18,13 +18,14 @@ panic = "abort"
 strip = "symbols"
 
 [workspace.package]
-version = "0.9.4"
+version = "0.9.5"
 edition = "2024"
 authors = ["Accessory"]
 repository = "https://github.com/Accessory/minus_games/"
 license = "MIT"
 
 [workspace.dependencies]
+futures-util = { version = "0", features = ["tokio-io"]}
 tokio = { version = "1", features = ["full"] }
 clap = { version = "4", features = ["derive", "env", "string"] }
 log = "0"
@@ -34,7 +35,7 @@ dotenvy = "0"
 dirs = "6"
 strum = { version = "0", features = ["derive"] }
 reqwest = { version = "0", features = ["json", "cookies", "brotli", "gzip", "multipart", "blocking", "stream"] }
-utoipa = { git = "https://github.com/juhaku/utoipa.git", rev = "7bde710045c677f4d2b02113cfa6a57bdf392fe0", features = [
+utoipa = { git = "https://github.com/juhaku/utoipa.git", rev = "a024acaab9645a8e8a6d25aeb151a10eed07729a", features = [
     "axum_extras",
     "chrono",
     "uuid",

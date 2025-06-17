@@ -2,11 +2,12 @@ use crate::runtime::{MinusGamesClientEvents, STOP_DOWNLOAD, get_client, send_eve
 use chrono::DateTime;
 use minus_games_utils::set_file_modified_time;
 use reqwest::Response;
+use std::io::Write;
+use std::num::NonZero;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::Ordering::Relaxed;
-use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
+use tokio::spawn;
 use tokio::sync::Semaphore;
 use tokio::task::JoinHandle;
 use tracing::{trace, warn};
@@ -36,7 +37,10 @@ impl DownloadManager {
         Self { download_list }
     }
     pub async fn download_all_to(&mut self, path: &Path) {
-        let processes: usize = std::thread::available_parallelism().unwrap().get();
+        let parallelism = std::thread::available_parallelism()
+            .unwrap_or(NonZero::new(1).unwrap())
+            .get();
+        let processes: usize = (parallelism / 2).max(1);
         let semaphore = Arc::new(Semaphore::new(processes));
         let mut joinings: Vec<JoinHandle<()>> = Vec::new();
         send_event(MinusGamesClientEvents::StartDownloadingFiles(
@@ -49,8 +53,7 @@ impl DownloadManager {
             }
             let pass = semaphore.clone().acquire_owned().await.unwrap();
             config.to_final = Some(path.join(config.to.as_str()));
-            // println!("{}", config.to_final.as_ref().unwrap().display());
-            let handle = tokio::spawn(async move {
+            let handle = spawn(async move {
                 trace!(
                     "Currently Running Downloads: {}",
                     processes - pass.semaphore().available_permits()
@@ -64,7 +67,9 @@ impl DownloadManager {
         }
 
         for join_handle in joinings.drain(0..) {
-            join_handle.await.unwrap();
+            if let Err(err) = join_handle.await {
+                warn!("Error downloading files: {}", err);
+            }
         }
         send_event(MinusGamesClientEvents::FinishedDownloadingFiles).await;
     }
@@ -95,7 +100,7 @@ pub async fn download_loop(mut response: Response, to: &Path) {
     trace!("Download From: {} - To: {}", response.url(), to.display());
 
     let parent = to.parent().unwrap();
-    match tokio::fs::create_dir_all(to.parent().unwrap()).await {
+    match std::fs::create_dir_all(to.parent().unwrap()) {
         Ok(_) => {}
         Err(err) => {
             warn!(
@@ -106,7 +111,7 @@ pub async fn download_loop(mut response: Response, to: &Path) {
         }
     }
 
-    let mut download_file = match File::create(&to).await {
+    let download_file = match std::fs::File::create(to) {
         Ok(file) => file,
         Err(err) => {
             warn!("File could not be created {err} - File: {}", to.display());
@@ -114,14 +119,18 @@ pub async fn download_loop(mut response: Response, to: &Path) {
         }
     };
 
+    let mut writer = std::io::BufWriter::with_capacity(128 * 1024, download_file);
+
+    // let header = response.headers().get("last-modified").cloned();
+
     loop {
         if STOP_DOWNLOAD.load(Relaxed) {
             break;
+            // return;
         }
-        let read_result = response.chunk().await.unwrap();
 
-        if let Some(bytes) = read_result {
-            if let Err(err) = download_file.write_all(&bytes).await {
+        if let Some(bytes) = response.chunk().await.unwrap() {
+            if let Err(err) = writer.write(&bytes) {
                 warn!("Download failed with: {err}");
             }
         } else {
@@ -129,11 +138,21 @@ pub async fn download_loop(mut response: Response, to: &Path) {
         };
     }
 
-    if let Some(last_modified_header_value) = response.headers().get("last-modified") {
-        if let Ok(last_modified_str) = last_modified_header_value.to_str() {
-            if let Ok(last_modified) = DateTime::parse_from_rfc2822(last_modified_str) {
-                set_file_modified_time(to, last_modified.into());
-            }
-        }
+    // let mut stream = response
+    //     .bytes_stream()
+    //     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e));
+    // let mut reader = tokio_util::io::StreamReader::new(stream);
+    // tokio::io::copy_buf(&mut reader, &mut writer).await.unwrap();
+
+    // download_file.flush().ok();
+    writer.flush().ok();
+    std::mem::drop(writer);
+
+    // if let Some(last_modified_header_value) = header
+    if let Some(last_modified_header_value) = response.headers().get("last-modified")
+        && let Ok(last_modified_str) = last_modified_header_value.to_str()
+        && let Ok(last_modified) = DateTime::parse_from_rfc2822(last_modified_str)
+    {
+        set_file_modified_time(to, last_modified.into());
     }
 }

@@ -23,7 +23,11 @@ pub struct MinusGamesClient {
 
 impl MinusGamesClient {
     pub async fn get(&self, url: &str) -> Response {
-        self.client.get(url).send().await.unwrap()
+        self.client
+            .get(url)
+            .send()
+            .await
+            .unwrap_or_else(|err| panic!("Error getting url from {url} with err: {err}"))
     }
     pub async fn can_sync(&self) -> bool {
         let url = self.url.join("/sync").unwrap();
@@ -248,18 +252,18 @@ impl MinusGamesClient {
 
         let status = response.status();
         if status == StatusCode::NOT_MODIFIED {
-            debug!("File not modified: {from}");
+            debug!("The File was not modified: {from}");
             return false;
         }
 
         if status == StatusCode::NOT_FOUND {
-            warn!("File not found: {from}");
+            warn!("The File was not found: {from}");
             return false;
         }
 
         if !status.is_success() {
             warn!(
-                "Failed to download file: {from} with status: {}",
+                "Failed to download the file: {from} with status: {}",
                 status.as_str()
             );
             return false;
@@ -276,7 +280,7 @@ impl MinusGamesClient {
 
         if !status.is_success() {
             warn!(
-                "Failed to download file: {from} with status: {}",
+                "Failed to download the file: {from} with status: {}",
                 status.as_str()
             );
             return;

@@ -26,14 +26,14 @@ dotenvy = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 utoipa = { workspace = true }
-utoipa-swagger-ui = { git = "https://github.com/juhaku/utoipa.git", rev = "7bde710045c677f4d2b02113cfa6a57bdf392fe0", features = ["axum"] }
+utoipa-swagger-ui = { git = "https://github.com/juhaku/utoipa.git", rev = "a024acaab9645a8e8a6d25aeb151a10eed07729a", features = ["axum"] }
 chrono = { version = "0", features = ["serde"] }
 clap = { version = "4", features = ["derive", "env", "string"] }
 tower-http = { version = "0", features = ["full"] }
 tower = { version = "0" }
 glob = "0"
 mime = "0"
-futures-util = "0"
+futures-util = { workspace = true }
 base64 = "0"
 uuid = "1"
 log = { workspace = true }

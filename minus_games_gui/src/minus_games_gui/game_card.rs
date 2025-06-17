@@ -71,14 +71,14 @@ impl GameCard {
     //     }
     // }
 
-    pub(crate) fn view(&self) -> MouseArea<MinusGamesGuiMessage> {
+    pub(crate) fn view(&self) -> MouseArea<'_, MinusGamesGuiMessage> {
         let row = self.create_row();
 
         MouseArea::new(row.height(GAME_CARD_ROW_HEIGHT))
             .on_enter(MinusGamesGuiMessage::EnterMouseArea(self.position))
     }
 
-    fn create_image(&self) -> Element<MinusGamesGuiMessage> {
+    fn create_image(&self) -> Element<'_, MinusGamesGuiMessage> {
         let element: Element<MinusGamesGuiMessage> = if let Some(image) = self.image.as_ref() {
             iced::widget::image(image)
                 .content_fit(Cover)
@@ -112,7 +112,7 @@ impl GameCard {
         element
     }
 
-    fn create_os_part(&self) -> Row<MinusGamesGuiMessage> {
+    fn create_os_part(&self) -> Row<'_, MinusGamesGuiMessage> {
         let mut items = Row::with_capacity(2);
 
         if self.minimal_game_infos.linux {
@@ -126,7 +126,7 @@ impl GameCard {
         items.width(width)
     }
 
-    fn create_installed_part(&self) -> Row<MinusGamesGuiMessage> {
+    fn create_installed_part(&self) -> Row<'_, MinusGamesGuiMessage> {
         let mut items = Row::with_capacity(2);
 
         if self.is_installed {
@@ -148,7 +148,7 @@ impl GameCard {
         }
     }
 
-    fn create_row(&self) -> Row<MinusGamesGuiMessage> {
+    fn create_row(&self) -> Row<'_, MinusGamesGuiMessage> {
         let mut row = row![
             horizontal_space().width(TINY_MARGIN_DEFAULT),
             self.create_image(),

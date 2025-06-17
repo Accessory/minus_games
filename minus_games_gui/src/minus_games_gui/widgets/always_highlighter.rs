@@ -2,7 +2,7 @@ use iced::advanced::layout::{Limits, Node};
 use iced::advanced::widget::{Operation, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Layout, Shell, mouse, renderer};
 use iced::mouse::Cursor;
-use iced::{Background, Color, Element, Event, Length, Rectangle, Size, Vector};
+use iced::{Color, Element, Event, Length, Rectangle, Size, Vector};
 
 pub struct AlwaysHighlighter<'a, Message, Theme, Renderer> {
     base: Element<'a, Message, Theme, Renderer>,
@@ -37,10 +37,10 @@ impl Catalog for iced::Theme {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Style {
-    pub background: Background,
-}
+// #[derive(Debug, Clone, Copy, PartialEq)]
+// pub struct Style {
+//     pub background: Background,
+// }
 
 impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
     for AlwaysHighlighter<'_, Message, Theme, Renderer>
@@ -97,32 +97,6 @@ where
         self.base.as_widget().diff(tree);
     }
 
-    fn mouse_interaction(
-        &self,
-        state: &Tree,
-        layout: Layout<'_>,
-        cursor: mouse::Cursor,
-        viewport: &Rectangle,
-        renderer: &Renderer,
-    ) -> mouse::Interaction {
-        self.base
-            .as_widget()
-            .mouse_interaction(state, layout, cursor, viewport, renderer)
-    }
-
-    fn overlay<'a>(
-        &'a mut self,
-        state: &'a mut Tree,
-        layout: Layout<'a>,
-        renderer: &Renderer,
-        viewport: &Rectangle,
-        translation: Vector,
-    ) -> Option<iced::advanced::overlay::Element<'a, Message, Theme, Renderer>> {
-        self.base
-            .as_widget_mut()
-            .overlay(state, layout, renderer, viewport, translation)
-    }
-
     fn operate(
         &self,
         state: &mut Tree,
@@ -149,5 +123,31 @@ where
         self.base.as_widget_mut().update(
             state, event, layout, cursor, renderer, clipboard, shell, viewport,
         )
+    }
+
+    fn mouse_interaction(
+        &self,
+        state: &Tree,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        viewport: &Rectangle,
+        renderer: &Renderer,
+    ) -> mouse::Interaction {
+        self.base
+            .as_widget()
+            .mouse_interaction(state, layout, cursor, viewport, renderer)
+    }
+
+    fn overlay<'a>(
+        &'a mut self,
+        state: &'a mut Tree,
+        layout: Layout<'a>,
+        renderer: &Renderer,
+        viewport: &Rectangle,
+        translation: Vector,
+    ) -> Option<iced::advanced::overlay::Element<'a, Message, Theme, Renderer>> {
+        self.base
+            .as_widget_mut()
+            .overlay(state, layout, renderer, viewport, translation)
     }
 }

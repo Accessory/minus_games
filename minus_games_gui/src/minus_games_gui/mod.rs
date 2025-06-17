@@ -453,10 +453,10 @@ impl MinusGamesGui {
                 self.current_game_name = Some(game);
             }
             MinusGamesGuiMessage::StartGame(_) => {
-                if self.current_game.is_none() {
-                    if let Some(game) = &self.current_game_name {
-                        self.current_game = get_config().get_game_infos(game);
-                    }
+                if self.current_game.is_none()
+                    && let Some(game) = &self.current_game_name
+                {
+                    self.current_game = get_config().get_game_infos(game);
                 }
 
                 self.state = MinusGamesState::Gaming;
@@ -540,14 +540,14 @@ impl MinusGamesGui {
             }
             MinusGamesGuiMessage::ChangeSetting(change_input) => {
                 handle_change_event(self.settings.as_mut(), change_input);
-                if let Some(settings) = self.settings.as_ref() {
-                    if self.theme != settings.theme {
-                        self.theme = settings.theme.clone();
-                    }
-                    // if !self.scale.is_some_and(|v| v == settings.scale) {
-                    //     self.scale = Some(settings.scale);
-                    // }
+                if let Some(settings) = self.settings.as_ref()
+                    && self.theme != settings.theme
+                {
+                    self.theme = settings.theme.clone();
                 }
+                // if !self.scale.is_some_and(|v| v == settings.scale) {
+                //     self.scale = Some(settings.scale);
+                // }
             }
             MinusGamesGuiMessage::FilterChanged(change) => {
                 self.apply_filter(change, false);
@@ -574,15 +574,15 @@ impl MinusGamesGui {
                 kill_current_running_game();
             }
             MinusGamesGuiMessage::EnterMouseArea(position) => {
-                if self.last_input_mouse && self.model.is_none() {
-                    if let Some((idx, _)) = self
+                if self.last_input_mouse
+                    && self.model.is_none()
+                    && let Some((idx, _)) = self
                         .highlight_map
                         .iter()
                         .enumerate()
                         .find(|&(ref _idx, &i)| i == position)
-                    {
-                        self.current_highlight_position = idx;
-                    }
+                {
+                    self.current_highlight_position = idx;
                 }
             }
             MinusGamesGuiMessage::CurrentPositionUp(up) => {
@@ -620,10 +620,10 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::StartCurrentPosition => {
                 if self.state == MinusGamesState::Ready {
                     let position = self.current_highlight_position;
-                    if let Some(game_card_position) = self.highlight_map.get(position) {
-                        if let Some(game_card) = self.game_cards.get(*game_card_position) {
-                            return Task::done(MinusGamesGuiMessage::Play(game_card.game.clone()));
-                        }
+                    if let Some(game_card_position) = self.highlight_map.get(position)
+                        && let Some(game_card) = self.game_cards.get(*game_card_position)
+                    {
+                        return Task::done(MinusGamesGuiMessage::Play(game_card.game.clone()));
                     }
                 }
             }
@@ -701,7 +701,7 @@ impl MinusGamesGui {
         send_event(MinusGamesClientEvents::Close).await;
     }
 
-    pub(crate) fn view(&self) -> Element<MinusGamesGuiMessage> {
+    pub(crate) fn view(&self) -> Element<'_, MinusGamesGuiMessage> {
         let to_display = match self.state {
             MinusGamesState::Loading => loading::view(self.size.height),
             MinusGamesState::Ready => ready::view(self),
@@ -733,7 +733,7 @@ impl MinusGamesGui {
         }
     }
 
-    fn create_ready_view(&self) -> Column<MinusGamesGuiMessage> {
+    fn create_ready_view(&self) -> Column<'_, MinusGamesGuiMessage> {
         if self.game_cards.is_empty() {
             return column![
                 row![
