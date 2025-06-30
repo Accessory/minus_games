@@ -177,17 +177,53 @@ pub fn kill_current_running_game() {
     }
 }
 
+// #[cfg(not(target_family = "windows"))]
+// pub fn kill_current_running_game() {
+//     let process_id = CURRENT_GAME_PROCESS_ID.load(Relaxed);
+//     if process_id != u32::MAX {
+//         debug!("Kill process {process_id}");
+//         match std::process::Command::new("pkill")
+//             .arg("-P")
+//             .arg(process_id.to_string())
+//             .output()
+//         {
+//             Ok(_info) => {}
+//             Err(err) => {
+//                 warn!("Failed to execute kill command: {err}");
+//             }
+//         };
+//     } else {
+//         warn!("Currently no running game found");
+//     }
+// }
+
 #[cfg(not(target_family = "windows"))]
 pub fn kill_current_running_game() {
     let process_id = CURRENT_GAME_PROCESS_ID.load(Relaxed);
+
+    let script = format!(
+        r#"
+        killtree() {{
+            local _pid=$1
+            for _child in $(pgrep -P "$_pid"); do
+                killtree "$_child"
+            done
+            kill -TERM "$_pid" 2>/dev/null
+        }}
+        killtree {process_id}
+        "#
+    );
+
     if process_id != u32::MAX {
         debug!("Kill process {process_id}");
-        match std::process::Command::new("pkill")
-            .arg("-P")
-            .arg(process_id.to_string())
+        match std::process::Command::new("sh")
+            .arg("-c")
+            .arg(script)
             .output()
         {
-            Ok(_info) => {}
+            Ok(info) => {
+                warn!("{} {}", info.status, String::from_utf8_lossy(&info.stdout));
+            }
             Err(err) => {
                 warn!("Failed to execute kill command: {err}");
             }
