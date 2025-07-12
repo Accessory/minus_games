@@ -70,7 +70,10 @@ pub fn run(config: Configuration) -> ExitCode {
             continue;
         }
 
-        info!("Check path: {:?}", std::path::absolute(&folder));
+        info!(
+            "Check path: {}",
+            std::path::absolute(&folder).unwrap().display()
+        );
         if let Some(game_infos) = detect_game(folder.as_path())
             && (!config.keep_existing_configs
                 || !config.does_game_infos_exists(&game_infos.folder_name))

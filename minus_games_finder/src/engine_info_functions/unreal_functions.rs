@@ -2,7 +2,8 @@ use std::path::Path;
 
 use crate::engine_info_functions::EngineInfoFunctions;
 use crate::utils::{
-    get_all_folder_names, get_closest_exe_from_folder, get_title_from_parent_folder,
+    find_closest_string, get_all_folder_names, get_closest_exe_from_folder,
+    get_title_from_parent_folder,
 };
 
 #[derive(Copy, Clone)]
@@ -19,13 +20,27 @@ impl EngineInfoFunctions for UnrealFunctions {
     }
 
     fn get_sync_folders(&self, game_root: &Path) -> Option<Vec<String>> {
-        let names = get_all_folder_names(game_root);
-        for name in names {
-            if game_root.join(&name).join("Binaries").is_dir() {
-                return Some(vec![format!("$UNREAL_CONFIG/{}/Saved/SaveGames", name)]);
-            }
+        let mut possible_folders = get_all_folder_names(game_root);
+
+        possible_folders.retain(|name| game_root.join(name).join("Binaries").is_dir());
+
+        if possible_folders.is_empty() {
+            return None;
         }
 
-        None
+        let game_binary_name = if possible_folders.len() == 1 {
+            possible_folders.first()?
+        } else {
+            let windows_exe = self.get_windows_exe(game_root)?;
+            possible_folders.retain(|e| e != "Engine");
+            let result =
+                find_closest_string(&windows_exe[0..windows_exe.len() - 4], &possible_folders);
+            possible_folders.get(result)?
+        };
+
+        Some(vec![format!(
+            "$UNREAL_CONFIG/{}/Saved/SaveGames",
+            game_binary_name
+        )])
     }
 }

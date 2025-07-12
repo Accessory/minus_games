@@ -169,7 +169,7 @@ pub fn kill_current_running_game() {
         {
             Ok(_) => {}
             Err(err) => {
-                warn!("Failed to execute kill command: {}", err);
+                warn!("Failed to execute kill command: {err}");
             }
         };
     } else {
