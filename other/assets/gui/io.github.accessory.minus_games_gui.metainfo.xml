@@ -46,6 +46,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.7" date="2025-01-28">
+            <description>
+                <p>Version Bumps</p>
+            </description>
+        </release>
         <release version="0.9.6" date="2025-01-28">
             <description>
                 <p>Cleanup and Bugfixes</p>
