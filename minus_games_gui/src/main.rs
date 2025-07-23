@@ -44,7 +44,7 @@ fn main() -> ExitCode {
                     continue;
                 }
 
-                if ["--theme", "--mode"].contains(&item.as_str()) {
+                if ["--theme", "--mode", "--font"].contains(&item.as_str()) {
                     is_not_ok = true;
                     continue;
                 }
@@ -126,7 +126,7 @@ fn main() -> ExitCode {
             .font(include_bytes!(
                 "./minus_games_gui/assets/fonts/MonaspiceArNerdFont-Regular.otf"
             ))
-            .default_font(Font::with_name("MonaspiceAr Nerd Font"))
+            .default_font(Font::with_name(&get_gui_config().font))
             .run();
 
             if let Err(err) = result {

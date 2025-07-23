@@ -19,6 +19,12 @@ pub struct GuiConfiguration {
     pub theme: String,
     #[arg(long, env = "MINUS_GAMES_GUI_SCALE")]
     pub scale: Option<f64>,
+    #[arg(
+        long,
+        env = "MINUS_GAMES_GUI_FONT",
+        default_value = "MonaspiceAr Nerd Font"
+    )]
+    pub font: String,
 }
 
 impl Display for GuiConfiguration {

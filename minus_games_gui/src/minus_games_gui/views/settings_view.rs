@@ -2,6 +2,7 @@ use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, TEXT};
 use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
+use iced::widget::text::Shaping;
 use iced::widget::{
     Button, Column, Row, button, checkbox, column, horizontal_space, pick_list, row, slider, text,
     text_input, vertical_space,
@@ -37,9 +38,9 @@ macro_rules! add_setting_input {
                     .on_input(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(i))),
                 // horizontal_space().width(MARGIN_DEFAULT),
                 // Clear
-                button("").on_press(MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(
-                    "".to_string()
-                ))),
+                button(text("").shaping(Shaping::Advanced)).on_press(
+                    MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3("".to_string()))
+                ),
             ])
             .push(vertical_space().height(MARGIN_DEFAULT))
     };
@@ -141,33 +142,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             .spacing(MARGIN_DEFAULT),
         )
         .push(vertical_space().height(MARGIN_DEFAULT));
-    // settings = settings
-    //     .push(
-    //         checkbox(
-    //             "Verbose:",
-    //             minus_games_gui.settings.as_ref().unwrap().verbose,
-    //         )
-    //         .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Verbose(i))),
-    //     )
-    //     .push(vertical_space().height(MARGIN_DEFAULT));
-    // settings = settings
-    //     .push(
-    //         checkbox(
-    //             "Offline:",
-    //             minus_games_gui.settings.as_ref().unwrap().offline,
-    //         )
-    //         .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Offline(i))),
-    //     )
-    //     .push(vertical_space().height(MARGIN_DEFAULT));
-    // settings = settings
-    //     .push(
-    //         checkbox(
-    //             "Fullscreen:",
-    //             minus_games_gui.settings.as_ref().unwrap().fullscreen,
-    //         )
-    //         .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::Fullscreen(i))),
-    //     )
-    //     .push(vertical_space().height(MARGIN_DEFAULT));
+
     settings = settings.push(pick_list(
         Theme::ALL,
         Some(&minus_games_gui.settings.as_ref().unwrap().theme),

@@ -7,9 +7,15 @@ pub(crate) fn create_config_button<'a>(
     value: &'static str,
     message: MinusGamesGuiMessage,
 ) -> Button<'a, MinusGamesGuiMessage> {
-    button(text(value).size(TEXT).center().width(Fill)) // Quit/Off
-        .width(GAME_CARD_ROW_HEIGHT)
-        .on_press(message)
+    button(
+        text(value)
+            .size(TEXT)
+            .center()
+            .width(Fill)
+            .shaping(text::Shaping::Advanced),
+    ) // Quit/Off
+    .width(GAME_CARD_ROW_HEIGHT)
+    .on_press(message)
     // .padding(TOP_BUTTON as u16)
 }
 

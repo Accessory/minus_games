@@ -45,6 +45,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.8" date="2025-01-28">
+            <description>
+                <p>Customizable Fonts</p>
+            </description>
+        </release>
         <release version="0.9.7" date="2025-01-28">
             <description>
                 <p>Version Bumps</p>
