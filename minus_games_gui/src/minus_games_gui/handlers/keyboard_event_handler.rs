@@ -1,6 +1,6 @@
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::{FILTER_ID, MinusGamesGui};
-use crate::runtime::{CLOSING, SCROLLABLE_ID};
+use crate::runtime::{CLOSING, IS_IN_FOCUS, SCROLLABLE_ID};
 use iced::keyboard::Event::KeyPressed;
 use iced::keyboard::{Key, key};
 use iced::mouse::Button;
@@ -8,7 +8,7 @@ use iced::widget::scrollable::{RelativeOffset, snap_to};
 use iced::widget::text_input;
 use iced::{Event, Task, mouse, widget, window};
 use std::sync::atomic::Ordering::Relaxed;
-use tracing::info;
+use tracing::{info, trace};
 
 pub(crate) fn handle_system_events(
     minus_games_gui: &mut MinusGamesGui,
@@ -85,6 +85,14 @@ pub(crate) fn handle_system_events(
         }
         Event::Window(window::Event::Resized(size)) => {
             minus_games_gui.size = size;
+        }
+        Event::Window(window::Event::Unfocused) => {
+            trace!("Lost Focus");
+            IS_IN_FOCUS.store(false, Relaxed);
+        }
+        Event::Window(window::Event::Focused) => {
+            trace!("Is in Focus");
+            IS_IN_FOCUS.store(true, Relaxed);
         }
         // Event::Window(window::Event::Opened { position: _, size }) => {
         //     minus_games_gui.size = size;

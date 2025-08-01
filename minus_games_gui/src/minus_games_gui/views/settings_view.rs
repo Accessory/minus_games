@@ -1,15 +1,30 @@
+use crate::minus_games_gui::DEFAULT_FONT;
 use crate::minus_games_gui::MinusGamesGui;
+use crate::minus_games_gui::configuration::DEFAULT_FONT_NAME;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
-use crate::minus_games_gui::style_constants::{HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, TEXT};
+use crate::minus_games_gui::style_constants::{
+    HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SMALL_MARGIN_DEFAULT, TEXT,
+};
 use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
-use iced::widget::text::Shaping;
+use fontique::CollectionOptions;
 use iced::widget::{
     Button, Column, Row, button, checkbox, column, horizontal_space, pick_list, row, slider, text,
     text_input, vertical_space,
 };
 use iced::{Bottom, Center, Fill, Theme};
 use minus_games_client::runtime::OFFLINE;
+use std::collections::HashSet;
+use std::sync::LazyLock;
 use std::sync::atomic::Ordering::Relaxed;
+
+static FONT_FAMILIES: LazyLock<Vec<String>> = LazyLock::new(|| {
+    let mut collection = fontique::Collection::new(CollectionOptions::default());
+    let mut family_set: HashSet<String> = collection.family_names().map(str::to_string).collect();
+    family_set.insert("MonaspiceAr Nerd Font".to_string());
+    let mut result: Vec<String> = family_set.into_iter().collect();
+    result.sort();
+    result
+});
 
 #[derive(Clone, Debug)]
 pub enum SettingInput {
@@ -27,6 +42,7 @@ pub enum SettingInput {
     Username(String),
     Password(String),
     Theme(Theme),
+    Font(String),
     Scale(f64),
 }
 
@@ -38,9 +54,9 @@ macro_rules! add_setting_input {
                     .on_input(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(i))),
                 // horizontal_space().width(MARGIN_DEFAULT),
                 // Clear
-                button(text("").shaping(Shaping::Advanced)).on_press(
-                    MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3("".to_string()))
-                ),
+                button(text("").font(DEFAULT_FONT)).on_press(MinusGamesGuiMessage::ChangeSetting(
+                    SettingInput::$n3("".to_string())
+                )),
             ])
             .push(vertical_space().height(MARGIN_DEFAULT))
     };
@@ -109,7 +125,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
         .push(add_checkbox_input!(
             minus_games_gui,
             settings,
-            "Sync Filegames",
+            "Sync Game Files",
             sync,
             Sync
         ))
@@ -143,11 +159,36 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
         )
         .push(vertical_space().height(MARGIN_DEFAULT));
 
-    settings = settings.push(pick_list(
-        Theme::ALL,
-        Some(&minus_games_gui.settings.as_ref().unwrap().theme),
-        |t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(t)),
-    ));
+    settings = settings.push(
+        row![
+            text("Font:"),
+            horizontal_space().width(SMALL_MARGIN_DEFAULT),
+            pick_list(
+                FONT_FAMILIES.clone(),
+                Some(&minus_games_gui.settings.as_ref().unwrap().font),
+                |f| MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(f)),
+            )
+            .width(Fill),
+            button(text("").font(DEFAULT_FONT)).on_press_with(|| {
+                MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(
+                    DEFAULT_FONT_NAME.to_string(),
+                ))
+            }),
+            horizontal_space().width(MARGIN_DEFAULT),
+            text("Theme:"),
+            horizontal_space().width(SMALL_MARGIN_DEFAULT),
+            pick_list(
+                Theme::ALL,
+                Some(&minus_games_gui.settings.as_ref().unwrap().theme),
+                |t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(t)),
+            )
+            .width(Fill),
+            button(text("").font(DEFAULT_FONT)).on_press_with(|| {
+                MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(Theme::Light))
+            })
+        ]
+        .align_y(Center),
+    );
 
     settings = settings.push(vertical_space().height(MARGIN_DEFAULT));
 

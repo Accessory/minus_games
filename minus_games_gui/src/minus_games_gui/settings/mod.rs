@@ -98,6 +98,7 @@ pub(crate) fn handle_change_event(
             SettingInput::Scale(scale) => {
                 minus_games_settings.scale = scale;
             }
+            SettingInput::Font(font) => minus_games_settings.font = font,
         };
     } else {
         warn!("Settings are not set!");
@@ -160,6 +161,12 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                 writer
                     .write_all(
                         format!("MINUS_GAMES_GUI_THEME=\"{}\"{}", settings.theme, NEW_LINE)
+                            .as_bytes(),
+                    )
+                    .unwrap();
+                writer
+                    .write_all(
+                        format!("MINUS_GAMES_GUI_FONT=\"{}\"{}", settings.font, NEW_LINE)
                             .as_bytes(),
                     )
                     .unwrap();

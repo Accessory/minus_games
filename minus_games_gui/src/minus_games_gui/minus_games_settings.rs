@@ -19,6 +19,7 @@ pub(crate) struct MinusGamesSettings {
     pub theme: Theme,
     pub initial_theme: Theme,
     pub scale: f64,
+    pub font: String,
 }
 
 impl MinusGamesSettings {
@@ -48,6 +49,7 @@ impl MinusGamesSettings {
             initial_theme: theme.clone(),
             theme,
             scale: value_gui.scale.unwrap_or(1.0),
+            font: value_gui.font.clone(),
         }
     }
 }

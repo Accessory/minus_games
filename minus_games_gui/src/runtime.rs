@@ -7,8 +7,10 @@ use std::sync::atomic::AtomicBool;
 pub(crate) static mut GUI_CONFIG: Option<GuiConfiguration> = None;
 
 pub(crate) static CLOSING: AtomicBool = AtomicBool::new(false);
+pub(crate) static IS_IN_FOCUS: AtomicBool = AtomicBool::new(true);
 
 pub(crate) static SCROLLABLE_ID: LazyLock<scrollable::Id> = LazyLock::new(scrollable::Id::unique);
+
 // pub(crate) static DEFAULT_SCALE_ADJUSTMENT_FACTOR: LazyLock<f32> = LazyLock::new(|| {
 //     if std::env::var("SteamDeck").is_ok_and(|v| v == "1") {
 //         2.

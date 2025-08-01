@@ -1,3 +1,4 @@
+use crate::minus_games_gui::configuration::DEFAULT_FONT;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::{
     GAME_CARD_IMAGE_HEIGHT, GAME_CARD_IMAGE_ROW_WIDTH, GAME_CARD_ROW_HEIGHT, READY_BUTTON_HEIGHT,
@@ -165,10 +166,10 @@ impl GameCard {
             // Play
             button(
                 text("") // Play
+                    .font(DEFAULT_FONT)
                     .height(READY_BUTTON_HEIGHT)
                     .width(TEXT)
                     .center()
-                    .shaping(Advanced)
             )
             .width(READY_BUTTON_WIDTH)
             .on_press(MinusGamesGuiMessage::Play(self.game.clone())),
@@ -179,10 +180,10 @@ impl GameCard {
                 // More
                 button(
                     text("󰍜") // More
+                        .font(DEFAULT_FONT)
                         .height(READY_BUTTON_HEIGHT)
                         .width(Fill)
-                        .center()
-                        .shaping(Advanced),
+                        .center(),
                 )
                 .width(READY_BUTTON_WIDTH)
                 .on_press(MinusGamesGuiMessage::OpenGameModal(
@@ -195,10 +196,10 @@ impl GameCard {
                 // Download
                 button(
                     text("") // Download
+                        .font(DEFAULT_FONT)
                         .height(READY_BUTTON_HEIGHT)
                         .width(Fill)
-                        .center()
-                        .shaping(Advanced),
+                        .center(),
                 )
                 .width(READY_BUTTON_WIDTH)
                 .on_press(MinusGamesGuiMessage::Repair(self.game.clone())),

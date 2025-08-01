@@ -1,3 +1,4 @@
+use crate::minus_games_gui::configuration::DEFAULT_FONT;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::{GAME_CARD_ROW_HEIGHT, TEXT};
 use iced::Fill;
@@ -12,7 +13,7 @@ pub(crate) fn create_config_button<'a>(
             .size(TEXT)
             .center()
             .width(Fill)
-            .shaping(text::Shaping::Advanced),
+            .font(DEFAULT_FONT),
     ) // Quit/Off
     .width(GAME_CARD_ROW_HEIGHT)
     .on_press(message)

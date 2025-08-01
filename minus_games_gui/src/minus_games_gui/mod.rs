@@ -1,3 +1,4 @@
+use crate::minus_games_gui::configuration::DEFAULT_FONT;
 use crate::minus_games_gui::game_card::GameCard;
 use crate::minus_games_gui::handlers::gamepad_input_handler::gamepad_input_handler;
 use crate::minus_games_gui::handlers::keyboard_event_handler::handle_system_events;
@@ -586,6 +587,7 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::CurrentPositionUp(up) => {
+                debug!("Button Up By: {up}");
                 if self.state == MinusGamesState::Ready
                     && !self.highlight_map.is_empty()
                     && self.current_highlight_position != 0
@@ -601,6 +603,7 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::CurrentPositionDown(down) => {
+                debug!("Button Down By: {down}");
                 if self.state == MinusGamesState::Ready
                     && !self.highlight_map.is_empty()
                     && self.current_highlight_position != self.highlight_map.len() - 1
@@ -757,11 +760,6 @@ impl MinusGamesGui {
             row![column![
                 row![
                     text("Games").size(TEXT),
-                    // text(format!(
-                    //     "X {}, Y {}",
-                    //     self.size.width,
-                    //     self.get_screen_height()
-                    // )),
                     horizontal_space().width(Fill),
                     create_reload_button(),
                     horizontal_space().width(HALF_MARGIN_DEFAULT),
@@ -777,7 +775,7 @@ impl MinusGamesGui {
                             .on_input(MinusGamesGuiMessage::FilterChanged)
                             .on_submit(MinusGamesGuiMessage::StartCurrentPosition)
                             .width(Fill),
-                        button("") // Clear Filter
+                        button(text("").font(DEFAULT_FONT)) // Clear Filter
                             .on_press_with(|| MinusGamesGuiMessage::FilterChanged("".to_string()))
                     ]
             ],]
