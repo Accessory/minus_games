@@ -55,8 +55,8 @@ where
         self.base.as_widget().size_hint()
     }
 
-    fn layout(&self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
-        self.base.as_widget().layout(tree, renderer, limits)
+    fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
+        self.base.as_widget_mut().layout(tree, renderer, limits)
     }
     fn draw(
         &self,
@@ -98,14 +98,14 @@ where
     }
 
     fn operate(
-        &self,
+        &mut self,
         state: &mut Tree,
         layout: Layout<'_>,
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
         self.base
-            .as_widget()
+            .as_widget_mut()
             .operate(state, layout, renderer, operation);
     }
 

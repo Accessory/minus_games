@@ -28,6 +28,9 @@ pub(crate) fn get_linux_exe(eif: &impl EngineInfoFunctions, game_root: &Path) ->
             && file.file_name() != "CREDITS"
             && file.file_name() != "chrome-sandbox"
             && file.file_name() != "UnityCrashHandler64"
+            && file.file_name() != "version"
+            && file.file_name() != "Version"
+            && file.file_name() != "LICENSE"
         {
             files.push(file_path.file_name().unwrap().to_str().unwrap().to_string());
         }

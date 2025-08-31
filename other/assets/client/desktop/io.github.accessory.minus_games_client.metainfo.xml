@@ -50,6 +50,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.9" date="2025-08-31">
+            <description>
+                <p>Bug fixes and better Controller support</p>
+            </description>
+        </release>
         <release version="0.9.8" date="2025-08-01">
             <description>
                 <p>Customizable Fonts</p>

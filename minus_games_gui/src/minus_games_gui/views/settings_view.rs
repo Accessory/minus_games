@@ -6,7 +6,8 @@ use crate::minus_games_gui::style_constants::{
     HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SMALL_MARGIN_DEFAULT, TEXT,
 };
 use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
-use fontique::CollectionOptions;
+use iced::advanced::graphics::text::cosmic_text::FontSystem;
+use iced::advanced::graphics::text::cosmic_text::Weight;
 use iced::widget::{
     Button, Column, Row, button, checkbox, column, horizontal_space, pick_list, row, slider, text,
     text_input, vertical_space,
@@ -14,17 +15,34 @@ use iced::widget::{
 use iced::{Bottom, Center, Fill, Theme};
 use minus_games_client::runtime::OFFLINE;
 use std::collections::HashSet;
+use std::ops::Deref;
 use std::sync::LazyLock;
 use std::sync::atomic::Ordering::Relaxed;
 
-static FONT_FAMILIES: LazyLock<Vec<String>> = LazyLock::new(|| {
-    let mut collection = fontique::Collection::new(CollectionOptions::default());
-    let mut family_set: HashSet<String> = collection.family_names().map(str::to_string).collect();
-    family_set.insert("MonaspiceAr Nerd Font".to_string());
-    let mut result: Vec<String> = family_set.into_iter().collect();
+struct FontFamily(LazyLock<Vec<String>>);
+
+impl Deref for FontFamily {
+    type Target = Vec<String>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+static FONT_FAMILIES: FontFamily = FontFamily(LazyLock::new(|| {
+    let font_system = FontSystem::new();
+    let mut family_set: HashSet<&str> = font_system
+        .db()
+        .faces()
+        .filter(|f| f.weight == Weight::NORMAL)
+        .map(|f| f.families.first().unwrap().0.as_str())
+        .collect();
+    family_set.insert(DEFAULT_FONT_NAME);
+    let mut result: Vec<String> = family_set.into_iter().map(|n| n.to_string()).collect();
     result.sort();
+    result.shrink_to_fit();
     result
-});
+}));
 
 #[derive(Clone, Debug)]
 pub enum SettingInput {
@@ -164,7 +182,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             text("Font:"),
             horizontal_space().width(SMALL_MARGIN_DEFAULT),
             pick_list(
-                FONT_FAMILIES.clone(),
+                &*(*FONT_FAMILIES),
                 Some(&minus_games_gui.settings.as_ref().unwrap().font),
                 |f| MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(f)),
             )

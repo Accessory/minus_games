@@ -219,10 +219,13 @@ pub async fn run_linux_game_on_linux(infos: GameInfos) {
         add_permissions(cwd_path, exe_stem);
     }
 
-    let child = Command::new(path_str)
-        .current_dir(&cwd)
-        .spawn()
-        .expect("Failed to spawn a child process");
+    let child = match Command::new(path_str).current_dir(&cwd).spawn() {
+        Ok(value) => value,
+        Err(err) => {
+            warn!("Failed to spawn a child process: {err}");
+            return;
+        }
+    };
 
     CURRENT_GAME_PROCESS_ID.store(child.id().expect("Failed to get the process id"), Relaxed);
     handle_command_output(child.wait_with_output().await, &infos.name);

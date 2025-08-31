@@ -1,9 +1,7 @@
 use crate::constants::{ADDITIONS, HEADER_JPG, INFOS};
-use argon2::password_hash::SaltString;
-use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use clap::builder::OsStr;
 use filetime::set_file_mtime;
-use rand_core::OsRng;
 use std::hash::{DefaultHasher, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -32,7 +30,6 @@ pub struct DataFolder {}
 static DATA_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
 
 impl From<DataFolder> for OsStr {
-    #[cfg(not(debug_assertions))]
     fn from(_value: DataFolder) -> Self {
         DATA_FOLDER_PATH
             .get_or_init(|| match dirs::data_dir() {
@@ -42,35 +39,18 @@ impl From<DataFolder> for OsStr {
             .as_os_str()
             .into()
     }
-
-    #[cfg(debug_assertions)]
-    fn from(_value: DataFolder) -> Self {
-        DATA_FOLDER_PATH
-            .get_or_init(|| std::env::current_dir().unwrap().join("data"))
-            .as_os_str()
-            .into()
-    }
 }
 pub struct GamesFolder {}
 
 static GAMES_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
 
 impl From<GamesFolder> for OsStr {
-    #[cfg(not(debug_assertions))]
     fn from(_value: GamesFolder) -> Self {
         GAMES_FOLDER_PATH
             .get_or_init(|| match dirs::data_dir() {
                 None => std::env::current_dir().unwrap().join("games"),
                 Some(value) => value.join("minus_games").join("games"),
             })
-            .as_os_str()
-            .into()
-    }
-
-    #[cfg(debug_assertions)]
-    fn from(_value: GamesFolder) -> Self {
-        GAMES_FOLDER_PATH
-            .get_or_init(|| std::env::current_dir().unwrap().join("games"))
             .as_os_str()
             .into()
     }
@@ -81,21 +61,12 @@ pub struct ClientGamesFolder {}
 static CLIENT_GAMES_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
 
 impl From<ClientGamesFolder> for OsStr {
-    #[cfg(not(debug_assertions))]
     fn from(_value: ClientGamesFolder) -> Self {
         CLIENT_GAMES_FOLDER_PATH
             .get_or_init(|| match dirs::data_dir() {
                 None => std::env::current_dir().unwrap().join("client_games"),
                 Some(value) => value.join("minus_games").join("client_games"),
             })
-            .as_os_str()
-            .into()
-    }
-
-    #[cfg(debug_assertions)]
-    fn from(_value: ClientGamesFolder) -> Self {
-        CLIENT_GAMES_FOLDER_PATH
-            .get_or_init(|| std::env::current_dir().unwrap().join("client_games"))
             .as_os_str()
             .into()
     }
@@ -106,15 +77,6 @@ pub struct ClientFolder {}
 static CLIENT_FOLDER_PATH: OnceLock<PathBuf> = OnceLock::new();
 
 impl From<ClientFolder> for OsStr {
-    #[cfg(debug_assertions)]
-    fn from(_: ClientFolder) -> Self {
-        CLIENT_FOLDER_PATH
-            .get_or_init(|| std::env::current_dir().unwrap().join("client"))
-            .as_os_str()
-            .into()
-    }
-
-    #[cfg(not(debug_assertions))]
     fn from(_: ClientFolder) -> Self {
         CLIENT_FOLDER_PATH
             .get_or_init(|| match dirs::config_dir() {
@@ -168,15 +130,6 @@ pub fn create_file_list(folder: &Path) -> Vec<PathBuf> {
 
 pub fn set_file_modified_time(to: &Path, time: SystemTime) {
     set_file_mtime(to, time.into()).ok();
-}
-
-pub fn create_argon2_hash(text: &str) -> String {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
-    argon2
-        .hash_password(text.as_bytes(), &salt)
-        .unwrap()
-        .to_string()
 }
 
 pub fn verify_argon2_hash(password: &str, hash: &str) -> bool {
@@ -233,21 +186,12 @@ pub fn get_header_path(data_dir: PathBuf, game: &str) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use crate::create_hash_from_string;
-    use crate::{create_argon2_hash, verify_argon2_hash};
+    use crate::verify_argon2_hash;
 
     #[test]
     fn test_create_hash_from_string() {
         let value = "test";
         let hash = create_hash_from_string(value);
         assert_eq!(hash, "tMSBYrhFthj");
-    }
-
-    #[test]
-    fn test_create_argon2_hash() {
-        let value = "default";
-        let hash = create_argon2_hash(value);
-        let verification_true = verify_argon2_hash(value, &hash);
-        let verification_false = verify_argon2_hash("value", &hash);
-        assert_ne!(verification_false, verification_true);
     }
 }
