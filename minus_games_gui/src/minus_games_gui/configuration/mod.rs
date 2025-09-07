@@ -23,7 +23,7 @@ pub struct GuiConfiguration {
     #[arg(long, env = "MINUS_GAMES_GUI_THEME", default_value = DEFAULT_THEME_NAME)]
     pub theme: String,
     #[arg(long, env = "MINUS_GAMES_GUI_SCALE")]
-    pub scale: Option<f64>,
+    pub scale: Option<f32>,
     #[arg(
         long,
         env = "MINUS_GAMES_GUI_FONT",

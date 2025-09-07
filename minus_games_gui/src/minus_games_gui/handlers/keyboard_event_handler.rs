@@ -1,25 +1,23 @@
+use crate::minus_games_gui::FILTER_ID;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
-use crate::minus_games_gui::{FILTER_ID, MinusGamesGui};
-use crate::runtime::{CLOSING, IS_IN_FOCUS, SCROLLABLE_ID};
-use iced::keyboard::Event::KeyPressed;
+use crate::runtime::{IS_IN_FOCUS, SCROLLABLE_ID};
 use iced::keyboard::{Key, key};
-use iced::mouse::Button;
 use iced::widget::scrollable::{RelativeOffset, snap_to};
 use iced::widget::text_input;
-use iced::{Event, Task, mouse, widget, window};
+use iced::{Task, keyboard, widget};
 use std::sync::atomic::Ordering::Relaxed;
-use tracing::{info, trace};
 
-pub(crate) fn handle_system_events(
-    minus_games_gui: &mut MinusGamesGui,
-    event: Event,
-) -> Task<MinusGamesGuiMessage> {
+pub(crate) fn handle_keyboard_event(event: keyboard::Event) -> Task<MinusGamesGuiMessage> {
+    if !IS_IN_FOCUS.load(Relaxed) {
+        return Task::none();
+    }
+
     match event {
-        Event::Keyboard(KeyPressed {
+        keyboard::Event::KeyPressed {
             key: Key::Character(character),
             modifiers,
             ..
-        }) => {
+        } => {
             if character.as_str() == "f" && modifiers.control() {
                 return Task::batch([
                     snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START),
@@ -27,11 +25,11 @@ pub(crate) fn handle_system_events(
                 ]);
             }
         }
-        Event::Keyboard(KeyPressed {
+        keyboard::Event::KeyPressed {
             key: Key::Named(named),
             modifiers,
             ..
-        }) => match named {
+        } => match named {
             key::Named::Tab => {
                 return if modifiers.shift() {
                     widget::focus_previous()
@@ -70,36 +68,6 @@ pub(crate) fn handle_system_events(
             }
             _ => {}
         },
-        Event::Mouse(mouse::Event::ButtonPressed(Button::Back)) => {
-            return Task::done(MinusGamesGuiMessage::BackFromSettings(false));
-        }
-        Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-            minus_games_gui.last_input_mouse = true;
-        }
-        Event::Window(window::Event::CloseRequested) => {
-            info!("Close Application!");
-            return Task::perform(
-                MinusGamesGui::close(),
-                MinusGamesGuiMessage::CloseApplication,
-            );
-        }
-        Event::Window(window::Event::Resized(size)) => {
-            minus_games_gui.size = size;
-        }
-        Event::Window(window::Event::Unfocused) => {
-            trace!("Lost Focus");
-            IS_IN_FOCUS.store(false, Relaxed);
-        }
-        Event::Window(window::Event::Focused) => {
-            trace!("Is in Focus");
-            IS_IN_FOCUS.store(true, Relaxed);
-        }
-        // Event::Window(window::Event::Opened { position: _, size }) => {
-        //     minus_games_gui.size = size;
-        // }
-        Event::Window(window::Event::Closed) => {
-            CLOSING.store(true, Relaxed);
-        }
         _ => {}
     }
 

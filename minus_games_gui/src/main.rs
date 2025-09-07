@@ -120,7 +120,12 @@ fn main() -> ExitCode {
             .settings(settings)
             .subscription(MinusGamesGui::batch_subscription)
             .window(window_settings)
-            .scale_factor(|minus_games_gui| minus_games_gui.scale.unwrap_or(1.0))
+            .scale_factor(|minus_games_gui| {
+                minus_games_gui
+                    .scale
+                    .or_else(|| get_gui_config().scale)
+                    .unwrap_or(1.0)
+            })
             .theme(MinusGamesGui::get_theme)
             .exit_on_close_request(false)
             .font(include_bytes!(

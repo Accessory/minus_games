@@ -13,7 +13,7 @@ pub(crate) enum MinusGamesGuiMessage {
     Init,
     // InitComplete(Arc<RwLock<tokio::sync::mpsc::Receiver<MinusGamesClientEvents>>>),
     InitWindow(()),
-    SetScale(f64),
+    SetScale(f32),
     InitComplete(()),
     Loading,
     Reload,

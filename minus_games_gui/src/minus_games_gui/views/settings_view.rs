@@ -61,7 +61,7 @@ pub enum SettingInput {
     Password(String),
     Theme(Theme),
     Font(String),
-    Scale(f64),
+    Scale(f32),
 }
 
 macro_rules! add_setting_input {

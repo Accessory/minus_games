@@ -1,8 +1,10 @@
 use crate::minus_games_gui::configuration::DEFAULT_FONT;
 use crate::minus_games_gui::game_card::GameCard;
 use crate::minus_games_gui::handlers::gamepad_input_handler::gamepad_input_handler;
-use crate::minus_games_gui::handlers::keyboard_event_handler::handle_system_events;
+use crate::minus_games_gui::handlers::keyboard_event_handler::handle_keyboard_event;
 use crate::minus_games_gui::handlers::lazy_image_download_handler::lazy_image_download_handler;
+use crate::minus_games_gui::handlers::mouse_event_handler::handle_mouse_event;
+use crate::minus_games_gui::handlers::window_event_handler::handle_window_events;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::minus_games_settings::MinusGamesSettings;
@@ -66,7 +68,7 @@ pub(crate) enum MinusGamesState {
 #[derive(Debug, Clone, Default)]
 pub(crate) struct MinusGamesGui {
     pub theme: Theme,
-    pub scale: Option<f64>,
+    pub scale: Option<f32>,
     pub game_cards: Vec<GameCard>,
     pub state: MinusGamesState,
     pub files_to_download: usize,
@@ -421,7 +423,7 @@ impl MinusGamesGui {
                         window::get_scale_factor(window_id).then(|f| {
                             // println!("Scale Factor: {f}");
                             Task::batch([
-                                Task::done(MinusGamesGuiMessage::SetScale(f as f64)),
+                                Task::done(MinusGamesGuiMessage::SetScale(f)),
                                 Task::done(MinusGamesGuiMessage::InitComplete(())),
                             ])
                         })
@@ -477,8 +479,13 @@ impl MinusGamesGui {
                 CLOSING.store(true, Relaxed);
                 return window::get_latest().and_then(window::close);
             }
-            MinusGamesGuiMessage::Event(event) => {
-                return handle_system_events(self, event);
+            MinusGamesGuiMessage::Event(system_event) => {
+                return match system_event {
+                    iced::Event::Keyboard(event) => handle_keyboard_event(event),
+                    iced::Event::Mouse(event) => handle_mouse_event(self, event),
+                    iced::Event::Window(event) => handle_window_events(self, event),
+                    _ => Task::none(),
+                };
             }
             MinusGamesGuiMessage::Fullscreen => {
                 return window::get_latest()
@@ -726,6 +733,14 @@ impl MinusGamesGui {
             .width(Fill)
             .height(Fill);
 
+        // Debug
+        // let screen_height = self.get_screen_height();
+        // let ok_area = screen_height * 0.80;
+        // let vertical_margin = vertical_space().height(ok_area);
+        // let debug_element =
+        //     text("-----------------------------------------------------------------------------")
+        //         .center();
+
         match &self.model {
             None => stack!(content).into(),
             Some((game, is_on_server)) => stack!(
@@ -807,8 +822,9 @@ impl MinusGamesGui {
         // if get_gui_config().fullscreen && std::env::var("SteamDeck").is_ok_and(|v| v == "1") {
         //     *PRIMARY_SCREEN_DISPLAY_HEIGHT
         // } else {
-        self.size.height / self.scale.unwrap_or(1.0) as f32
+        // self.size.height / self.scale.unwrap_or(1.0)
         // }
+        self.size.height
     }
 }
 

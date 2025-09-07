@@ -18,7 +18,7 @@ pub(crate) struct MinusGamesSettings {
     pub password: String,
     pub theme: Theme,
     pub initial_theme: Theme,
-    pub scale: f64,
+    pub scale: f32,
     pub font: String,
 }
 
