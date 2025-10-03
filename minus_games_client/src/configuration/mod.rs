@@ -1,5 +1,5 @@
 use crate::utils::{is_or_none, is_or_none_path_buf, is_or_none_string};
-use clap::{Parser, Subcommand, command};
+use clap::{Parser, Subcommand};
 use log::warn;
 use minus_games_models::game_file_info::GameFileInfo;
 use minus_games_models::game_infos::GameInfos;

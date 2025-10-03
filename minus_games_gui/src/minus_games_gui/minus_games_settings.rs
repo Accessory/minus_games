@@ -3,7 +3,7 @@ use crate::runtime::get_gui_config;
 use iced::Theme;
 use minus_games_client::configuration::Configuration;
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct MinusGamesSettings {
     pub server_url: String,
     pub client_folder: String,
@@ -20,6 +20,28 @@ pub(crate) struct MinusGamesSettings {
     pub initial_theme: Theme,
     pub scale: f32,
     pub font: String,
+}
+
+impl Default for MinusGamesSettings {
+    fn default() -> Self {
+        Self {
+            server_url: Default::default(),
+            client_folder: Default::default(),
+            client_games_folder: Default::default(),
+            wine_exe: Default::default(),
+            wine_prefix: Default::default(),
+            verbose: Default::default(),
+            offline: Default::default(),
+            sync: Default::default(),
+            fullscreen: Default::default(),
+            username: Default::default(),
+            password: Default::default(),
+            theme: Theme::CatppuccinMocha,
+            initial_theme: Theme::CatppuccinMocha,
+            scale: Default::default(),
+            font: Default::default(),
+        }
+    }
 }
 
 impl MinusGamesSettings {

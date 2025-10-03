@@ -2,9 +2,9 @@ use crate::minus_games_gui::FILTER_ID;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::runtime::{IS_IN_FOCUS, SCROLLABLE_ID};
 use iced::keyboard::{Key, key};
-use iced::widget::scrollable::{RelativeOffset, snap_to};
-use iced::widget::text_input;
-use iced::{Task, keyboard, widget};
+use iced::widget::operation;
+use iced::widget::scrollable::RelativeOffset;
+use iced::{Task, keyboard};
 use std::sync::atomic::Ordering::Relaxed;
 
 pub(crate) fn handle_keyboard_event(event: keyboard::Event) -> Task<MinusGamesGuiMessage> {
@@ -20,8 +20,8 @@ pub(crate) fn handle_keyboard_event(event: keyboard::Event) -> Task<MinusGamesGu
         } => {
             if character.as_str() == "f" && modifiers.control() {
                 return Task::batch([
-                    snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START),
-                    text_input::focus(FILTER_ID),
+                    operation::snap_to(SCROLLABLE_ID, RelativeOffset::START),
+                    operation::focus(FILTER_ID),
                 ]);
             }
         }
@@ -32,9 +32,9 @@ pub(crate) fn handle_keyboard_event(event: keyboard::Event) -> Task<MinusGamesGu
         } => match named {
             key::Named::Tab => {
                 return if modifiers.shift() {
-                    widget::focus_previous()
+                    operation::focus_previous()
                 } else {
-                    widget::focus_next()
+                    operation::focus_next()
                 };
             }
             key::Named::ArrowUp => {

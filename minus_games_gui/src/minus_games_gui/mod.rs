@@ -25,9 +25,9 @@ use iced::futures::channel::mpsc::Sender;
 use iced::futures::{SinkExt, Stream};
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{AbsoluteOffset, Direction, RelativeOffset, Scrollbar};
+use iced::widget::space::{horizontal, vertical};
 use iced::widget::{
-    Button, Column, button, column, horizontal_space, row, scrollable, stack, text, text_input,
-    vertical_space,
+    Button, Column, button, column, operation, row, scrollable, stack, text, text_input,
 };
 use iced::{Center, Element, Fill, Length, Size, Subscription, Task, Theme, event, stream, window};
 use minus_games_client::actions::delete::delete_game;
@@ -65,7 +65,7 @@ pub(crate) enum MinusGamesState {
     Settings,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub(crate) struct MinusGamesGui {
     pub theme: Theme,
     pub scale: Option<f32>,
@@ -86,6 +86,32 @@ pub(crate) struct MinusGamesGui {
     pub last_input_mouse: bool,
     pub block_highlighting: bool,
     pub lazy_image_downloader_sender: Option<Sender<(String, bool, usize)>>,
+}
+
+impl Default for MinusGamesGui {
+    fn default() -> Self {
+        Self {
+            theme: Theme::CatppuccinMocha,
+            scale: Default::default(),
+            game_cards: Default::default(),
+            state: Default::default(),
+            files_to_download: Default::default(),
+            files_downloaded: Default::default(),
+            current_game: Default::default(),
+            current_game_name: Default::default(),
+            settings: Default::default(),
+            filter: Default::default(),
+            model: Default::default(),
+            size: Default::default(),
+            highlight_map: Default::default(),
+            scroll_offset: Default::default(),
+            current_highlight_position: Default::default(),
+            went_up: Default::default(),
+            last_input_mouse: Default::default(),
+            block_highlighting: Default::default(),
+            lazy_image_downloader_sender: Default::default(),
+        }
+    }
 }
 
 const FILTER_ID: &str = "FILTER_ID";
@@ -342,7 +368,7 @@ impl MinusGamesGui {
                 self.apply_filter(self.filter.clone(), true);
 
                 return Task::batch([
-                    text_input::focus(FILTER_ID),
+                    operation::focus(FILTER_ID),
                     // Task::done(MinusGamesGuiMessage::FilterChanged(self.filter.clone(),true)),
                     image_task,
                 ]);
@@ -419,8 +445,8 @@ impl MinusGamesGui {
                         Task::done(MinusGamesGuiMessage::InitComplete(())),
                     ])
                 } else {
-                    window::get_latest().and_then(|window_id| {
-                        window::get_scale_factor(window_id).then(|f| {
+                    window::latest().and_then(|window_id| {
+                        window::scale_factor(window_id).then(|f| {
                             // println!("Scale Factor: {f}");
                             Task::batch([
                                 Task::done(MinusGamesGuiMessage::SetScale(f)),
@@ -477,7 +503,7 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::CloseApplication(_) => {
                 info!("Client event listener closed!");
                 CLOSING.store(true, Relaxed);
-                return window::get_latest().and_then(window::close);
+                return window::latest().and_then(window::close);
             }
             MinusGamesGuiMessage::Event(system_event) => {
                 return match system_event {
@@ -488,7 +514,7 @@ impl MinusGamesGui {
                 };
             }
             MinusGamesGuiMessage::Fullscreen => {
-                return window::get_latest()
+                return window::latest()
                     .and_then(move |window| window::set_mode(window, window::Mode::Fullscreen));
             }
             MinusGamesGuiMessage::GotoSettings => {
@@ -501,10 +527,10 @@ impl MinusGamesGui {
             }
             MinusGamesGuiMessage::ApplyScreenSettings => {
                 return if get_gui_config().fullscreen {
-                    window::get_latest()
+                    window::latest()
                         .and_then(move |window| window::set_mode(window, window::Mode::Fullscreen))
                 } else {
-                    window::get_latest()
+                    window::latest()
                         .and_then(move |window| window::set_mode(window, window::Mode::Windowed))
                 };
             }
@@ -651,8 +677,8 @@ impl MinusGamesGui {
 
                 self.block_highlighting = false;
                 if !self.went_up && ok_area < bottom {
-                    return scrollable::scroll_by(
-                        SCROLLABLE_ID.clone(),
+                    return operation::scroll_by(
+                        SCROLLABLE_ID,
                         AbsoluteOffset {
                             x: 0.0,
                             y: step as f32 * GAME_CARD_ROW_HEIGHT as f32,
@@ -661,12 +687,12 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::ScrollToTop => {
-                return scrollable::snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START);
+                return operation::snap_to(SCROLLABLE_ID, RelativeOffset::START);
             }
             MinusGamesGuiMessage::ScrollUp(step) => {
                 self.block_highlighting = false;
                 if self.current_highlight_position == 0 {
-                    return scrollable::snap_to(SCROLLABLE_ID.clone(), RelativeOffset::START);
+                    return operation::snap_to(SCROLLABLE_ID, RelativeOffset::START);
                 }
 
                 let screen_height = self.get_screen_height();
@@ -679,8 +705,8 @@ impl MinusGamesGui {
                 // trace!("not_ok_area: {}, top: {}, screen_height: {}", not_ok_area, top, screen_height);
 
                 if self.went_up && not_ok_area > top {
-                    return scrollable::scroll_by(
-                        SCROLLABLE_ID.clone(),
+                    return operation::scroll_by(
+                        SCROLLABLE_ID,
                         AbsoluteOffset {
                             x: 0.0,
                             y: -(step as f32 * GAME_CARD_ROW_HEIGHT as f32),
@@ -728,7 +754,7 @@ impl MinusGamesGui {
                     .scroller_width(5)
                     .anchor(Start),
             ))
-            .id(SCROLLABLE_ID.clone())
+            .id(SCROLLABLE_ID)
             .on_scroll(MinusGamesGuiMessage::Scrolled)
             .width(Fill)
             .height(Fill);
@@ -736,7 +762,7 @@ impl MinusGamesGui {
         // Debug
         // let screen_height = self.get_screen_height();
         // let ok_area = screen_height * 0.80;
-        // let vertical_margin = vertical_space().height(ok_area);
+        // let vertical_margin = vertical().height(ok_area);
         // let debug_element =
         //     text("-----------------------------------------------------------------------------")
         //         .center();
@@ -755,18 +781,18 @@ impl MinusGamesGui {
         if self.game_cards.is_empty() {
             return column![
                 row![
-                    horizontal_space().width(Fill),
+                    horizontal().width(Fill),
                     text("No Games found...").size(50),
-                    horizontal_space().width(Fill),
+                    horizontal().width(Fill),
                 ],
                 row![
-                    horizontal_space().width(Fill),
+                    horizontal().width(Fill),
                     create_reload_button(),
-                    horizontal_space().width(MARGIN_DEFAULT),
+                    horizontal().width(MARGIN_DEFAULT),
                     create_settings_button(),
-                    horizontal_space().width(MARGIN_DEFAULT),
+                    horizontal().width(MARGIN_DEFAULT),
                     create_quit_button(),
-                    horizontal_space().width(Fill),
+                    horizontal().width(Fill),
                 ]
             ];
         }
@@ -775,15 +801,15 @@ impl MinusGamesGui {
             row![column![
                 row![
                     text("Games").size(TEXT),
-                    horizontal_space().width(Fill),
+                    horizontal().width(Fill),
                     create_reload_button(),
-                    horizontal_space().width(HALF_MARGIN_DEFAULT),
+                    horizontal().width(HALF_MARGIN_DEFAULT),
                     create_settings_button(),
-                    horizontal_space().width(MARGIN_DEFAULT),
+                    horizontal().width(MARGIN_DEFAULT),
                     create_quit_button(),
                 ]
                 .align_y(Bottom),
-                vertical_space().height(HALF_MARGIN_DEFAULT),
+                vertical().height(HALF_MARGIN_DEFAULT),
                 row![
                         text_input("Filter", &self.filter)
                             .id(FILTER_ID)
@@ -796,7 +822,7 @@ impl MinusGamesGui {
             ],]
             .align_y(Center),
         );
-        rtn = rtn.push(vertical_space().height(HALF_MARGIN_DEFAULT));
+        rtn = rtn.push(vertical().height(HALF_MARGIN_DEFAULT));
         let position = self.current_highlight_position;
 
         for (idx, game_card_position) in self.highlight_map.iter().enumerate() {

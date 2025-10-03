@@ -8,9 +8,10 @@ use crate::minus_games_gui::style_constants::{
 use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
 use iced::advanced::graphics::text::cosmic_text::FontSystem;
 use iced::advanced::graphics::text::cosmic_text::Weight;
+use iced::widget::space::horizontal;
+use iced::widget::space::vertical;
 use iced::widget::{
-    Button, Column, Row, button, checkbox, column, horizontal_space, pick_list, row, slider, text,
-    text_input, vertical_space,
+    Button, Column, Row, button, checkbox, column, pick_list, row, slider, text, text_input,
 };
 use iced::{Bottom, Center, Fill, Theme};
 use minus_games_client::runtime::OFFLINE;
@@ -70,13 +71,13 @@ macro_rules! add_setting_input {
             .push(row![
                 text_input("", $g.$i.as_ref().unwrap().$n2.as_str())
                     .on_input(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(i))),
-                // horizontal_space().width(MARGIN_DEFAULT),
+                // horizontal().width(MARGIN_DEFAULT),
                 // Clear
                 button(text("").font(DEFAULT_FONT)).on_press(MinusGamesGuiMessage::ChangeSetting(
                     SettingInput::$n3("".to_string())
                 )),
             ])
-            .push(vertical_space().height(MARGIN_DEFAULT))
+            .push(vertical().height(MARGIN_DEFAULT))
     };
 }
 
@@ -131,7 +132,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             verbose,
             Verbose
         ))
-        .push(horizontal_space().width(MARGIN_DEFAULT))
+        .push(horizontal().width(MARGIN_DEFAULT))
         .push(add_checkbox_input!(
             minus_games_gui,
             settings,
@@ -139,7 +140,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             offline,
             Offline
         ))
-        .push(horizontal_space().width(MARGIN_DEFAULT))
+        .push(horizontal().width(MARGIN_DEFAULT))
         .push(add_checkbox_input!(
             minus_games_gui,
             settings,
@@ -147,7 +148,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             sync,
             Sync
         ))
-        .push(horizontal_space().width(MARGIN_DEFAULT))
+        .push(horizontal().width(MARGIN_DEFAULT))
         .push(add_checkbox_input!(
             minus_games_gui,
             settings,
@@ -155,9 +156,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             fullscreen,
             Fullscreen
         ));
-    settings = settings
-        .push(row)
-        .push(vertical_space().height(MARGIN_DEFAULT));
+    settings = settings.push(row).push(vertical().height(MARGIN_DEFAULT));
     settings = settings
         .push(
             row![
@@ -175,12 +174,12 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             ]
             .spacing(MARGIN_DEFAULT),
         )
-        .push(vertical_space().height(MARGIN_DEFAULT));
+        .push(vertical().height(MARGIN_DEFAULT));
 
     settings = settings.push(
         row![
             text("Font:"),
-            horizontal_space().width(SMALL_MARGIN_DEFAULT),
+            horizontal().width(SMALL_MARGIN_DEFAULT),
             pick_list(
                 &*(*FONT_FAMILIES),
                 Some(&minus_games_gui.settings.as_ref().unwrap().font),
@@ -192,9 +191,9 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
                     DEFAULT_FONT_NAME.to_string(),
                 ))
             }),
-            horizontal_space().width(MARGIN_DEFAULT),
+            horizontal().width(MARGIN_DEFAULT),
             text("Theme:"),
-            horizontal_space().width(SMALL_MARGIN_DEFAULT),
+            horizontal().width(SMALL_MARGIN_DEFAULT),
             pick_list(
                 Theme::ALL,
                 Some(&minus_games_gui.settings.as_ref().unwrap().theme),
@@ -208,7 +207,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
         .align_y(Center),
     );
 
-    settings = settings.push(vertical_space().height(MARGIN_DEFAULT));
+    settings = settings.push(vertical().height(MARGIN_DEFAULT));
 
     let mut action_row = Row::new().spacing(HALF_MARGIN_DEFAULT);
     if !OFFLINE.load(Relaxed) {
@@ -223,23 +222,23 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
     );
 
     row![
-        horizontal_space().width(MARGIN_DEFAULT),
+        horizontal().width(MARGIN_DEFAULT),
         column![
-            vertical_space().height(MARGIN_DEFAULT),
+            vertical().height(MARGIN_DEFAULT),
             row![
                 text("Settings").size(TEXT),
-                horizontal_space(),
+                horizontal(),
                 create_save_button(),
-                horizontal_space().width(HALF_MARGIN_DEFAULT),
+                horizontal().width(HALF_MARGIN_DEFAULT),
                 create_back_button(),
-                horizontal_space().width(MARGIN_DEFAULT),
+                horizontal().width(MARGIN_DEFAULT),
                 create_quit_button()
             ]
             .align_y(Bottom),
-            vertical_space().height(MARGIN_DEFAULT),
+            vertical().height(MARGIN_DEFAULT),
             settings,
             action_row,
-            vertical_space().height(MARGIN_DEFAULT),
+            vertical().height(MARGIN_DEFAULT),
             column![text!(
                 "Minus Games Version {}  - Build on: {}",
                 env!("CARGO_PKG_VERSION"),
@@ -254,9 +253,9 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             )]
             .align_x(Center)
             .width(Fill),
-            vertical_space().height(MARGIN_DEFAULT),
+            vertical().height(MARGIN_DEFAULT),
         ],
-        horizontal_space().width(MARGIN_DEFAULT),
+        horizontal().width(MARGIN_DEFAULT),
     ]
     .height(Fill)
 }

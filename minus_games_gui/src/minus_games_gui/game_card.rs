@@ -6,11 +6,10 @@ use crate::minus_games_gui::style_constants::{
 };
 use iced::ContentFit::Cover;
 use iced::advanced::Widget;
+use iced::widget::space::horizontal;
 use iced::widget::svg::Status;
 use iced::widget::text::Shaping::Advanced;
-use iced::widget::{
-    MouseArea, Row, button, center, column, container, horizontal_space, image, row, svg, text,
-};
+use iced::widget::{MouseArea, Row, button, center, column, container, image, row, svg, text};
 use iced::{Center, Element, Fill, Left, Right, Shrink, Theme, border, gradient};
 use minus_games_models::game_infos::MinimalGameInfos;
 use std::sync::LazyLock;
@@ -151,7 +150,7 @@ impl GameCard {
 
     fn create_row(&self) -> Row<'_, MinusGamesGuiMessage> {
         let mut row = row![
-            horizontal_space().width(TINY_MARGIN_DEFAULT),
+            horizontal().width(TINY_MARGIN_DEFAULT),
             self.create_image(),
             row![
                 text(&self.title)
@@ -205,7 +204,7 @@ impl GameCard {
                 .on_press(MinusGamesGuiMessage::Repair(self.game.clone())),
             )
         };
-        row = row.push(horizontal_space().width(TINY_MARGIN_DEFAULT));
+        row = row.push(horizontal().width(TINY_MARGIN_DEFAULT));
         row.spacing(SMALL_MARGIN_DEFAULT).align_y(Center)
     }
 }

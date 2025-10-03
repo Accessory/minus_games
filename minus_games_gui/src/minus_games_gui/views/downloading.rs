@@ -3,13 +3,14 @@ use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMess
 use crate::minus_games_gui::style_constants::MARGIN_DEFAULT;
 use crate::minus_games_gui::views::components_helper::create_info_part;
 use crate::minus_games_gui::views::game_helper::create_info_game_line;
-use iced::widget::{Row, column, horizontal_space, progress_bar, row, stack, text, vertical_space};
+use iced::widget::space::{horizontal, vertical};
+use iced::widget::{Row, column, progress_bar, row, stack, text};
 use iced::{Center, Fill};
 
 pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMessage> {
     if let Some(cgi) = minus_games_gui.current_game.as_ref() {
         row![
-            horizontal_space().width(MARGIN_DEFAULT),
+            horizontal().width(MARGIN_DEFAULT),
             column![
                 create_info_part(
                     cgi,
@@ -31,20 +32,20 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
                     .height(Fill)
                     .center()
                 ),
-                vertical_space().height(MARGIN_DEFAULT),
+                vertical().height(MARGIN_DEFAULT),
                 create_info_game_line(cgi),
             ]
             .align_x(Center),
-            horizontal_space().width(MARGIN_DEFAULT)
+            horizontal().width(MARGIN_DEFAULT)
         ]
     } else {
         row![
-            horizontal_space(),
+            horizontal(),
             column![
-                vertical_space().height(MARGIN_DEFAULT),
+                vertical().height(MARGIN_DEFAULT),
                 text("Downloading").size(50),
             ],
-            horizontal_space(),
+            horizontal(),
         ]
     }
 }

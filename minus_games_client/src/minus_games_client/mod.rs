@@ -298,10 +298,12 @@ impl MinusGamesClient {
     }
 
     pub fn new(url: &str, username: Option<&String>, password: Option<&String>) -> Self {
-        let client = if username.is_some() && password.is_some() {
+        let client = if let Some(username_string) = username
+            && let Some(password_string) = password
+        {
             let mut headers = HeaderMap::new();
             let encoded_part =
-                BASE64_STANDARD.encode(format!("{}:{}", username.unwrap(), password.unwrap()));
+                BASE64_STANDARD.encode(format!("{}:{}", username_string, password_string));
             headers.append(
                 AUTHORIZATION,
                 HeaderValue::from_str(&format!("Basic {encoded_part}")).unwrap(),

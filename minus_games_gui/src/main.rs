@@ -95,7 +95,7 @@ fn main() -> ExitCode {
 
     match get_gui_config().mode {
         Mode::Gui => {
-            static ICON: &[u8] = include_bytes!("../../other/assets/common/MinusGames.jpg");
+            static ICON: &[u8] = include_bytes!("../../other/assets/common/MinusGamesV2.png");
             let image = image::load_from_memory(ICON).unwrap();
             let window_settings = iced::window::Settings {
                 icon: Some(

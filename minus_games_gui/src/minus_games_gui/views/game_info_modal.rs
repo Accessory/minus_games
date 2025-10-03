@@ -4,7 +4,8 @@ use crate::minus_games_gui::style_constants::{
     HALF_MARGIN_DEFAULT, LONG_BUTTON_WIDTH, MARGIN_DEFAULT,
 };
 use crate::minus_games_gui::views::game_helper::create_info_game_line_with;
-use iced::widget::{Column, button, center, container, mouse_area, opaque, text, vertical_space};
+use iced::widget::space::vertical;
+use iced::widget::{Column, button, center, container, mouse_area, opaque, text};
 use iced::{Center, Color, Element, Fill};
 use minus_games_client::runtime::{OFFLINE, get_config};
 use std::sync::atomic::Ordering::Relaxed;
@@ -32,7 +33,7 @@ pub(crate) fn create_modal(
             game_infos.supports_linux(),
             game_infos.supports_windows(),
         ));
-        column = column.push(vertical_space().height(MARGIN_DEFAULT));
+        column = column.push(vertical().height(MARGIN_DEFAULT));
         column = column.push(
             button(text("Delete").width(Fill).align_x(Center))
                 .width(LONG_BUTTON_WIDTH)
@@ -41,7 +42,7 @@ pub(crate) fn create_modal(
                 ))),
         );
         if !OFFLINE.load(Relaxed) && is_on_server {
-            column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
+            column = column.push(vertical().height(HALF_MARGIN_DEFAULT));
             if get_config().is_game_dirty(game) {
                 column = column.push(
                     button(text("Continue Download").width(Fill).align_x(Center))
@@ -60,7 +61,7 @@ pub(crate) fn create_modal(
                 );
             }
         }
-        column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
+        column = column.push(vertical().height(HALF_MARGIN_DEFAULT));
         column = column.push(
             button(text("Open folder").width(Fill).align_x(Center))
                 .width(LONG_BUTTON_WIDTH)
@@ -69,13 +70,13 @@ pub(crate) fn create_modal(
                 ))),
         );
     }
-    column = column.push(vertical_space().height(MARGIN_DEFAULT));
+    column = column.push(vertical().height(MARGIN_DEFAULT));
     column = column.push(
         button(text("Close").width(Fill).align_x(Center))
             .width(LONG_BUTTON_WIDTH)
             .on_press(MinusGamesGuiMessage::ModalCallback(None)),
     );
-    column = column.push(vertical_space().height(HALF_MARGIN_DEFAULT));
+    column = column.push(vertical().height(HALF_MARGIN_DEFAULT));
     column = column.align_x(Center);
 
     let modal_content = container(column)

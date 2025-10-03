@@ -1,7 +1,5 @@
 use crate::minus_games_gui::configuration::GuiConfiguration;
 use clap::Parser;
-use iced::widget::scrollable;
-use std::sync::LazyLock;
 use std::sync::atomic::AtomicBool;
 
 pub(crate) static mut GUI_CONFIG: Option<GuiConfiguration> = None;
@@ -9,7 +7,7 @@ pub(crate) static mut GUI_CONFIG: Option<GuiConfiguration> = None;
 pub(crate) static CLOSING: AtomicBool = AtomicBool::new(false);
 pub(crate) static IS_IN_FOCUS: AtomicBool = AtomicBool::new(true);
 
-pub(crate) static SCROLLABLE_ID: LazyLock<scrollable::Id> = LazyLock::new(scrollable::Id::unique);
+pub(crate) static SCROLLABLE_ID: &str = "scrollable";
 
 // pub(crate) static DEFAULT_SCALE_ADJUSTMENT_FACTOR: LazyLock<f32> = LazyLock::new(|| {
 //     if std::env::var("SteamDeck").is_ok_and(|v| v == "1") {
