@@ -65,9 +65,9 @@ pub(crate) enum MinusGamesState {
     Settings,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub(crate) struct MinusGamesGui {
-    pub theme: Theme,
+    pub theme: Option<Theme>,
     pub scale: Option<f32>,
     pub game_cards: Vec<GameCard>,
     pub state: MinusGamesState,
@@ -86,32 +86,6 @@ pub(crate) struct MinusGamesGui {
     pub last_input_mouse: bool,
     pub block_highlighting: bool,
     pub lazy_image_downloader_sender: Option<Sender<(String, bool, usize)>>,
-}
-
-impl Default for MinusGamesGui {
-    fn default() -> Self {
-        Self {
-            theme: Theme::CatppuccinMocha,
-            scale: Default::default(),
-            game_cards: Default::default(),
-            state: Default::default(),
-            files_to_download: Default::default(),
-            files_downloaded: Default::default(),
-            current_game: Default::default(),
-            current_game_name: Default::default(),
-            settings: Default::default(),
-            filter: Default::default(),
-            model: Default::default(),
-            size: Default::default(),
-            highlight_map: Default::default(),
-            scroll_offset: Default::default(),
-            current_highlight_position: Default::default(),
-            went_up: Default::default(),
-            last_input_mouse: Default::default(),
-            block_highlighting: Default::default(),
-            lazy_image_downloader_sender: Default::default(),
-        }
-    }
 }
 
 const FILTER_ID: &str = "FILTER_ID";
@@ -192,15 +166,14 @@ impl MinusGamesGui {
     }
 
     pub(crate) fn init() -> (Self, Task<MinusGamesGuiMessage>) {
-        let theme_string = get_gui_config().theme.as_str();
-
-        if let Some(theme) = Theme::ALL
-            .iter()
-            .find(|&t| theme_string == t.to_string().as_str())
+        if let Some(theme_string) = get_gui_config().theme.as_ref()
+            && let Some(theme) = Theme::ALL
+                .iter()
+                .find(|&t| theme_string == t.to_string().as_str())
         {
             return (
                 MinusGamesGui {
-                    theme: theme.clone(),
+                    theme: Some(theme.clone()),
                     ..MinusGamesGui::default()
                 },
                 Self::start_async_init(),
@@ -840,7 +813,7 @@ impl MinusGamesGui {
         rtn
     }
 
-    pub(crate) fn get_theme(&self) -> Theme {
+    pub(crate) fn get_theme(&self) -> Option<Theme> {
         self.theme.clone()
     }
 

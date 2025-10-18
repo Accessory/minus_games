@@ -60,7 +60,7 @@ pub enum SettingInput {
     Fullscreen(bool),
     Username(String),
     Password(String),
-    Theme(Theme),
+    Theme(Option<Theme>),
     Font(String),
     Scale(f32),
 }
@@ -196,12 +196,13 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             horizontal().width(SMALL_MARGIN_DEFAULT),
             pick_list(
                 Theme::ALL,
-                Some(&minus_games_gui.settings.as_ref().unwrap().theme),
-                |t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(t)),
+                minus_games_gui.settings.as_ref().unwrap().theme.clone(),
+                |t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(Some(t))),
             )
+            .placeholder("System")
             .width(Fill),
             button(text("").font(DEFAULT_FONT)).on_press_with(|| {
-                MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(Theme::Light))
+                MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(None))
             })
         ]
         .align_y(Center),

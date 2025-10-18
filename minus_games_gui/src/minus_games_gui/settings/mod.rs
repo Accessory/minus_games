@@ -25,13 +25,13 @@ pub(crate) fn override_config(minus_games_settings_option: Option<&MinusGamesSet
         get_mut_config().username = resolve_string(&minus_games_settings.username);
         get_mut_config().password = resolve_string(&minus_games_settings.password);
         get_mut_gui_config().fullscreen = minus_games_settings.fullscreen;
-        get_mut_gui_config().theme = minus_games_settings.theme.to_string();
+        get_mut_gui_config().theme = minus_games_settings.get_optinal_theme_name();
     }
 }
 pub(crate) fn override_gui_config(minus_games_settings_option: Option<&MinusGamesSettings>) {
     if let Some(minus_games_settings) = minus_games_settings_option {
         get_mut_gui_config().scale = Some(minus_games_settings.scale);
-        get_mut_gui_config().theme = minus_games_settings.theme.to_string();
+        get_mut_gui_config().theme = minus_games_settings.get_optinal_theme_name();
     }
 }
 
@@ -160,8 +160,12 @@ pub(crate) fn save_new_settings(settings_option: Option<&MinusGamesSettings>) {
                     .unwrap();
                 writer
                     .write_all(
-                        format!("MINUS_GAMES_GUI_THEME=\"{}\"{}", settings.theme, NEW_LINE)
-                            .as_bytes(),
+                        format!(
+                            "MINUS_GAMES_GUI_THEME=\"{}\"{}",
+                            settings.get_theme_name(),
+                            NEW_LINE
+                        )
+                        .as_bytes(),
                     )
                     .unwrap();
                 writer

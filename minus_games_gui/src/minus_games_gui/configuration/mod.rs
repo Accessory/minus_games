@@ -2,7 +2,7 @@ use clap::Parser;
 use iced::Font;
 use std::fmt::{Display, Formatter};
 
-pub(crate) const DEFAULT_THEME_NAME: &str = "Light";
+// pub(crate) const DEFAULT_THEME_NAME: &str = "Light";
 pub(crate) const DEFAULT_FONT_NAME: &str = "MonaspiceAr Nerd Font";
 pub(crate) static DEFAULT_FONT: Font = Font::with_name(DEFAULT_FONT_NAME);
 
@@ -20,8 +20,8 @@ pub struct GuiConfiguration {
     pub fullscreen: bool,
     #[arg(long, env = "MINUS_GAMES_GUI_MODE", default_value = "Gui")]
     pub mode: Mode,
-    #[arg(long, env = "MINUS_GAMES_GUI_THEME", default_value = DEFAULT_THEME_NAME)]
-    pub theme: String,
+    #[arg(long, env = "MINUS_GAMES_GUI_THEME")]
+    pub theme: Option<String>,
     #[arg(long, env = "MINUS_GAMES_GUI_SCALE")]
     pub scale: Option<f32>,
     #[arg(
@@ -36,7 +36,11 @@ impl Display for GuiConfiguration {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Fullscreen: {}", self.fullscreen)?;
         writeln!(f, "Mode: {}", self.mode)?;
-        writeln!(f, "Theme: {}", &self.theme)?;
+        writeln!(
+            f,
+            "Theme: {}",
+            &self.theme.as_ref().unwrap_or(&String::from("System"))
+        )?;
         write!(f, "Font: {}", &self.font)
     }
 }

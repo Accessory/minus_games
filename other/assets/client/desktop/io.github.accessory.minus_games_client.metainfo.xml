@@ -7,7 +7,7 @@
     <name>Minus Games Client</name>
     <summary>Download, sync and run games</summary>
     <launchable type="desktop-id">io.github.accessory.minus_games_client.desktop</launchable>
-    <content_rating type="oars-1.0"/>
+    <content_rating type="oars-1.0" />
 
     <metadata_license>MIT</metadata_license>
     <project_license>MIT</project_license>
@@ -50,6 +50,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.12" date="2025-10-18">
+            <description>
+                <p>Gui improvements</p>
+            </description>
+        </release>
         <release version="0.9.11" date="2025-10-03">
             <description>
                 <p>Basic Improvements</p>

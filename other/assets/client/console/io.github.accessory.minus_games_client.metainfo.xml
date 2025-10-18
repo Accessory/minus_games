@@ -24,11 +24,13 @@
 
     <screenshots>
         <screenshot type="default">
-            <image>https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/Screenshot_Gui_3.png</image>
+            <image>
+                https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/Screenshot_Gui_3.png</image>
             <caption>Main Application</caption>
         </screenshot>
         <screenshot type="default">
-            <image>https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/Screenshot_Gui_4.png</image>
+            <image>
+                https://raw.githubusercontent.com/Accessory/minus_games/main/other/assets/common/Screenshot_Gui_4.png</image>
             <caption>Settings</caption>
         </screenshot>
     </screenshots>
@@ -45,6 +47,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.12" date="2025-10-18">
+            <description>
+                <p>Gui improvements</p>
+            </description>
+        </release>
         <release version="0.9.11" date="2025-10-03">
             <description>
                 <p>Basic Improvements</p>

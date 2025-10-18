@@ -3,7 +3,7 @@ use crate::runtime::get_gui_config;
 use iced::Theme;
 use minus_games_client::configuration::Configuration;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct MinusGamesSettings {
     pub server_url: String,
     pub client_folder: String,
@@ -16,39 +16,29 @@ pub(crate) struct MinusGamesSettings {
     pub fullscreen: bool,
     pub username: String,
     pub password: String,
-    pub theme: Theme,
-    pub initial_theme: Theme,
+    pub theme: Option<Theme>,
+    pub initial_theme: Option<Theme>,
     pub scale: f32,
     pub font: String,
 }
 
-impl Default for MinusGamesSettings {
-    fn default() -> Self {
-        Self {
-            server_url: Default::default(),
-            client_folder: Default::default(),
-            client_games_folder: Default::default(),
-            wine_exe: Default::default(),
-            wine_prefix: Default::default(),
-            verbose: Default::default(),
-            offline: Default::default(),
-            sync: Default::default(),
-            fullscreen: Default::default(),
-            username: Default::default(),
-            password: Default::default(),
-            theme: Theme::CatppuccinMocha,
-            initial_theme: Theme::CatppuccinMocha,
-            scale: Default::default(),
-            font: Default::default(),
+impl MinusGamesSettings {
+    pub(crate) fn get_theme_name(&self) -> String {
+        if let Some(theme) = self.theme.as_ref() {
+            theme.to_string()
+        } else {
+            "System".to_string()
         }
     }
-}
 
-impl MinusGamesSettings {
+    pub(crate) fn get_optinal_theme_name(&self) -> Option<String> {
+        self.theme.as_ref().map(|theme| theme.to_string())
+    }
+
     pub fn from_config_with_theme(
         value: &Configuration,
         value_gui: &GuiConfiguration,
-        theme: Theme,
+        theme: Option<Theme>,
     ) -> Self {
         Self {
             server_url: value.server_url.to_string(),
