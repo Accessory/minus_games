@@ -77,7 +77,12 @@ fn main() -> ExitCode {
 
     // Logging
     let filter = if get_config().verbose {
-        EnvFilter::default().add_directive(LevelFilter::DEBUG.into())
+        EnvFilter::default()
+            .add_directive(LevelFilter::DEBUG.into())
+            .add_directive("wgpu_core=WARN".parse().unwrap())
+            .add_directive("wgpu_hal=WARN".parse().unwrap())
+            .add_directive("iced_futures=WARN".parse().unwrap())
+            .add_directive("cosmic_text=WARN".parse().unwrap())
     } else {
         EnvFilter::default()
             .add_directive(LevelFilter::INFO.into())
@@ -85,6 +90,7 @@ fn main() -> ExitCode {
             .add_directive("wgpu_core=WARN".parse().unwrap())
             .add_directive("wgpu_hal=WARN".parse().unwrap())
             .add_directive("iced_futures=WARN".parse().unwrap())
+            .add_directive("cosmic_text=WARN".parse().unwrap())
     };
     tracing_subscriber::fmt().with_env_filter(filter).init();
 

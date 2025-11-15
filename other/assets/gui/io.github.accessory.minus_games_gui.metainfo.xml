@@ -46,6 +46,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.13" date="2025-11-15">
+            <description>
+                <p>Windows Bugfix</p>
+            </description>
+        </release>
         <release version="0.9.12" date="2025-10-18">
             <description>
                 <p>Gui improvements</p>

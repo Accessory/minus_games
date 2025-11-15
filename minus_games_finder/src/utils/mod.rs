@@ -69,7 +69,8 @@ pub fn save_game_file_infos(game_folder: &Path, config: &Configuration, game_inf
     let file_list = create_file_list(game_folder);
 
     let csv_path = get_csv_path(&config.data_folder, game_infos.folder_name.as_str());
-    if let Err(err) = std::fs::create_dir_all(config.data_folder.as_path()) {
+    let csv_path_parent = csv_path.parent().unwrap();
+    if let Err(err) = std::fs::create_dir_all(csv_path_parent) {
         warn!("Failed to create client data folder: {}", err);
         return;
     };

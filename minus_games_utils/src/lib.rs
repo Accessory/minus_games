@@ -186,7 +186,6 @@ pub fn get_header_path(data_dir: PathBuf, game: &str) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use crate::create_hash_from_string;
-    use crate::verify_argon2_hash;
 
     #[test]
     fn test_create_hash_from_string() {

@@ -33,6 +33,7 @@ impl GameFileInfo {
 impl GameFileInfo {
     pub fn from_path_buf_with_cut_off(file: PathBuf, cut_off: usize) -> GameFileInfo {
         let file_name = file.file_name().unwrap().to_str().unwrap().to_string();
+        #[cfg(target_family = "unix")]
         let file_path = file
             .iter()
             .skip(cut_off)
@@ -40,6 +41,14 @@ impl GameFileInfo {
             .to_str()
             .unwrap()
             .to_string();
+
+        #[cfg(not(target_family = "unix"))]
+        let file_path = file
+            .iter()
+            .skip(cut_off)
+            .map(|s| s.to_string_lossy())
+            .collect::<Vec<_>>()
+            .join("/");
         let metadata = file.metadata().unwrap();
         let size = metadata.len();
         let last_modified = metadata.modified().unwrap();
