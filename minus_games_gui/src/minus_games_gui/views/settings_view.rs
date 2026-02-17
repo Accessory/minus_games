@@ -83,7 +83,8 @@ macro_rules! add_setting_input {
 
 macro_rules! add_checkbox_input {
     ($g:ident,$i:ident, $n1:literal, $n2:tt, $n3:tt) => {
-        checkbox($n1, $g.$i.as_ref().unwrap().$n2)
+        checkbox($g.$i.as_ref().unwrap().$n2)
+            .label($n1)
             .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(i)))
     };
 }
@@ -181,10 +182,11 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             text("Font:"),
             horizontal().width(SMALL_MARGIN_DEFAULT),
             pick_list(
-                &*(*FONT_FAMILIES),
                 Some(&minus_games_gui.settings.as_ref().unwrap().font),
-                |f| MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(f)),
+                &*(*FONT_FAMILIES),
+                String::to_string
             )
+            .on_select(|f| MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(f)))
             .width(Fill),
             button(text("").font(DEFAULT_FONT)).on_press_with(|| {
                 MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(
@@ -195,10 +197,11 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             text("Theme:"),
             horizontal().width(SMALL_MARGIN_DEFAULT),
             pick_list(
-                Theme::ALL,
                 minus_games_gui.settings.as_ref().unwrap().theme.clone(),
-                |t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(Some(t))),
+                Theme::ALL,
+                Theme::to_string
             )
+            .on_select(|t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(Some(t))))
             .placeholder("System")
             .width(Fill),
             button(text("").font(DEFAULT_FONT)).on_press_with(|| {

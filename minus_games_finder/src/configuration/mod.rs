@@ -82,6 +82,15 @@ impl std::fmt::Display for Configuration {
                 .to_str()
                 .unwrap()
         )?;
+        if let Some(cache_folder) = &self.cache_folder {
+            writeln!(
+                f,
+                "Cache Folder: {}",
+                std::path::absolute(cache_folder).unwrap().to_str().unwrap()
+            )?;
+        } else {
+            writeln!(f, "Cache Folder: Not set")?;
+        }
         writeln!(f, "Keep existing files: {}", self.keep_existing_configs)?;
         if let Some(value) = &self.filter {
             write!(f, "Filter: {value}")?;

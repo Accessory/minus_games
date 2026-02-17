@@ -36,15 +36,12 @@ impl Configuration {
             .to_string();
         let mut rtn: Vec<String> = Vec::new();
         for entry in glob::glob(&path).unwrap() {
-            rtn.push(
-                entry
-                    .unwrap()
-                    .file_stem()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string(),
-            );
+            let entry = entry.unwrap();
+            let file_stem = entry.file_stem().unwrap().to_str().unwrap();
+
+            if self.games_folder.join(file_stem).exists() {
+                rtn.push(entry.file_stem().unwrap().to_str().unwrap().to_string());
+            }
         }
         rtn
     }
@@ -76,7 +73,7 @@ impl Configuration {
 
 impl std::fmt::Display for Configuration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Listening on: {}:{}", &self.ip, &self.port)?;
+        writeln!(f, "Listening on: http://{}:{}", &self.ip, &self.port)?;
         writeln!(
             f,
             "Game Folder: {}",

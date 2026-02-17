@@ -11,7 +11,7 @@ use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use strum::IntoEnumIterator;
-use tracing::{error, info, trace, warn};
+use tracing::{info, trace, warn};
 
 pub mod configuration;
 mod engine_descriptions;
@@ -74,39 +74,41 @@ pub fn run(config: Configuration) -> ExitCode {
             "Check path: {}",
             std::path::absolute(&folder).unwrap().display()
         );
-        if let Some(game_infos) = detect_game(folder.as_path())
-            && (!config.keep_existing_configs
-                || !config.does_game_infos_exists(&game_infos.folder_name))
-        {
-            save_game_file_infos(folder.as_path(), &config, &game_infos);
-            if let Some(cache_file) = config.get_cache_file_if_exists(&game_infos.folder_name) {
-                let file = File::open(cache_file.as_path()).unwrap();
-                let buf = BufReader::new(file);
-                let cached_game_infos: GameInfos = match serde_json::from_reader(buf) {
-                    Ok(infos) => infos,
-                    Err(err) => {
-                        error!(
-                            "Failed to parse cached infos: {} with {}",
-                            cache_file.display(),
-                            err
-                        );
-                        game_infos
-                    }
-                };
-
-                save_infos_to_data_folder(config.data_folder.as_path(), &cached_game_infos);
-                info!("Game Infos:\n{cached_game_infos}");
-            } else {
+        if let Some(game_infos) = detect_game(folder.as_path(), &config) {
+            if !config.keep_existing_configs
+                || !config.does_game_infos_exists(&game_infos.folder_name)
+            {
+                save_game_file_infos(folder.as_path(), &config, &game_infos);
                 save_infos_to_data_folder(config.data_folder.as_path(), &game_infos);
                 info!("Game Infos:\n{game_infos}");
             }
+        } else {
+            warn!("Failed to detect game at {}", folder.display());
         }
     }
 
     ExitCode::SUCCESS
 }
 
-fn detect_game(game_path: &Path) -> Option<GameInfos> {
+fn detect_game(game_path: &Path, config: &Configuration) -> Option<GameInfos> {
+    let game_folder_name = game_path.iter().next_back()?.to_str()?.to_string();
+
+    // Check if we have a cached infos file for this game.
+    if let Some(cache_file) = config.get_cache_file_if_exists(&game_folder_name) {
+        let file = File::open(cache_file.as_path()).unwrap();
+        let buf = BufReader::new(file);
+        match serde_json::from_reader(buf) {
+            Ok(infos) => return Some(infos),
+            Err(err) => {
+                warn!(
+                    "Failed to parse cached infos: {} with {}. Continue with other detection methods.",
+                    cache_file.display(),
+                    err
+                );
+            }
+        };
+    }
+
     let mut current_supported_platforms = None;
     let mut current_engine_description: Option<&EngineDescription> = None;
     for engine in GameEngine::iter() {

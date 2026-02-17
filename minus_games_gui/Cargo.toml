@@ -23,7 +23,7 @@ strum = { workspace = true }
 gilrs = { version = "0", features = [] }
 
 [build-dependencies]
-vergen = { version = "9", features = ["build"] }
-vergen-git2 = { version = "1" }
+vergen = { version = "10.0.0-beta.5", features = ["build", "default"]}
+vergen-git2 = { version = "10.0.0-beta.5", features = ["build", "default"]} # Change later
 anyhow = "1"
 embed-resource = "3"

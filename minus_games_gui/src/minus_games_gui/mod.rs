@@ -230,7 +230,7 @@ impl MinusGamesGui {
             .get_games_with_minimal_game_infos()
             .await
             .unwrap_or_default();
-        minimal_game_infos.sort_unstable_by(|l, r| r.date.cmp(&l.date));
+        minimal_game_infos.sort_unstable_by_key(|r| std::cmp::Reverse(r.date));
         let mut server_games: Vec<String> = Vec::with_capacity(minimal_game_infos.len());
         let mut has_header_list: Vec<bool> = Vec::with_capacity(minimal_game_infos.len());
         let mut info_list = Vec::with_capacity(minimal_game_infos.len());

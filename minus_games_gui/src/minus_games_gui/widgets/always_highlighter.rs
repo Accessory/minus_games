@@ -1,6 +1,6 @@
 use iced::advanced::layout::{Limits, Node};
 use iced::advanced::widget::{Operation, Tree, Widget, tree};
-use iced::advanced::{Clipboard, Layout, Shell, mouse, renderer};
+use iced::advanced::{Layout, Shell, mouse, renderer};
 use iced::mouse::Cursor;
 use iced::{Color, Element, Event, Length, Rectangle, Size, Vector};
 
@@ -116,13 +116,12 @@ where
         layout: Layout<'_>,
         cursor: mouse::Cursor,
         renderer: &Renderer,
-        clipboard: &mut dyn Clipboard,
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
-        self.base.as_widget_mut().update(
-            state, event, layout, cursor, renderer, clipboard, shell, viewport,
-        )
+        self.base
+            .as_widget_mut()
+            .update(state, event, layout, cursor, renderer, shell, viewport)
     }
 
     fn mouse_interaction(
