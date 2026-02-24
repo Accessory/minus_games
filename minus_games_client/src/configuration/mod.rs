@@ -81,6 +81,8 @@ pub struct Configuration {
     pub offline: bool,
     #[arg(long, default_value = ClientGamesFolder {}, env = "MINUS_GAMES_CLIENT_GAMES_FOLDER")]
     pub client_games_folder: PathBuf,
+    #[arg(long, default_value = ClientGamesFolder {}, env = "MINUS_GAMES_CLIENT_CACHE_FOLDER")]
+    pub client_cache_folder: Option<PathBuf>,
     #[arg(long, env = "MINUS_GAMES_USERNAME")]
     pub username: Option<String>,
     #[arg(long, env = "MINUS_GAMES_PASSWORD")]
@@ -282,6 +284,11 @@ impl Display for Configuration {
         writeln!(f, "Server Url: {}", self.server_url.as_str())?;
         writeln!(f, "Client Folder: {}", self.client_folder.display())?;
         writeln!(f, "Game Folder: {}", self.client_games_folder.display())?;
+        if let Some(cache_folder) = &self.client_cache_folder {
+            writeln!(f, "Cache Folder: {}", cache_folder.display())?;
+        } else {
+            writeln!(f, "Cache Folder: Not Set")?;
+        }
         writeln!(f, "Wine Exe: {}", is_or_none_path_buf(&self.wine_exe))?;
         writeln!(f, "Wine Prefix: {}", is_or_none_path_buf(&self.wine_prefix))?;
         writeln!(f, "Username: {}", is_or_none_string(&self.username))?;

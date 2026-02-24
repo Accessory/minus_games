@@ -5,13 +5,15 @@ use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMess
 use crate::minus_games_gui::style_constants::{
     HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SMALL_MARGIN_DEFAULT, TEXT,
 };
-use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
+use crate::minus_games_gui::views::buttons_helper::{
+    create_back_button, create_quit_button, create_save_button,
+};
 use iced::advanced::graphics::text::cosmic_text::FontSystem;
 use iced::advanced::graphics::text::cosmic_text::Weight;
 use iced::widget::space::horizontal;
 use iced::widget::space::vertical;
 use iced::widget::{
-    Button, Column, Row, button, checkbox, column, pick_list, row, slider, text, text_input,
+    Column, Row, button, checkbox, column, pick_list, row, slider, text, text_input,
 };
 use iced::{Bottom, Center, Fill, Theme};
 use minus_games_client::runtime::OFFLINE;
@@ -83,7 +85,8 @@ macro_rules! add_setting_input {
 
 macro_rules! add_checkbox_input {
     ($g:ident,$i:ident, $n1:literal, $n2:tt, $n3:tt) => {
-        checkbox($n1, $g.$i.as_ref().unwrap().$n2)
+        checkbox($g.$i.as_ref().unwrap().$n2)
+            .label($n1)
             .on_toggle(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(i)))
     };
 }
@@ -181,10 +184,11 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             text("Font:"),
             horizontal().width(SMALL_MARGIN_DEFAULT),
             pick_list(
-                &*(*FONT_FAMILIES),
                 Some(&minus_games_gui.settings.as_ref().unwrap().font),
-                |f| MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(f)),
+                &*(*FONT_FAMILIES),
+                String::to_string
             )
+            .on_select(|f| MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(f)))
             .width(Fill),
             button(text("").font(DEFAULT_FONT)).on_press_with(|| {
                 MinusGamesGuiMessage::ChangeSetting(SettingInput::Font(
@@ -195,10 +199,11 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             text("Theme:"),
             horizontal().width(SMALL_MARGIN_DEFAULT),
             pick_list(
-                Theme::ALL,
                 minus_games_gui.settings.as_ref().unwrap().theme.clone(),
-                |t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(Some(t))),
+                Theme::ALL,
+                Theme::to_string
             )
+            .on_select(|t| MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(Some(t))))
             .placeholder("System")
             .width(Fill),
             button(text("").font(DEFAULT_FONT)).on_press_with(|| {
@@ -259,12 +264,4 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
         horizontal().width(MARGIN_DEFAULT),
     ]
     .height(Fill)
-}
-
-fn create_save_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
-    create_config_button("", MinusGamesGuiMessage::BackFromSettings(true))
-}
-
-fn create_back_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
-    create_config_button("", MinusGamesGuiMessage::BackFromSettings(false))
 }

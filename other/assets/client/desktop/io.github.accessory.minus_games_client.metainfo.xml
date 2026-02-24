@@ -50,6 +50,16 @@
     </provides>
 
     <releases>
+        <release version="0.9.15" date="2026-02-28">
+            <description>
+                <p>Improve UI</p>
+            </description>
+        </release>
+        <release version="0.9.14" date="2026-02-17">
+            <description>
+                <p>Better cache management</p>
+            </description>
+        </release>
         <release version="0.9.13" date="2025-11-15">
             <description>
                 <p>Windows Bugfix</p>

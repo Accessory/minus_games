@@ -4,15 +4,15 @@ use crate::minus_games_gui::style_constants::{
     GAME_CARD_IMAGE_HEIGHT, GAME_CARD_IMAGE_ROW_WIDTH, GAME_CARD_ROW_HEIGHT, READY_BUTTON_HEIGHT,
     READY_BUTTON_WIDTH, SMALL_MARGIN_DEFAULT, TEXT, TINY_MARGIN_DEFAULT,
 };
+use crate::minus_games_gui::views::buttons_helper::set_svg_style;
+use crate::minus_games_gui::views::icons::{INSTALLED, LINUX, ON_SERVER, WINDOWS};
 use iced::ContentFit::Cover;
 use iced::advanced::Widget;
 use iced::widget::space::horizontal;
-use iced::widget::svg::Status;
 use iced::widget::text::Shaping::Advanced;
 use iced::widget::{MouseArea, Row, button, center, column, container, image, row, svg, text};
 use iced::{Center, Element, Fill, Left, Right, Shrink, Theme, border, gradient};
 use minus_games_models::game_infos::MinimalGameInfos;
-use std::sync::LazyLock;
 
 #[derive(Clone, Debug, Default)]
 pub struct GameCard {
@@ -26,18 +26,6 @@ pub struct GameCard {
     pub has_header: bool,
     pub minimal_game_infos: MinimalGameInfos,
 }
-
-static INSTALLED: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/installed.svg")));
-
-static ON_SERVER: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/on-server.svg")));
-
-static LINUX: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/linux.svg")));
-
-static WINDOWS: LazyLock<svg::Handle> =
-    LazyLock::new(|| svg::Handle::from_memory(include_bytes!("./assets/svgs/windows.svg")));
 
 impl GameCard {
     pub(crate) fn new(
@@ -116,11 +104,11 @@ impl GameCard {
         let mut items = Row::with_capacity(2);
 
         if self.minimal_game_infos.linux {
-            items = items.push(svg(LINUX.clone()).style(Self::set_svg_style))
+            items = items.push(svg(LINUX.clone()).style(set_svg_style))
         }
 
         if self.minimal_game_infos.windows {
-            items = items.push(svg(WINDOWS.clone()).style(Self::set_svg_style))
+            items = items.push(svg(WINDOWS.clone()).style(set_svg_style))
         }
         let width = TEXT * items.children().len() as u32;
         items.width(width)
@@ -130,22 +118,15 @@ impl GameCard {
         let mut items = Row::with_capacity(2);
 
         if self.is_installed {
-            items = items.push(svg(INSTALLED.clone()).style(Self::set_svg_style))
+            items = items.push(svg(INSTALLED.clone()).style(set_svg_style))
         }
 
         if self.is_on_server {
-            items = items.push(svg(ON_SERVER.clone()).style(Self::set_svg_style))
+            items = items.push(svg(ON_SERVER.clone()).style(set_svg_style))
         }
 
         let width = TEXT * items.children().len() as u32;
         items.width(width)
-    }
-
-    fn set_svg_style(theme: &Theme, _status: Status) -> svg::Style {
-        let palette = theme.extended_palette();
-        svg::Style {
-            color: Some(palette.background.base.text),
-        }
     }
 
     fn create_row(&self) -> Row<'_, MinusGamesGuiMessage> {

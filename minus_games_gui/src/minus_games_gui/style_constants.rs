@@ -15,3 +15,4 @@ pub(crate) const GAME_CARD_IMAGE_ROW_WIDTH: u32 =
     GAME_CARD_ROW_HEIGHT * 2 + GAME_CARD_ROW_HEIGHT / 2;
 
 pub(crate) const BIG_IMAGE_HEIGHT: u32 = 145;
+pub(crate) const TOP_BUTTON_HEIGHT: u32 = TEXT + HALF_MARGIN_DEFAULT;

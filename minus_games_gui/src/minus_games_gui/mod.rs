@@ -14,7 +14,9 @@ use crate::minus_games_gui::settings::{
 use crate::minus_games_gui::style_constants::{
     GAME_CARD_ROW_HEIGHT, HALF_MARGIN_DEFAULT, MARGIN_DEFAULT, SPACING_DEFAULT, TEXT,
 };
-use crate::minus_games_gui::views::buttons_helper::{create_config_button, create_quit_button};
+use crate::minus_games_gui::views::buttons_helper::{
+    create_quit_button, create_reload_button, create_settings_button,
+};
 use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::minus_games_gui::widgets::always_highlighter::AlwaysHighlighter;
@@ -26,9 +28,7 @@ use iced::futures::{SinkExt, Stream};
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{AbsoluteOffset, Direction, RelativeOffset, Scrollbar};
 use iced::widget::space::{horizontal, vertical};
-use iced::widget::{
-    Button, Column, button, column, operation, row, scrollable, stack, text, text_input,
-};
+use iced::widget::{Column, button, column, operation, row, scrollable, stack, text, text_input};
 use iced::{Center, Element, Fill, Length, Size, Subscription, Task, Theme, event, stream, window};
 use minus_games_client::actions::delete::delete_game;
 use minus_games_client::actions::other::move_additions_header_to_tmp;
@@ -230,7 +230,7 @@ impl MinusGamesGui {
             .get_games_with_minimal_game_infos()
             .await
             .unwrap_or_default();
-        minimal_game_infos.sort_unstable_by(|l, r| r.date.cmp(&l.date));
+        minimal_game_infos.sort_unstable_by_key(|r| std::cmp::Reverse(r.date));
         let mut server_games: Vec<String> = Vec::with_capacity(minimal_game_infos.len());
         let mut has_header_list: Vec<bool> = Vec::with_capacity(minimal_game_infos.len());
         let mut info_list = Vec::with_capacity(minimal_game_infos.len());
@@ -825,11 +825,4 @@ impl MinusGamesGui {
         // }
         self.size.height
     }
-}
-
-fn create_reload_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
-    create_config_button("󰑓", MinusGamesGuiMessage::Reload)
-}
-fn create_settings_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
-    create_config_button("", MinusGamesGuiMessage::GotoSettings)
 }

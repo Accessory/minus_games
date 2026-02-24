@@ -35,13 +35,11 @@ async fn main() {
     info!("Config:\n{config}");
 
     // Init Client
-    let client = if config.username.is_some() && config.password.is_some() {
+    let client = if let Some(username) = config.username.as_ref()
+        && let Some(password) = config.password.as_ref()
+    {
         let mut headers = HeaderMap::new();
-        let encoded_part = BASE64_STANDARD.encode(format!(
-            "{}:{}",
-            config.username.as_ref().unwrap(),
-            config.password.as_ref().unwrap()
-        ));
+        let encoded_part = BASE64_STANDARD.encode(format!("{}:{}", username, password));
         headers.append(
             AUTHORIZATION,
             HeaderValue::from_str(&format!("Basic {encoded_part}")).unwrap(),
