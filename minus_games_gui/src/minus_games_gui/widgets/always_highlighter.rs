@@ -33,7 +33,7 @@ trait Catalog {
 
 impl Catalog for iced::Theme {
     fn get_background_color(&self) -> Color {
-        self.extended_palette().background.weak.color
+        self.palette().background.weak.color
     }
 }
 

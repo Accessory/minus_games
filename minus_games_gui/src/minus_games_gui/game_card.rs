@@ -81,7 +81,7 @@ impl GameCard {
                     .shaping(Advanced),
             )
             .style(|theme: &Theme| {
-                let palette = theme.extended_palette();
+                let palette = theme.palette();
                 let style = container::Style::default();
 
                 // style.text_color = Some(palette.secondary.strong.text);

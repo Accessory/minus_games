@@ -1,5 +1,4 @@
 #![windows_subsystem = "windows"]
-
 use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::configuration::Mode;
 use crate::runtime::get_gui_config;
@@ -28,35 +27,68 @@ fn main() -> ExitCode {
     dotenvy::dotenv_override().ok();
 
     println!("Config:");
-    println!("{}", unsafe {
-        #[allow(static_mut_refs)]
-        CONFIG.get_or_insert_with(|| {
-            let mut parse_list: Vec<String> = Vec::new();
-            let mut is_not_ok = false;
-            for (i, item) in std::env::args().enumerate() {
-                if i == 0 {
-                    parse_list.push(item);
-                    continue;
-                }
-
-                if is_not_ok {
-                    is_not_ok = false;
-                    continue;
-                }
-
-                if ["--theme", "--mode", "--font"].contains(&item.as_str()) {
-                    is_not_ok = true;
-                    continue;
-                }
-                if ["--fullscreen"].contains(&item.as_str()) {
-                    continue;
-                }
+    let config_insert_result = {
+        let mut parse_list: Vec<String> = Vec::new();
+        let mut is_not_ok = false;
+        for (i, item) in std::env::args().enumerate() {
+            if i == 0 {
                 parse_list.push(item);
+                continue;
             }
 
-            Configuration::parse_from(parse_list)
-        })
-    });
+            if is_not_ok {
+                is_not_ok = false;
+                continue;
+            }
+
+            if ["--theme", "--mode", "--font"].contains(&item.as_str()) {
+                is_not_ok = true;
+                continue;
+            }
+            if ["--fullscreen"].contains(&item.as_str()) {
+                continue;
+            }
+            parse_list.push(item);
+        }
+
+        Configuration::try_parse_from(parse_list)
+    };
+
+    unsafe {
+        #[allow(static_mut_refs)]
+        match config_insert_result {
+            Ok(config) => {
+                CONFIG.get_or_insert(config);
+            }
+            #[cfg(not(target_family = "windows"))]
+            Err(err) => {
+                eprintln!("Failed to parse Arguments:\n {err}");
+                return ExitCode::FAILURE;
+            }
+            #[cfg(target_family = "windows")]
+            Err(err) => {
+                use windows::Win32::UI::WindowsAndMessaging::{MB_ICONERROR, MB_OK, MessageBoxW};
+                use windows::core::PCWSTR;
+
+                fn to_wide(s: &str) -> Vec<u16> {
+                    s.encode_utf16().chain(Some(0)).collect()
+                }
+
+                let message_w = to_wide(&err.to_string());
+                let title_w = to_wide("Failed to parse Arguments");
+
+                MessageBoxW(
+                    None,
+                    PCWSTR(message_w.as_ptr()),
+                    PCWSTR(title_w.as_ptr()),
+                    MB_OK | MB_ICONERROR,
+                );
+                return ExitCode::FAILURE;
+            }
+        }
+    }
+
+    println!("{}", get_config());
     println!("{}", get_gui_config());
     println!(
         "Version: {} Build on: {}",
@@ -137,7 +169,7 @@ fn main() -> ExitCode {
             .font(include_bytes!(
                 "./minus_games_gui/assets/fonts/MonaspiceArNerdFont-Regular.otf"
             ))
-            .default_font(Font::with_name(&get_gui_config().font))
+            .default_font(Font::new(&get_gui_config().font))
             .run();
 
             if let Err(err) = result {

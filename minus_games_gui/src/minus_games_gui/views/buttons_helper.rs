@@ -11,10 +11,15 @@ pub(crate) fn create_svg_config_button<'a>(
     value: svg::Handle,
     message: MinusGamesGuiMessage,
 ) -> Button<'a, MinusGamesGuiMessage> {
-    button(svg(value).style(set_svg_style).width(Fill).height(Fill))
-        .width(GAME_CARD_ROW_HEIGHT)
-        .height(TOP_BUTTON_HEIGHT)
-        .on_press(message)
+    button(
+        svg(value)
+            .style(set_button_svg_style)
+            .width(Fill)
+            .height(Fill),
+    )
+    .width(GAME_CARD_ROW_HEIGHT)
+    .height(TOP_BUTTON_HEIGHT)
+    .on_press(message)
     // .padding(TOP_BUTTON as u16)
 }
 
@@ -44,24 +49,15 @@ pub(crate) fn create_settings_button<'a>() -> Button<'a, MinusGamesGuiMessage> {
 }
 
 pub(crate) fn set_svg_style(theme: &Theme, _status: Status) -> svg::Style {
-    let palette = theme.extended_palette();
+    let palette = theme.palette();
     svg::Style {
         color: Some(palette.background.base.text),
     }
 }
 
-// pub(crate) fn create_config_button<'a>(
-//     value: &'static str,
-//     message: MinusGamesGuiMessage,
-// ) -> Button<'a, MinusGamesGuiMessage> {
-//     button(
-//         text(value)
-//             .size(TEXT)
-//             .center()
-//             .width(Fill)
-//             .font(DEFAULT_FONT),
-//     ) // Quit/Off
-//     .width(GAME_CARD_ROW_HEIGHT)
-//     .on_press(message)
-//     // .padding(TOP_BUTTON as u16)
-// }
+pub(crate) fn set_button_svg_style(theme: &Theme, _status: Status) -> svg::Style {
+    let palette = theme.palette();
+    svg::Style {
+        color: Some(palette.primary.base.text),
+    }
+}

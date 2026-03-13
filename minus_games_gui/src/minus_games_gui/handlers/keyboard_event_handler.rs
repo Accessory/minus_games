@@ -17,13 +17,11 @@ pub(crate) fn handle_keyboard_event(event: keyboard::Event) -> Task<MinusGamesGu
             key: Key::Character(character),
             modifiers,
             ..
-        } => {
-            if character.as_str() == "f" && modifiers.control() {
-                return Task::batch([
-                    operation::snap_to(SCROLLABLE_ID, RelativeOffset::START),
-                    operation::focus(FILTER_ID),
-                ]);
-            }
+        } if character.as_str() == "f" && modifiers.control() => {
+            return Task::batch([
+                operation::snap_to(SCROLLABLE_ID, RelativeOffset::START),
+                operation::focus(FILTER_ID),
+            ]);
         }
         keyboard::Event::KeyPressed {
             key: Key::Named(named),
