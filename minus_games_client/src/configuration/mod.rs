@@ -69,7 +69,7 @@ pub struct Configuration {
         env = "MINUS_GAMES_SERVER_URL"
     )]
     pub server_url: String,
-    #[arg(long, default_value = ClientFolder {}, env = "MINUS_GAMES_CLIENT_FOLDER" )]
+    #[arg(long, default_value = ClientFolder {}, env = "MINUS_GAMES_CLIENT_FOLDER")]
     pub client_folder: PathBuf,
     #[arg(long, env = "MINUS_GAMES_WINE_EXE")]
     pub wine_exe: Option<PathBuf>,
@@ -159,7 +159,18 @@ impl Configuration {
     pub fn get_game_file_list(&self, game: &str) -> Option<Vec<GameFileInfo>> {
         let csv_path = self.get_csv_path_for_game(game);
         let mut reader = csv::ReaderBuilder::new().from_path(csv_path).ok()?;
-        Some(reader.deserialize().map(|i| i.unwrap()).collect())
+        let mut rtn = vec![];
+
+        for result_item in reader.deserialize::<GameFileInfo>() {
+            match result_item {
+                Ok(item) => rtn.push(item),
+                Err(err) => {
+                    warn!("Failed to parse CSV: {}", err);
+                    return None;
+                }
+            };
+        }
+        Some(rtn)
     }
 
     pub fn mark_games_as_dirty(&self, game: &str) {

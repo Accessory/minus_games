@@ -229,7 +229,7 @@ fn resolve_sync_path(to_resolve: &str, game_infos: &GameInfos) -> PathBuf {
                 }
             }
             #[cfg(target_family = "windows")]
-            "$APPDATA_ROAMING" => {
+            "$ELECTRON_CONFIG" | "$APPDATA_ROAMING" | "APPDATA_ROAMING_OR_CONFIG" => {
                 if let Some(value) = get_appdata_roaming() {
                     rtn.push(value);
                 }
@@ -237,6 +237,12 @@ fn resolve_sync_path(to_resolve: &str, game_infos: &GameInfos) -> PathBuf {
             #[cfg(not(target_family = "windows"))]
             "$APPDATA_ROAMING" => {
                 if let Some(value) = get_appdata_roaming(game_infos) {
+                    rtn.push(value);
+                }
+            }
+            #[cfg(not(target_family = "windows"))]
+            "$ELECTRON_CONFIG" | "$APPDATA_ROAMING_OR_CONFIG" => {
+                if let Some(value) = get_appdata_roaming_or_config(game_infos) {
                     rtn.push(value);
                 }
             }
@@ -275,6 +281,39 @@ fn get_appdata_roaming(game_infos: &GameInfos) -> Option<PathBuf> {
     }
 }
 
+#[cfg(not(target_family = "windows"))]
+fn get_appdata_roaming_or_config(game_infos: &GameInfos) -> Option<PathBuf> {
+    if let Ok(app_data) = std::env::var("APPDATA") {
+        return Some(PathBuf::from(app_data));
+    }
+    let is_wine = check_if_is_wine(game_infos);
+    if is_wine {
+        let wine_prefix = get_config().wine_prefix.as_ref()?;
+        let user = get_user()?;
+        let rtn = wine_prefix
+            .join("pfx")
+            .join("drive_c")
+            .join("users")
+            .join(user)
+            .join("AppData")
+            .join("Roaming");
+        Some(rtn)
+    } else {
+        get_config_path()
+    }
+}
+
+#[cfg(not(target_family = "windows"))]
+fn get_config_path() -> Option<PathBuf> {
+    match std::env::var("XDG_CONFIG_HOME") {
+        Ok(config) => Some(PathBuf::from(config)),
+        Err(_) => {
+            let home = std::env::var("HOME").unwrap_or(".".to_string());
+            std::path::absolute(format!("{home}/.config")).ok()
+        }
+    }
+}
+
 #[cfg(target_family = "windows")]
 fn get_local_low() -> Option<PathBuf> {
     let local_appdata = std::env::var("LOCALAPPDATA").ok()?;
@@ -297,13 +336,7 @@ fn resolve_unity_config_path(game_infos: &GameInfos) -> Option<PathBuf> {
             .join("LocalLow");
         Some(rtn)
     } else {
-        let mut rtn = match std::env::var("XDG_CONFIG_HOME") {
-            Ok(config) => PathBuf::from(config),
-            Err(_) => {
-                let home = std::env::var("HOME").unwrap_or(".".to_string());
-                std::path::absolute(format!("{home}/.config")).ok()?
-            }
-        };
+        let mut rtn = get_config_path()?;
         trace!("Config: {}", rtn.display());
         rtn.push("unity3d");
         Some(rtn)

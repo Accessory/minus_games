@@ -41,7 +41,7 @@ fn main() -> ExitCode {
                 continue;
             }
 
-            if ["--theme", "--mode", "--font"].contains(&item.as_str()) {
+            if ["--theme", "--mode", "--font", "--scale"].contains(&item.as_str()) {
                 is_not_ok = true;
                 continue;
             }

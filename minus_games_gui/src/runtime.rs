@@ -45,7 +45,7 @@ pub(crate) fn get_mut_gui_config() -> &'static mut GuiConfiguration {
                     is_ok = false;
                     continue;
                 }
-                if ["--theme", "--mode"].contains(&item.as_str()) {
+                if ["--theme", "--mode", "--scale"].contains(&item.as_str()) {
                     parse_list.push(item);
                     is_ok = true;
                     continue;
