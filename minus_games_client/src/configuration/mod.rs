@@ -62,7 +62,7 @@ pub enum ClientActions {
 
 #[derive(Parser, Debug, Serialize, Deserialize, Clone)]
 #[command(author, version, about, long_about = None)]
-pub struct Configuration {
+pub struct ClientConfiguration {
     #[arg(
         long,
         default_value = "http://127.0.0.1:8415",
@@ -95,7 +95,7 @@ pub struct Configuration {
     pub action: Option<ClientActions>,
 }
 
-impl Configuration {
+impl ClientConfiguration {
     pub fn create_necessary_folders(&self) -> Result<(), std::io::Error> {
         std::fs::create_dir_all(self.client_folder.join(INFOS))?;
         std::fs::create_dir_all(self.client_folder.join(ADDITIONS))?;
@@ -290,7 +290,7 @@ impl Configuration {
     }
 }
 
-impl Display for Configuration {
+impl Display for ClientConfiguration {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Server Url: {}", self.server_url.as_str())?;
         writeln!(f, "Client Folder: {}", self.client_folder.display())?;

@@ -1,7 +1,7 @@
-use crate::minus_games_gui::configuration::GuiConfiguration;
+use crate::minus_games_gui::configuration::gui_configuration::GuiConfiguration;
 use crate::runtime::get_gui_config;
 use iced::Theme;
-use minus_games_client::configuration::Configuration;
+use minus_games_client::configuration::ClientConfiguration;
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct MinusGamesSettings {
@@ -36,7 +36,7 @@ impl MinusGamesSettings {
     }
 
     pub fn from_config_with_theme(
-        value: &Configuration,
+        value: &ClientConfiguration,
         value_gui: &GuiConfiguration,
         theme: Option<Theme>,
     ) -> Self {

@@ -21,14 +21,15 @@ use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::minus_games_gui::widgets::always_highlighter::AlwaysHighlighter;
 use crate::runtime::{CLOSING, SCROLLABLE_ID, get_gui_config, get_mut_gui_config};
-use iced::Bottom;
 use iced::futures::channel::mpsc;
 use iced::futures::channel::mpsc::Sender;
 use iced::futures::{SinkExt, Stream};
+use iced::theme::Base;
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{AbsoluteOffset, Direction, RelativeOffset, Scrollbar};
 use iced::widget::space::{horizontal, vertical};
 use iced::widget::{Column, button, column, operation, row, scrollable, stack, text, text_input};
+use iced::{Bottom, system};
 use iced::{Center, Element, Fill, Length, Size, Subscription, Task, Theme, event, stream, window};
 use minus_games_client::actions::delete::delete_game;
 use minus_games_client::actions::other::move_additions_header_to_tmp;
@@ -86,6 +87,7 @@ pub(crate) struct MinusGamesGui {
     pub last_input_mouse: bool,
     pub block_highlighting: bool,
     pub lazy_image_downloader_sender: Option<Sender<(String, bool, usize)>>,
+    pub system_theme: Option<Theme>
 }
 
 const FILTER_ID: &str = "FILTER_ID";
@@ -415,6 +417,7 @@ impl MinusGamesGui {
                 return if let Some(scale) = get_gui_config().scale {
                     Task::batch([
                         Task::done(MinusGamesGuiMessage::SetScale(scale)),
+                        Task::done(MinusGamesGuiMessage::UpdateSystemTheme(())),
                         Task::done(MinusGamesGuiMessage::InitComplete(())),
                     ])
                 } else {
@@ -423,6 +426,7 @@ impl MinusGamesGui {
                             // println!("Scale Factor: {f}");
                             Task::batch([
                                 Task::done(MinusGamesGuiMessage::SetScale(f)),
+                                Task::done(MinusGamesGuiMessage::UpdateSystemTheme(())),
                                 Task::done(MinusGamesGuiMessage::InitComplete(())),
                             ])
                         })
@@ -541,6 +545,7 @@ impl MinusGamesGui {
                 }
                 self.state = MinusGamesState::Loading;
                 return Task::batch([
+                    Task::done(MinusGamesGuiMessage::UpdateSystemTheme(())),
                     Task::done(MinusGamesGuiMessage::ApplyScreenSettings),
                     Self::load(),
                 ]);
@@ -702,6 +707,15 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::FinishedProcessingImages(_) => {
                 debug!("Finished Processing Images. There are now lazy loaded");
             }
+            MinusGamesGuiMessage::SetSystemTheme(theme) => {
+                self.system_theme = Some(theme);
+            },
+            MinusGamesGuiMessage::UpdateSystemTheme(_) => {
+                return system::theme().then(|mode| {
+                    let system_theme = iced::Theme::default(mode);
+                    Task::done(MinusGamesGuiMessage::SetSystemTheme(system_theme))
+                });
+            },
         };
         Task::none()
     }

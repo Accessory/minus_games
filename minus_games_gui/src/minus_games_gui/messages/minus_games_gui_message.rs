@@ -1,7 +1,7 @@
 use crate::minus_games_gui::game_card::GameCard;
 use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::views::settings_view::SettingInput;
-use iced::Event;
+use iced::{Event, Theme};
 use iced::futures::channel::mpsc::Sender;
 use iced::widget::scrollable;
 use minus_games_client::runtime::MinusGamesClientEvents;
@@ -32,6 +32,8 @@ pub(crate) enum MinusGamesGuiMessage {
     FinishedDelete(()),
     FinishedRepairing(()),
     SetFilesToDownload(usize),
+    UpdateSystemTheme(()),
+    SetSystemTheme(Theme),
     FinishedDownloading,
     SyncFileInfosComplete,
     CurrentGame(String),

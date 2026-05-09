@@ -1,4 +1,4 @@
-use crate::configuration::Configuration;
+use crate::configuration::ClientConfiguration;
 use crate::minus_games_client::MinusGamesClient;
 use crate::runtime::MinusGamesClientEvents::{LogInfoMessage, LogInfoStaticMessage};
 use crate::utils::get_folders_in_path;
@@ -56,15 +56,15 @@ pub async fn send_event(event: MinusGamesClientEvents) {
     }
 }
 
-pub static mut CONFIG: Option<Configuration> = None;
-pub fn get_config() -> &'static Configuration {
+pub static mut CONFIG: Option<ClientConfiguration> = None;
+pub fn get_config() -> &'static ClientConfiguration {
     get_mut_config()
 }
 
-pub fn get_mut_config() -> &'static mut Configuration {
+pub fn get_mut_config() -> &'static mut ClientConfiguration {
     #[allow(static_mut_refs)]
     unsafe {
-        CONFIG.get_or_insert_with(Configuration::parse)
+        CONFIG.get_or_insert_with(ClientConfiguration::parse)
     }
 }
 

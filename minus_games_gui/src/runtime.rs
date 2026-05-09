@@ -1,4 +1,4 @@
-use crate::minus_games_gui::configuration::GuiConfiguration;
+use crate::minus_games_gui::configuration::gui_configuration::GuiConfiguration;
 use clap::Parser;
 use std::sync::atomic::AtomicBool;
 

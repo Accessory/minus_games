@@ -169,7 +169,7 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
                     minus_games_gui.settings.as_ref().unwrap().scale,
                     |value| MinusGamesGuiMessage::ChangeSetting(SettingInput::Scale(value)),
                 )
-                .step(0.25),
+                .step(0.25_f32),
                 text(format!(
                     "{:.2}",
                     minus_games_gui.settings.as_ref().unwrap().scale

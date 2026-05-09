@@ -1,11 +1,11 @@
 #![windows_subsystem = "windows"]
 use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::configuration::Mode;
-use crate::runtime::get_gui_config;
+use crate::minus_games_gui::configuration::complete_configuration::CompleteConfiguration;
+use crate::runtime::{GUI_CONFIG, get_gui_config};
 use clap::Parser;
 use iced::window::icon::from_rgba;
 use iced::{Font, Settings, application};
-use minus_games_client::configuration::Configuration;
 use minus_games_client::run_cli;
 use minus_games_client::runtime::{CONFIG, OFFLINE, SYNC, SYNC_TESTED, get_config};
 use std::process::ExitCode;
@@ -27,38 +27,16 @@ fn main() -> ExitCode {
     dotenvy::dotenv_override().ok();
 
     println!("Config:");
-    let config_insert_result = {
-        let mut parse_list: Vec<String> = Vec::new();
-        let mut is_not_ok = false;
-        for (i, item) in std::env::args().enumerate() {
-            if i == 0 {
-                parse_list.push(item);
-                continue;
-            }
-
-            if is_not_ok {
-                is_not_ok = false;
-                continue;
-            }
-
-            if ["--theme", "--mode", "--font", "--scale"].contains(&item.as_str()) {
-                is_not_ok = true;
-                continue;
-            }
-            if ["--fullscreen"].contains(&item.as_str()) {
-                continue;
-            }
-            parse_list.push(item);
-        }
-
-        Configuration::try_parse_from(parse_list)
-    };
+    let complete_configuration_parsing_result = CompleteConfiguration::try_parse();
 
     unsafe {
         #[allow(static_mut_refs)]
-        match config_insert_result {
-            Ok(config) => {
-                CONFIG.get_or_insert(config);
+        match complete_configuration_parsing_result {
+            Ok(complete_configuration) => {
+                let (gui_configuration, client_configuration) =
+                    complete_configuration.into_gui_configuration_and_client_configuration();
+                CONFIG.get_or_insert(client_configuration);
+                GUI_CONFIG.get_or_insert(gui_configuration);
             }
             #[cfg(not(target_family = "windows"))]
             Err(err) => {

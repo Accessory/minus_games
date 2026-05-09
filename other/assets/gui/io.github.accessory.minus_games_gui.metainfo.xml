@@ -4,6 +4,7 @@
     <id>io.github.accessory.minus_games_gui</id>
     <url type="homepage">https://github.com/Accessory/minus_games</url>
     <url type="faq">https://accessory.github.io/minus_games_user_guide/</url>
+    <url type="vcs-browser">https://github.com/Accessory/minus_games</url>
     <name>Minus Games</name>
     <summary>Download, sync and run games</summary>
     <launchable type="desktop-id">io.github.accessory.minus_games_gui.desktop</launchable>
@@ -46,6 +47,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.18" date="2026-05-09">
+            <description>
+                <p>Improved configuration</p>
+            </description>
+        </release>
         <release version="0.9.17" date="2026-04-29">
             <description>
                 <p>Bugfixes</p>
