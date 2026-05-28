@@ -31,7 +31,9 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
                     .color(get_progress_bar_color(
                         minus_games_gui.files_downloaded,
                         minus_games_gui.files_to_download,
-                        minus_games_gui.get_theme().unwrap_or(minus_games_gui.system_theme.clone().unwrap())
+                        minus_games_gui
+                            .get_theme()
+                            .unwrap_or(minus_games_gui.system_theme.clone().unwrap())
                     ))
                     .width(Fill)
                     .height(Fill)

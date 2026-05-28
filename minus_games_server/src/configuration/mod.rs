@@ -73,7 +73,7 @@ impl Configuration {
 
 impl std::fmt::Display for Configuration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Listening on: http://{}:{}", &self.ip, &self.port)?;
+        writeln!(f, "Listening on: http://{}:{}", self.ip, self.port)?;
         writeln!(
             f,
             "Game Folder: {}",
@@ -95,7 +95,7 @@ impl std::fmt::Display for Configuration {
         write!(
             f,
             "Config File: {}",
-            &self.config_file.as_ref().unwrap_or(&String::from("None"))
+            self.config_file.as_ref().unwrap_or(&String::from("None"))
         )
     }
 }

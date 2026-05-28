@@ -1,7 +1,7 @@
 use super::run::{run_game, run_game_synced};
 use crate::actions::delete::delete_game;
 use crate::actions::download::download_game;
-use crate::actions::repair::repair_game;
+use crate::actions::repair::{check_for_corruption_for_game, repair_game};
 use crate::actions::scan::scan_for_games;
 use crate::actions::sync::sync_all_game_files;
 use crate::actions::sync::{download_sync_for_game, upload_sync_for_game};
@@ -55,11 +55,12 @@ pub async fn select_game_to_play() {
 }
 
 pub async fn start_menu() {
-    const MENU_ITEMS: [&str; 9] = [
+    const MENU_ITEMS: [&str; 10] = [
         "Sync & Start",
         "Start",
         "Download",
         "Delete",
+        "Check for Corruption",
         "Repair",
         "Upload Saves",
         "Download Saves",
@@ -79,11 +80,12 @@ pub async fn start_menu() {
         Some(1) => select_game().await,
         Some(2) => select_game_to_download().await,
         Some(3) => select_game_to_delete(true),
-        Some(4) => select_repair().await,
-        Some(5) => select_upload_saves().await,
-        Some(6) => select_download_saves().await,
-        Some(7) => scan_for_games(),
-        Some(8) => {
+        Some(4) => select_check_for_corruption().await,
+        Some(5) => select_repair().await,
+        Some(6) => select_upload_saves().await,
+        Some(7) => select_download_saves().await,
+        Some(8) => scan_for_games(),
+        Some(9) => {
             info!("Quitting now.")
         }
         _ => info!("Nothing selected - Quitting now."),
@@ -134,6 +136,29 @@ pub async fn select_download_saves() {
         info!("Nothing selected!")
     }
 }
+pub async fn select_check_for_corruption() {
+    let installed_games = get_installed_games();
+
+    if installed_games.is_empty() {
+        info!("No games installed");
+        return;
+    }
+
+    let selection = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Select Game to check:")
+        .default(0)
+        .items(installed_games.as_slice())
+        .interact_opt()
+        .unwrap();
+
+    if let Some(selection) = selection {
+        let game = installed_games.get(selection).unwrap();
+        check_for_corruption_for_game(game).await;
+    } else {
+        info!("Nothing selected!")
+    }
+}
+
 pub async fn select_repair() {
     let installed_games = get_installed_games();
 

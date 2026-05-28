@@ -11,7 +11,7 @@ use tracing::{debug, trace};
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum AxisEvent {
-    Neural,
+    Neutral,
     Down,
     Up,
 }
@@ -23,10 +23,16 @@ impl From<f32> for AxisEvent {
         } else if value < -0.7 {
             AxisEvent::Down
         } else {
-            AxisEvent::Neural
+            AxisEvent::Neutral
         }
     }
 }
+
+const VERY_SHORT_INPUT_DELAY: Duration = Duration::from_millis(20);
+const SHORT_INPUT_DELAY: Duration = Duration::from_millis(60);
+// const INPUT_DELAY: Duration = Duration::from_millis(150);
+const LONG_INPUT_DELAY: Duration = Duration::from_millis(250);
+const VERY_LONG_INPUT_DELAY: Duration = Duration::from_millis(500);
 
 pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage> {
     stream::channel(
@@ -41,7 +47,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
             let mut last_axes_event = None;
             loop {
                 if !IS_IN_FOCUS.load(Relaxed) {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
+                    tokio::time::sleep(VERY_LONG_INPUT_DELAY).await;
                     continue;
                 }
 
@@ -72,8 +78,8 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
 
                     if tokio::time::Instant::now() < block_input_until {
                         output.flush().await.ok();
-                        yield_now().await;
-                        // tokio::time::sleep_until(block_input_until).await;
+                        // yield_now().await;
+                        tokio::time::sleep(VERY_SHORT_INPUT_DELAY).await;
                         continue;
                     }
 
@@ -92,7 +98,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                 last_axes_event = None;
                                 last_id_used = Some(id);
                                 block_input_until = tokio::time::Instant::now()
-                                    .checked_add(Duration::from_millis(250))
+                                    .checked_add(LONG_INPUT_DELAY)
                                     .unwrap();
                             }
                             Button::DPadUp => {
@@ -108,20 +114,20 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                 last_axes_event = None;
                                 last_id_used = Some(id);
                                 block_input_until = tokio::time::Instant::now()
-                                    .checked_add(Duration::from_millis(250))
+                                    .checked_add(LONG_INPUT_DELAY)
                                     .unwrap();
                             }
                             Button::South => {
                                 debug!("Pressed South");
                                 output
-                                    .send(MinusGamesGuiMessage::StartCurrentPosition)
+                                    .send(MinusGamesGuiMessage::AffirmativeAction)
                                     .await
                                     .ok();
                                 last_button_pressed = Some(button);
                                 last_axes_event = None;
                                 last_id_used = Some(id);
                                 block_input_until = tokio::time::Instant::now()
-                                    .checked_add(Duration::from_millis(500))
+                                    .checked_add(VERY_LONG_INPUT_DELAY)
                                     .unwrap();
                             }
                             Button::East => {
@@ -131,7 +137,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                 last_axes_event = None;
                                 last_id_used = Some(id);
                                 block_input_until = tokio::time::Instant::now()
-                                    .checked_add(Duration::from_millis(500))
+                                    .checked_add(VERY_LONG_INPUT_DELAY)
                                     .unwrap();
                             }
                             Button::Start => {
@@ -141,7 +147,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                 last_axes_event = None;
                                 last_id_used = Some(id);
                                 block_input_until = tokio::time::Instant::now()
-                                    .checked_add(Duration::from_millis(500))
+                                    .checked_add(VERY_LONG_INPUT_DELAY)
                                     .unwrap();
                             }
                             Button::Select => {
@@ -151,7 +157,20 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                 last_axes_event = None;
                                 last_id_used = Some(id);
                                 block_input_until = tokio::time::Instant::now()
-                                    .checked_add(Duration::from_millis(500))
+                                    .checked_add(VERY_LONG_INPUT_DELAY)
+                                    .unwrap();
+                            }
+                            Button::West => {
+                                debug!("Pressed Select");
+                                output
+                                    .send(MinusGamesGuiMessage::AlternativeAction)
+                                    .await
+                                    .ok();
+                                last_button_pressed = Some(button);
+                                last_axes_event = None;
+                                last_id_used = Some(id);
+                                block_input_until = tokio::time::Instant::now()
+                                    .checked_add(VERY_LONG_INPUT_DELAY)
                                     .unwrap();
                             }
                             _ => {
@@ -161,7 +180,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                         continue;
                     } else if let Some(axis_event) = axis_event_option {
                         match axis_event {
-                            AxisEvent::Neural => {
+                            AxisEvent::Neutral => {
                                 last_message_send = None;
                                 last_button_pressed = None;
                                 last_id_used = None;
@@ -198,7 +217,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                 last_axes_event = Some(AxisEvent::Up);
                                 last_id_used = Some(id);
                                 block_input_until = tokio::time::Instant::now()
-                                    .checked_add(Duration::from_millis(250))
+                                    .checked_add(LONG_INPUT_DELAY)
                                     .unwrap();
                             }
                         }
@@ -222,7 +241,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                             output.send(last_message).await.ok();
                             output.flush().await.ok();
                             block_input_until = tokio::time::Instant::now()
-                                .checked_add(Duration::from_millis(100))
+                                .checked_add(SHORT_INPUT_DELAY)
                                 .unwrap();
                         } else {
                             last_message_send = None;
@@ -262,7 +281,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                 output.send(last_message).await.ok();
                                 output.flush().await.ok();
                                 block_input_until = tokio::time::Instant::now()
-                                    .checked_add(Duration::from_millis(100))
+                                    .checked_add(SHORT_INPUT_DELAY)
                                     .unwrap();
                             }
 
@@ -276,8 +295,8 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                         continue;
                     }
                 } else {
-                    // info!("Do nothing!");
-                    tokio::time::sleep(Duration::from_millis(200)).await;
+                    // debug!("Do nothing!");
+                    tokio::time::sleep(SHORT_INPUT_DELAY).await;
                 }
             }
         },

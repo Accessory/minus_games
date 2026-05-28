@@ -95,6 +95,7 @@ pub async fn run_cli() {
         ClientActions::SelectDeleteGame { purge } => select_game_to_delete(purge.unwrap_or(true)),
         ClientActions::Menu => start_menu().await,
         ClientActions::Repair { game } => repair_game(&game).await,
+        ClientActions::CheckForCorruption { game } => repair_game(&game).await,
         ClientActions::SelectRepair => select_repair().await,
         ClientActions::DownloadSyncs => download_syncs().await,
         ClientActions::DownloadSync { game } => download_sync_for_game(&game).await,

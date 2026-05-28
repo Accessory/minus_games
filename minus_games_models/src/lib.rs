@@ -14,9 +14,7 @@ use utoipa::ToSchema;
 )]
 pub enum GameEngine {
     RenPy,
-    FinalFantasyPixelRemaster,
     RPGMaker,
-    RPGMakerMZ,
     Unreal,
     Unity,
     UnityOld,

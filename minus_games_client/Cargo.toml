@@ -27,6 +27,7 @@ chrono = "0"
 dirs = { workspace = true }
 base64 = "0"
 convert_case = "0"
+blake3 = "1"
 minus_games_utils = { path = "../minus_games_utils" }
 minus_games_models = { path = "../minus_games_models" }
 minus_games_finder = { path = "../minus_games_finder" }

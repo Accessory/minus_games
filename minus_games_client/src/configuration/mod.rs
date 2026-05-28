@@ -48,6 +48,9 @@ pub enum ClientActions {
     Repair {
         game: String,
     },
+    CheckForCorruption {
+        game: String,
+    },
     SelectRepair,
     DownloadSyncs,
     DownloadSync {
@@ -254,7 +257,10 @@ impl ClientConfiguration {
 
     pub fn get_header_option(&self, game: &str) -> Option<PathBuf> {
         let header_path = self.get_game_additions_path(game).join("header.jpg");
-        if header_path.exists() {
+        if header_path.is_file()
+            && let Ok(metadata) = header_path.metadata()
+            && metadata.len() != 0
+        {
             Some(header_path)
         } else {
             let tmp_image_path = env::temp_dir()
@@ -262,7 +268,10 @@ impl ClientConfiguration {
                 .join(ADDITIONS)
                 .join(game)
                 .join("header.jpg");
-            if tmp_image_path.exists() {
+            if tmp_image_path.is_file()
+                && let Ok(metadata) = tmp_image_path.metadata()
+                && metadata.len() != 0
+            {
                 Some(tmp_image_path)
             } else {
                 None
@@ -303,8 +312,8 @@ impl Display for ClientConfiguration {
         writeln!(f, "Wine Exe: {}", is_or_none_path_buf(&self.wine_exe))?;
         writeln!(f, "Wine Prefix: {}", is_or_none_path_buf(&self.wine_prefix))?;
         writeln!(f, "Username: {}", is_or_none_string(&self.username))?;
-        writeln!(f, "Offline: {:?}", &self.offline)?;
-        writeln!(f, "Sync: {:?}", &self.sync)?;
+        writeln!(f, "Offline: {:?}", self.offline)?;
+        writeln!(f, "Sync: {:?}", self.sync)?;
         write!(f, "Action: {}", is_or_none(self.action.as_ref()))
     }
 }

@@ -20,7 +20,10 @@ use crate::minus_games_gui::views::buttons_helper::{
 use crate::minus_games_gui::views::game_info_modal::create_modal;
 use crate::minus_games_gui::views::{downloading, gaming, loading, ready, settings_view};
 use crate::minus_games_gui::widgets::always_highlighter::AlwaysHighlighter;
-use crate::runtime::{CLOSING, SCROLLABLE_ID, get_gui_config, get_mut_gui_config};
+use crate::runtime::{
+    CLOSING, MODAL_SELECTED_OPTION, SCROLLABLE_ID, get_gui_config, get_mut_gui_config,
+    set_selected_item_one_down, set_selected_item_one_up,
+};
 use iced::futures::channel::mpsc;
 use iced::futures::channel::mpsc::Sender;
 use iced::futures::{SinkExt, Stream};
@@ -53,7 +56,7 @@ mod messages;
 mod minus_games_settings;
 mod settings;
 mod style_constants;
-mod views;
+pub(crate) mod views;
 mod widgets;
 
 #[derive(Default, Copy, Clone, Debug, Eq, PartialEq)]
@@ -78,7 +81,7 @@ pub(crate) struct MinusGamesGui {
     pub current_game_name: Option<String>,
     pub settings: Option<MinusGamesSettings>,
     pub filter: String,
-    pub model: Option<(String, bool)>,
+    pub modal: Option<(String, bool)>,
     pub size: Size,
     pub highlight_map: Vec<usize>,
     pub scroll_offset: AbsoluteOffset,
@@ -87,7 +90,7 @@ pub(crate) struct MinusGamesGui {
     pub last_input_mouse: bool,
     pub block_highlighting: bool,
     pub lazy_image_downloader_sender: Option<Sender<(String, bool, usize)>>,
-    pub system_theme: Option<Theme>
+    pub system_theme: Option<Theme>,
 }
 
 const FILTER_ID: &str = "FILTER_ID";
@@ -277,7 +280,8 @@ impl MinusGamesGui {
         }
 
         for (idx, game) in server_games.iter().enumerate() {
-            if installed_games.contains(game) {
+            if let Some(game_card) = rtn.iter_mut().find(|f| f.game == *game) {
+                game_card.has_header = game_card.has_header || has_header_list[idx];
                 continue;
             }
 
@@ -377,10 +381,11 @@ impl MinusGamesGui {
                 );
             }
             MinusGamesGuiMessage::OpenGameModal(game, is_installed) => {
-                self.model = Some((game, is_installed));
+                self.modal = Some((game, is_installed));
             }
             MinusGamesGuiMessage::ModalCallback(message_option) => {
-                self.model = None;
+                self.modal = None;
+                MODAL_SELECTED_OPTION.store(-1, Relaxed);
                 if let Some(message) = message_option {
                     return match message {
                         ModalCallback::DeleteGame(game) => {
@@ -511,12 +516,26 @@ impl MinusGamesGui {
                         .and_then(move |window| window::set_mode(window, window::Mode::Windowed))
                 };
             }
+            MinusGamesGuiMessage::AffirmativeAction => {
+                return if self.modal.is_none() {
+                    Task::done(MinusGamesGuiMessage::StartCurrentPosition)
+                } else {
+                    self.affirmative_modal_action()
+                };
+            }
             MinusGamesGuiMessage::BackAction => match self.state {
                 MinusGamesState::Ready => {
-                    return Task::done(MinusGamesGuiMessage::CloseApplication(()));
+                    if self.modal.is_none() {
+                        return Task::done(MinusGamesGuiMessage::CloseApplication(()));
+                    } else {
+                        self.modal = None;
+                    }
                 }
                 MinusGamesState::Settings => {
                     return Task::done(MinusGamesGuiMessage::BackFromSettings(false));
+                }
+                MinusGamesState::Downloading => {
+                    return Task::done(MinusGamesGuiMessage::StopDownload);
                 }
                 _ => {}
             },
@@ -528,6 +547,24 @@ impl MinusGamesGui {
             MinusGamesGuiMessage::ReloadAction => {
                 if self.state == MinusGamesState::Ready {
                     return Task::done(MinusGamesGuiMessage::Reload);
+                }
+            }
+            MinusGamesGuiMessage::AlternativeAction => {
+                if self.state == MinusGamesState::Ready
+                    && let Some(current_highlight_game) =
+                        self.game_cards.get(self.current_highlight_position)
+                    && self.modal.is_none()
+                {
+                    return if current_highlight_game.is_installed {
+                        Task::done(MinusGamesGuiMessage::OpenGameModal(
+                            current_highlight_game.game.clone(),
+                            current_highlight_game.is_installed,
+                        ))
+                    } else {
+                        Task::done(MinusGamesGuiMessage::Repair(
+                            current_highlight_game.game.clone(),
+                        ))
+                    };
                 }
             }
             MinusGamesGuiMessage::BackFromSettings(save) => {
@@ -587,7 +624,7 @@ impl MinusGamesGui {
             }
             MinusGamesGuiMessage::EnterMouseArea(position) => {
                 if self.last_input_mouse
-                    && self.model.is_none()
+                    && self.modal.is_none()
                     && let Some((idx, _)) = self
                         .highlight_map
                         .iter()
@@ -599,46 +636,60 @@ impl MinusGamesGui {
             }
             MinusGamesGuiMessage::CurrentPositionUp(up) => {
                 debug!("Button Up By: {up}");
-                if self.state == MinusGamesState::Ready
-                    && !self.highlight_map.is_empty()
-                    && self.current_highlight_position != 0
-                {
-                    self.last_input_mouse = false;
-                    self.current_highlight_position = cmp::min(
-                        self.current_highlight_position.saturating_sub(up),
-                        self.highlight_map.len() - 1,
-                    );
-                    self.block_highlighting = true;
-                    self.went_up = true;
-                    return Task::done(MinusGamesGuiMessage::ScrollUp(up));
+                if self.state == MinusGamesState::Ready {
+                    if self.modal.is_some() {
+                        if let Some(game_card_position) =
+                            self.highlight_map.get(self.current_highlight_position)
+                            && let Some(game_card) = self.game_cards.get(*game_card_position)
+                        {
+                            set_selected_item_one_up(game_card.is_on_server);
+                        }
+                    } else if !self.highlight_map.is_empty() && self.current_highlight_position != 0
+                    {
+                        self.last_input_mouse = false;
+                        self.current_highlight_position = cmp::min(
+                            self.current_highlight_position.saturating_sub(up),
+                            self.highlight_map.len() - 1,
+                        );
+                        self.block_highlighting = true;
+                        self.went_up = true;
+                        return Task::done(MinusGamesGuiMessage::ScrollUp(up));
+                    }
                 }
             }
             MinusGamesGuiMessage::CurrentPositionDown(down) => {
                 debug!("Button Down By: {down}");
-                if self.state == MinusGamesState::Ready
-                    && !self.highlight_map.is_empty()
-                    && self.current_highlight_position != self.highlight_map.len() - 1
-                {
-                    self.last_input_mouse = false;
-                    self.current_highlight_position = cmp::min(
-                        self.current_highlight_position
-                            .checked_add(down)
-                            .unwrap_or(self.highlight_map.len() - 1),
-                        self.highlight_map.len() - 1,
-                    );
-                    self.block_highlighting = true;
-                    self.went_up = false;
-                    return Task::done(MinusGamesGuiMessage::ScrollDown(down));
+                if self.state == MinusGamesState::Ready {
+                    if self.modal.is_some() {
+                        if let Some(game_card_position) =
+                            self.highlight_map.get(self.current_highlight_position)
+                            && let Some(game_card) = self.game_cards.get(*game_card_position)
+                        {
+                            set_selected_item_one_down(game_card.is_on_server);
+                        }
+                    } else if !self.highlight_map.is_empty()
+                        && self.current_highlight_position != self.highlight_map.len() - 1
+                    {
+                        self.last_input_mouse = false;
+                        self.current_highlight_position = cmp::min(
+                            self.current_highlight_position
+                                .checked_add(down)
+                                .unwrap_or(self.highlight_map.len() - 1),
+                            self.highlight_map.len() - 1,
+                        );
+                        self.block_highlighting = true;
+                        self.went_up = false;
+                        return Task::done(MinusGamesGuiMessage::ScrollDown(down));
+                    }
                 }
             }
             MinusGamesGuiMessage::StartCurrentPosition => {
-                if self.state == MinusGamesState::Ready {
-                    let position = self.current_highlight_position;
-                    if let Some(game_card_position) = self.highlight_map.get(position)
-                        && let Some(game_card) = self.game_cards.get(*game_card_position)
-                    {
-                        return Task::done(MinusGamesGuiMessage::Play(game_card.game.clone()));
-                    }
+                if self.state == MinusGamesState::Ready
+                    && let Some(game_card_position) =
+                        self.highlight_map.get(self.current_highlight_position)
+                    && let Some(game_card) = self.game_cards.get(*game_card_position)
+                {
+                    return Task::done(MinusGamesGuiMessage::Play(game_card.game.clone()));
                 }
             }
             MinusGamesGuiMessage::ScrollDown(step) => {
@@ -709,13 +760,13 @@ impl MinusGamesGui {
             }
             MinusGamesGuiMessage::SetSystemTheme(theme) => {
                 self.system_theme = Some(theme);
-            },
+            }
             MinusGamesGuiMessage::UpdateSystemTheme(_) => {
                 return system::theme().then(|mode| {
                     let system_theme = iced::Theme::default(mode);
                     Task::done(MinusGamesGuiMessage::SetSystemTheme(system_theme))
                 });
-            },
+            }
         };
         Task::none()
     }
@@ -754,7 +805,7 @@ impl MinusGamesGui {
         //     text("-----------------------------------------------------------------------------")
         //         .center();
 
-        match &self.model {
+        match &self.modal {
             None => stack!(content).into(),
             Some((game, is_on_server)) => stack!(
                 content,
@@ -762,6 +813,36 @@ impl MinusGamesGui {
             )
             .into(),
         }
+    }
+
+    fn affirmative_modal_action(&mut self) -> Task<MinusGamesGuiMessage> {
+        if self.modal.is_some()
+            && let Some((current_game_name, _)) = self.modal.as_ref()
+        {
+            return match MODAL_SELECTED_OPTION.load(Relaxed) {
+                views::game_info_modal::MODAL_DELETE_BUTTON_ID => {
+                    Task::done(MinusGamesGuiMessage::ModalCallback(Some(
+                        ModalCallback::DeleteGame(current_game_name.clone()),
+                    )))
+                }
+                views::game_info_modal::MODAL_CONTINUE_DOWNLOAD_BUTTON_ID => {
+                    Task::done(MinusGamesGuiMessage::ModalCallback(Some(
+                        ModalCallback::RepairGame(current_game_name.clone()),
+                    )))
+                }
+                views::game_info_modal::MODAL_OPEN_FOLDER_BUTTON_ID => Task::done(
+                    MinusGamesGuiMessage::ModalCallback(Some(ModalCallback::OpenGameFolder(
+                        get_config().get_game_path(current_game_name),
+                    ))),
+                ),
+                views::game_info_modal::MODAL_CLOSE_BUTTON_ID => {
+                    self.modal = None;
+                    Task::none()
+                }
+                _ => Task::none(),
+            };
+        }
+        Task::none()
     }
 
     fn create_ready_view(&self) -> Column<'_, MinusGamesGuiMessage> {

@@ -1,9 +1,9 @@
 use crate::minus_games_gui::game_card::GameCard;
 use crate::minus_games_gui::messages::modal_callback::ModalCallback;
 use crate::minus_games_gui::views::settings_view::SettingInput;
-use iced::{Event, Theme};
 use iced::futures::channel::mpsc::Sender;
 use iced::widget::scrollable;
+use iced::{Event, Theme};
 use minus_games_client::runtime::MinusGamesClientEvents;
 use tracing::info;
 
@@ -21,6 +21,8 @@ pub(crate) enum MinusGamesGuiMessage {
     GotoSettings,
     StartAction,
     ReloadAction,
+    AlternativeAction,
+    AffirmativeAction,
     BackAction,
     BackFromSettings(bool),
     ChangeSetting(SettingInput),

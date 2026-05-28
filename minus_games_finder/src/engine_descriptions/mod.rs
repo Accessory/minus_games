@@ -7,19 +7,6 @@ use std::sync::LazyLock;
 
 pub mod engine_description;
 
-static FINAL_FANTASY_PIXEL_REMASTER: LazyLock<EngineDescription> =
-    LazyLock::new(|| EngineDescription {
-        engine_type: GameEngine::FinalFantasyPixelRemaster,
-        main_files: vec![],
-        main_folders: vec![],
-        platform_windows: Some(PlatformDescription {
-            platform: Platform::Windows,
-            look_for_files: vec!["FINAL FANTASY*.exe".into()],
-            look_for_folders: vec!["FINAL FANTASY*Data".into()],
-        }),
-        platform_linux: None,
-    });
-
 static REN_PY: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescription {
     engine_type: GameEngine::RenPy,
     main_files: vec![],
@@ -56,22 +43,6 @@ static ELECTRON: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescriptio
     engine_type: GameEngine::Electron,
     main_files: vec!["snapshot_blob.bin".into()],
     main_folders: vec!["resources".into()],
-    platform_windows: Some(PlatformDescription {
-        platform: Platform::Windows,
-        look_for_files: vec!["*.exe".into()],
-        look_for_folders: vec![],
-    }),
-    platform_linux: Some(PlatformDescription {
-        platform: Platform::Linux,
-        look_for_files: vec![],
-        look_for_folders: vec![],
-    }),
-});
-
-static RPGM_MZ: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescription {
-    engine_type: GameEngine::RPGMakerMZ,
-    main_files: vec!["package.json".into()],
-    main_folders: vec!["data".into(), "js".into()],
     platform_windows: Some(PlatformDescription {
         platform: Platform::Windows,
         look_for_files: vec!["*.exe".into()],
@@ -168,10 +139,8 @@ pub fn get_game_description_for_engine(
     game_engine: GameEngine,
 ) -> Option<&'static EngineDescription> {
     match game_engine {
-        GameEngine::FinalFantasyPixelRemaster => Some(&*FINAL_FANTASY_PIXEL_REMASTER),
         GameEngine::RenPy => Some(&*REN_PY),
         GameEngine::RPGMaker => Some(&*RPGM),
-        GameEngine::RPGMakerMZ => Some(&*RPGM_MZ),
         GameEngine::Unreal => Some(&*UNREAL),
         GameEngine::Unity => Some(&*UNITY),
         GameEngine::UnityOld => Some(&*UNITY_OLD),

@@ -119,7 +119,7 @@ pub async fn run_windows_game_on_linux(infos: GameInfos) {
         .to_str()
         .unwrap()
         .to_string();
-    let game_id = format!("umu-{}", &infos.name).to_case(Case::Kebab);
+    let game_id = format!("umu-{}", infos.name).to_case(Case::Kebab);
     let protonpath = if wine.contains("umu") {
         "GE-Proton"
     } else {

@@ -1,12 +1,15 @@
 use crate::minus_games_gui::configuration::gui_configuration::GuiConfiguration;
+use crate::minus_games_gui::views::game_info_modal::{
+    MODAL_CLOSE_BUTTON_ID, MODAL_CONTINUE_DOWNLOAD_BUTTON_ID,
+};
 use clap::Parser;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::Relaxed;
+use std::sync::atomic::{AtomicBool, AtomicI8};
 
 pub(crate) static mut GUI_CONFIG: Option<GuiConfiguration> = None;
 
 pub(crate) static CLOSING: AtomicBool = AtomicBool::new(false);
 pub(crate) static IS_IN_FOCUS: AtomicBool = AtomicBool::new(true);
-
 pub(crate) static SCROLLABLE_ID: &str = "scrollable";
 
 // pub(crate) static DEFAULT_SCALE_ADJUSTMENT_FACTOR: LazyLock<f32> = LazyLock::new(|| {
@@ -28,6 +31,24 @@ pub(crate) static SCROLLABLE_ID: &str = "scrollable";
 //
 //     display_infos.first().expect("No display found").height as f32
 // });
+
+pub(crate) static MODAL_SELECTED_OPTION: AtomicI8 = AtomicI8::new(-1);
+
+pub(crate) fn set_selected_item_one_down(is_on_server: bool) {
+    let mut next_value = MODAL_SELECTED_OPTION.load(Relaxed) + 1;
+    if !is_on_server && next_value == MODAL_CONTINUE_DOWNLOAD_BUTTON_ID {
+        next_value += 1;
+    }
+    MODAL_SELECTED_OPTION.store(next_value.min(MODAL_CLOSE_BUTTON_ID), Relaxed);
+}
+
+pub(crate) fn set_selected_item_one_up(is_on_server: bool) {
+    let mut next_value = MODAL_SELECTED_OPTION.load(Relaxed) - 1;
+    if !is_on_server && next_value == MODAL_CONTINUE_DOWNLOAD_BUTTON_ID {
+        next_value -= 1;
+    }
+    MODAL_SELECTED_OPTION.store(next_value.max(0), Relaxed);
+}
 
 pub(crate) fn get_gui_config() -> &'static GuiConfiguration {
     get_mut_gui_config()

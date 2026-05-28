@@ -47,6 +47,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.19" date="2026-05-28">
+            <description>
+                <p>Improved gamepad handling</p>
+            </description>
+        </release>
         <release version="0.9.18" date="2026-05-09">
             <description>
                 <p>Improved configuration</p>

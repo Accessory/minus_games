@@ -50,7 +50,7 @@ async fn main() {
         .init();
 
     info!("Config:\n{config}");
-    let addr = format!("{}:{}", &config.ip, &config.port);
+    let addr = format!("{}:{}", config.ip, config.port);
     let user_files_path = config.data_folder.join("users");
     let user_handler = Arc::new(UserHandler { user_files_path });
     let session_manager = Arc::new(RwLock::new(SessionManager::default()));
