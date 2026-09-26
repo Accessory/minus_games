@@ -11,12 +11,12 @@ dotenvy = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 clap = { workspace = true }
-serde = { version = "1", features = ["derive"] }
+serde = { workspace = true }
 reqwest = { workspace = true }
 tokio = { workspace = true }
 futures-util = { workspace = true }
 minus_games_models = { path = "../minus_games_models" }
 strum = { workspace = true }
-chrono = "0"
+chrono = { workspace = true }
 filetime = "0"
 base64 = "0"

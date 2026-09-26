@@ -5,7 +5,9 @@ use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::routing::post;
 use axum::{Json, Router, middleware};
+use log::warn;
 use serde::{Deserialize, Serialize};
+use std::process::ExitCode;
 use std::sync::{Arc, LazyLock};
 use tracing::info;
 use utoipa::ToSchema;
@@ -55,8 +57,12 @@ pub async fn post_rerun_finder_for(
 
         tokio::task::spawn_blocking(move || {
             info!("Rerun Finder");
-            minus_games_finder::run(config);
-            info!("Finder finished");
+            let status_code_rtn = minus_games_finder::run(config);
+            if status_code_rtn == ExitCode::SUCCESS {
+                info!("Finder finished");
+            } else {
+                warn!("Finder finished with errors")
+            }
             drop(lock)
         });
     } else {
@@ -96,8 +102,12 @@ pub async fn post_rerun_finder_for_game(
 
         tokio::task::spawn_blocking(move || {
             info!("Rerun Finder");
-            minus_games_finder::run(config);
-            info!("Finder finished");
+            let status_code_rtn = minus_games_finder::run(config);
+            if status_code_rtn == ExitCode::SUCCESS {
+                info!("Finder finished");
+            } else {
+                warn!("Finder finished with errors")
+            }
             drop(lock)
         });
     } else {
@@ -128,8 +138,12 @@ pub async fn post_rerun_finder(State(app_state): State<Arc<AppState>>) -> Status
 
         tokio::task::spawn_blocking(move || {
             info!("Rerun Finder");
-            minus_games_finder::run(config);
-            info!("Finder finished");
+            let status_code_rtn = minus_games_finder::run(config);
+            if status_code_rtn == ExitCode::SUCCESS {
+                info!("Finder finished");
+            } else {
+                warn!("Finder finished with errors")
+            }
             drop(lock)
         });
     } else {
@@ -161,8 +175,12 @@ pub async fn post_rerun_finder_all(State(app_state): State<Arc<AppState>>) -> St
 
         tokio::task::spawn_blocking(move || {
             info!("Rerun Finder");
-            minus_games_finder::run(config);
-            info!("Finder finished updating all games");
+            let status_code_rtn = minus_games_finder::run(config);
+            if status_code_rtn == ExitCode::SUCCESS {
+                info!("Finder finished updating all games");
+            } else {
+                warn!("Finder finished with errors")
+            }
             drop(lock)
         });
     } else {

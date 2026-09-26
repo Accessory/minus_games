@@ -18,7 +18,7 @@ panic = "abort"
 strip = "symbols"
 
 [workspace.package]
-version = "0.9.19"
+version = "0.9.20"
 edition = "2024"
 authors = ["Accessory"]
 repository = "https://github.com/Accessory/minus_games/"
@@ -27,6 +27,7 @@ license = "MIT"
 [workspace.dependencies]
 futures-util = { version = "0", features = ["tokio-io"] }
 tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0", features = ["codec"] }
 clap = { version = "4", features = ["derive", "env", "string"] }
 log = "0"
 tracing = "0"
@@ -42,7 +43,7 @@ reqwest = { version = "0", features = [
     "multipart",
     "blocking",
     "stream",
-    "rustls-tls",
+    "rustls"
 ] }
 utoipa = { version = "5", features = [
     "axum_extras",
@@ -51,6 +52,9 @@ utoipa = { version = "5", features = [
     "openapi_extensions",
 ] }
 utoipa-swagger-ui = { version = "9", features = ["axum"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0", features = ["serde"] }
 
 [profile.dev.package.iced]
 opt-level = 3

@@ -8,7 +8,7 @@ repository.workspace = true
 
 [dependencies]
 home = "0"
-clap = { version = "4" }
+clap = { workspace = true }
 walkdir = "2"
 filetime = "0"
 argon2 = { version = "0" }

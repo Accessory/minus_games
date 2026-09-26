@@ -8,12 +8,13 @@ repository.workspace = true
 
 [dependencies]
 tokio = { workspace = true }
-tokio-util = { version = "0.7.3", features = ["codec"] }
+tokio-util = { workspace = true }
 reqwest = { workspace = true }
 clap = { workspace = true }
 dotenvy = { workspace = true }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde = { workspace = true }
+
+serde_json = {workspace = true }
 csv = "1"
 log = { workspace = true }
 tracing = { workspace = true }
@@ -23,7 +24,7 @@ walkdir = "2"
 dialoguer = "0"
 indicatif = "0"
 mime = "0"
-chrono = "0"
+chrono = { workspace = true }
 dirs = { workspace = true }
 base64 = "0"
 convert_case = "0"

@@ -93,6 +93,7 @@ pub fn save_infos_to_data_folder(data_folder: &Path, game_infos: &GameInfos) {
     std::fs::write(json_path, game_infos.to_string()).expect("Unable to write game infos to file");
 }
 
+#[inline]
 pub fn file_path_is_windows_exe(file_path: &Path) -> bool {
     file_path.is_file()
         && file_path

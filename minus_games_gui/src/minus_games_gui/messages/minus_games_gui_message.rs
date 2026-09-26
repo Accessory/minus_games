@@ -62,7 +62,7 @@ pub(crate) enum MinusGamesGuiMessage {
     ScrollToTop,
     ScrollUp(usize),
     ScrollDown(usize),
-    Scrolled(scrollable::Viewport),
+    Scrolled(scrollable::Scroll),
     LazyImageDownloaderReady(Sender<(String, bool, usize)>),
     LazyImageUpdateCard(usize, iced::widget::image::Handle),
     FinishedProcessingImages(()),

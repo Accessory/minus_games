@@ -28,6 +28,7 @@ use iced::futures::channel::mpsc;
 use iced::futures::channel::mpsc::Sender;
 use iced::futures::{SinkExt, Stream};
 use iced::theme::Base;
+use iced::widget::operation::Animation;
 use iced::widget::scrollable::Anchor::Start;
 use iced::widget::scrollable::{AbsoluteOffset, Direction, RelativeOffset, Scrollbar};
 use iced::widget::space::{horizontal, vertical};
@@ -712,16 +713,21 @@ impl MinusGamesGui {
                             x: 0.0,
                             y: step as f32 * GAME_CARD_ROW_HEIGHT as f32,
                         },
+                        Animation::Auto,
                     );
                 }
             }
             MinusGamesGuiMessage::ScrollToTop => {
-                return operation::snap_to(SCROLLABLE_ID, RelativeOffset::START);
+                return operation::snap_to(SCROLLABLE_ID, RelativeOffset::START, Animation::Auto);
             }
             MinusGamesGuiMessage::ScrollUp(step) => {
                 self.block_highlighting = false;
                 if self.current_highlight_position == 0 {
-                    return operation::snap_to(SCROLLABLE_ID, RelativeOffset::START);
+                    return operation::snap_to(
+                        SCROLLABLE_ID,
+                        RelativeOffset::START,
+                        Animation::Auto,
+                    );
                 }
 
                 let screen_height = self.get_screen_height();
@@ -740,11 +746,12 @@ impl MinusGamesGui {
                             x: 0.0,
                             y: -(step as f32 * GAME_CARD_ROW_HEIGHT as f32),
                         },
+                        Animation::Auto,
                     );
                 }
             }
-            MinusGamesGuiMessage::Scrolled(viewport) => {
-                self.scroll_offset = viewport.absolute_offset();
+            MinusGamesGuiMessage::Scrolled(scroll) => {
+                self.scroll_offset = scroll.viewport.absolute_offset();
             }
             MinusGamesGuiMessage::LazyImageDownloaderReady(sender) => {
                 self.lazy_image_downloader_sender = Some(sender);

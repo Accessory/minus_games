@@ -1,4 +1,6 @@
 use crate::runtime::get_config;
+use log::warn;
+use std::process::ExitCode;
 use tracing::info;
 
 pub fn scan_for_games() {
@@ -12,6 +14,10 @@ pub fn scan_for_games() {
     };
 
     info!("Run Finder");
-    minus_games_finder::run(config);
-    info!("Finder finished");
+    let status_code_rtn = minus_games_finder::run(config);
+    if status_code_rtn == ExitCode::SUCCESS {
+        info!("Finder finished");
+    } else {
+        warn!("Finder finished with errors")
+    }
 }

@@ -3,6 +3,7 @@ use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMess
 use crate::runtime::{IS_IN_FOCUS, SCROLLABLE_ID};
 use iced::keyboard::{Key, key};
 use iced::widget::operation;
+use iced::widget::operation::Animation;
 use iced::widget::scrollable::RelativeOffset;
 use iced::{Task, keyboard};
 use std::sync::atomic::Ordering::Relaxed;
@@ -19,7 +20,7 @@ pub(crate) fn handle_keyboard_event(event: keyboard::Event) -> Task<MinusGamesGu
             ..
         } if character.as_str() == "f" && modifiers.control() => {
             return Task::batch([
-                operation::snap_to(SCROLLABLE_ID, RelativeOffset::START),
+                operation::snap_to(SCROLLABLE_ID, RelativeOffset::START, Animation::Auto),
                 operation::focus(FILTER_ID),
             ]);
         }

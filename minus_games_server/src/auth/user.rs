@@ -18,7 +18,7 @@ pub struct User {
 }
 
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
-struct UserShort<'a> {
+pub(crate) struct UserShort<'a> {
     username: &'a str,
     sync: bool,
 }

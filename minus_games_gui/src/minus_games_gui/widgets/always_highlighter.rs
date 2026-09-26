@@ -1,6 +1,6 @@
-use iced::advanced::layout::{Limits, Node};
+use iced::advanced::layout::Limits;
 use iced::advanced::widget::{Operation, Tree, Widget, tree};
-use iced::advanced::{Layout, Shell, mouse, renderer};
+use iced::advanced::{Layout, Shell, mouse, overlay, renderer};
 use iced::mouse::Cursor;
 use iced::{Color, Element, Event, Length, Rectangle, Size, Vector};
 
@@ -51,11 +51,8 @@ where
     fn size(&self) -> Size<Length> {
         self.base.as_widget().size()
     }
-    fn size_hint(&self) -> Size<Length> {
-        self.base.as_widget().size_hint()
-    }
 
-    fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
+    fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) {
         self.base.as_widget_mut().layout(tree, renderer, limits)
     }
     fn draw(
@@ -64,7 +61,7 @@ where
         renderer: &mut Renderer,
         theme: &Theme,
         style: &renderer::Style,
-        layout: Layout<'_>,
+        layout: Layout,
         cursor: Cursor,
         viewport: &Rectangle,
     ) {
@@ -89,31 +86,28 @@ where
         self.base.as_widget().state()
     }
 
-    fn children(&self) -> Vec<Tree> {
-        self.base.as_widget().children()
-    }
-
-    fn diff(&self, tree: &mut Tree) {
-        self.base.as_widget().diff(tree);
+    fn diff(&mut self, tree: &mut Tree) {
+        self.base.as_widget_mut().diff(tree);
     }
 
     fn operate(
         &mut self,
-        state: &mut Tree,
-        layout: Layout<'_>,
+        tree: &mut Tree,
+        layout: Layout,
+        viewport: &Rectangle,
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
         self.base
             .as_widget_mut()
-            .operate(state, layout, renderer, operation);
+            .operate(tree, layout, viewport, renderer, operation);
     }
 
     fn update(
         &mut self,
-        state: &mut Tree,
+        tree: &mut Tree,
         event: &Event,
-        layout: Layout<'_>,
+        layout: Layout,
         cursor: mouse::Cursor,
         renderer: &Renderer,
         shell: &mut Shell<'_, Message>,
@@ -121,32 +115,33 @@ where
     ) {
         self.base
             .as_widget_mut()
-            .update(state, event, layout, cursor, renderer, shell, viewport)
+            .update(tree, event, layout, cursor, renderer, shell, viewport)
     }
 
     fn mouse_interaction(
         &self,
-        state: &Tree,
-        layout: Layout<'_>,
+        tree: &Tree,
+        layout: Layout,
         cursor: mouse::Cursor,
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
         self.base
             .as_widget()
-            .mouse_interaction(state, layout, cursor, viewport, renderer)
+            .mouse_interaction(tree, layout, cursor, viewport, renderer)
     }
 
     fn overlay<'a>(
         &'a mut self,
-        state: &'a mut Tree,
-        layout: Layout<'a>,
+        tree: &'a mut Tree,
+        layout: Layout,
         renderer: &Renderer,
         viewport: &Rectangle,
         translation: Vector,
-    ) -> Option<iced::advanced::overlay::Element<'a, Message, Theme, Renderer>> {
+        size: Size,
+    ) -> Vec<overlay::Element<'a, Message, Theme, Renderer>> {
         self.base
             .as_widget_mut()
-            .overlay(state, layout, renderer, viewport, translation)
+            .overlay(tree, layout, renderer, viewport, translation, size)
     }
 }

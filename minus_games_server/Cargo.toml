@@ -17,18 +17,18 @@ axum = { version = "0.8", features = [
     "form",
     "http2"
 ] }
-axum-extra = { version = "0.10", features = ["async-read-body", "cookie"] }
+axum-extra = { version = "0", features = ["async-read-body", "cookie"] }
 tokio = { workspace = true }
 tokio-util = { version = "0" }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 dotenvy = { workspace = true }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde = { workspace = true }
+serde_json = { workspace = true }
 utoipa = { workspace = true }
 utoipa-swagger-ui ={ workspace = true }
-chrono = { version = "0", features = ["serde"] }
-clap = { version = "4", features = ["derive", "env", "string"] }
+chrono = { workspace = true }
+clap = { workspace = true }
 tower-http = { version = "0", features = ["full"] }
 tower = { version = "0" }
 glob = "0"

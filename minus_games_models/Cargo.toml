@@ -8,9 +8,9 @@ repository.workspace = true
 
 [dependencies]
 strum = { workspace = true }
-serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1" }
+serde = { workspace = true }
+serde_json = { workspace = true }
 blake3 = "1"
-chrono = { version = "0", features = ["serde"] }
+chrono = { workspace = true }
 minus_games_utils = { path = "../minus_games_utils" }
 utoipa = { workspace = true }

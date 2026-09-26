@@ -23,3 +23,7 @@ repo
 pkgbuild/client/src
 other/pkgbuild/client/minus*
 other/pkgbuild/client/pkg
+
+
+# Other
+Cross.toml

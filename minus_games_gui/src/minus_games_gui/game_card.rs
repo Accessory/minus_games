@@ -7,7 +7,6 @@ use crate::minus_games_gui::style_constants::{
 use crate::minus_games_gui::views::buttons_helper::set_svg_style;
 use crate::minus_games_gui::views::icons::{INSTALLED, LINUX, ON_SERVER, WINDOWS};
 use iced::ContentFit::Cover;
-use iced::advanced::Widget;
 use iced::widget::space::horizontal;
 use iced::widget::text::Shaping::Advanced;
 use iced::widget::{MouseArea, Row, button, center, column, container, image, row, svg, text};
@@ -103,29 +102,37 @@ impl GameCard {
     fn create_os_part(&self) -> Row<'_, MinusGamesGuiMessage> {
         let mut items = Row::with_capacity(2);
 
+        let mut items_count = 0;
+
         if self.minimal_game_infos.linux {
-            items = items.push(svg(LINUX.clone()).style(set_svg_style))
+            items = items.push(svg(LINUX.clone()).style(set_svg_style));
+            items_count = 1;
         }
 
         if self.minimal_game_infos.windows {
-            items = items.push(svg(WINDOWS.clone()).style(set_svg_style))
+            items = items.push(svg(WINDOWS.clone()).style(set_svg_style));
+            items_count += 1;
         }
-        let width = TEXT * items.children().len() as u32;
+        let width = TEXT * items_count;
         items.width(width)
     }
 
     fn create_installed_part(&self) -> Row<'_, MinusGamesGuiMessage> {
         let mut items = Row::with_capacity(2);
 
+        let mut items_count = 0;
+
         if self.is_installed {
-            items = items.push(svg(INSTALLED.clone()).style(set_svg_style))
+            items = items.push(svg(INSTALLED.clone()).style(set_svg_style));
+            items_count = 1;
         }
 
         if self.is_on_server {
-            items = items.push(svg(ON_SERVER.clone()).style(set_svg_style))
+            items = items.push(svg(ON_SERVER.clone()).style(set_svg_style));
+            items_count += 1;
         }
 
-        let width = TEXT * items.children().len() as u32;
+        let width = TEXT * items_count;
         items.width(width)
     }
 

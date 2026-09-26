@@ -144,10 +144,11 @@ fn main() -> ExitCode {
             })
             .theme(MinusGamesGui::get_theme)
             .exit_on_close_request(false)
-            .font(include_bytes!(
+            .fonts([include_bytes!(
                 "./minus_games_gui/assets/fonts/MonaspiceArNerdFont-Regular.otf"
-            ))
-            .default_font(Font::new(&get_gui_config().font))
+            )
+            .as_slice()])
+            .font(Font::new(&get_gui_config().font))
             .run();
 
             if let Err(err) = result {
