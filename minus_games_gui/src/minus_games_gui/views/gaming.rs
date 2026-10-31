@@ -4,10 +4,11 @@ use crate::minus_games_gui::style_constants::MARGIN_DEFAULT;
 use crate::minus_games_gui::views::components_helper::create_info_part;
 use crate::minus_games_gui::views::game_helper::create_info_game_line;
 use iced::Center;
+use iced::Element;
 use iced::widget::space::{horizontal, vertical};
 use iced::widget::{Row, column, row, text};
 
-pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMessage> {
+pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<Element<'_, MinusGamesGuiMessage>> {
     if let Some(cgi) = minus_games_gui.current_game.as_ref() {
         row![
             horizontal().width(MARGIN_DEFAULT),

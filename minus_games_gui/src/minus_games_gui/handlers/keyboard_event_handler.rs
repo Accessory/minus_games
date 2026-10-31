@@ -20,7 +20,11 @@ pub(crate) fn handle_keyboard_event(event: keyboard::Event) -> Task<MinusGamesGu
             ..
         } if character.as_str() == "f" && modifiers.control() => {
             return Task::batch([
-                operation::snap_to(SCROLLABLE_ID, RelativeOffset::START, Animation::Auto),
+                operation::scrollable::snap_to(
+                    SCROLLABLE_ID,
+                    RelativeOffset::START,
+                    Animation::Auto,
+                ),
                 operation::focus(FILTER_ID),
             ]);
         }
@@ -51,7 +55,13 @@ pub(crate) fn handle_keyboard_event(event: keyboard::Event) -> Task<MinusGamesGu
                 };
             }
             key::Named::Enter => {
-                return Task::done(MinusGamesGuiMessage::StartCurrentPosition);
+                return Task::done(MinusGamesGuiMessage::AffirmativeAction);
+            }
+            key::Named::Backspace | key::Named::Escape => {
+                return Task::done(MinusGamesGuiMessage::BackAction);
+            }
+            key::Named::Space => {
+                return Task::done(MinusGamesGuiMessage::AlternativeAction);
             }
             key::Named::Home => {
                 return Task::done(MinusGamesGuiMessage::CurrentPositionUp(usize::MAX));

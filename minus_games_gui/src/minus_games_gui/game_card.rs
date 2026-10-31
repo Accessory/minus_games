@@ -8,9 +8,10 @@ use crate::minus_games_gui::views::buttons_helper::set_svg_style;
 use crate::minus_games_gui::views::icons::{INSTALLED, LINUX, ON_SERVER, WINDOWS};
 use iced::ContentFit::Cover;
 use iced::widget::space::horizontal;
-use iced::widget::text::Shaping::Advanced;
+use iced::widget::text::Ellipsis;
+use iced::widget::text::Shaping::Auto;
 use iced::widget::{MouseArea, Row, button, center, column, container, image, row, svg, text};
-use iced::{Center, Element, Fill, Left, Right, Shrink, Theme, border, gradient};
+use iced::{Center, Element, Fill, Left, Right, Shrink, Theme, Widget, border, gradient};
 use minus_games_models::game_infos::MinimalGameInfos;
 
 #[derive(Clone, Debug, Default)]
@@ -61,7 +62,7 @@ impl GameCard {
     pub(crate) fn view(&self) -> MouseArea<'_, MinusGamesGuiMessage> {
         let row = self.create_row();
 
-        MouseArea::new(row.height(GAME_CARD_ROW_HEIGHT))
+        MouseArea::new(row.height(GAME_CARD_ROW_HEIGHT).boxed())
             .on_enter(MinusGamesGuiMessage::EnterMouseArea(self.position))
     }
 
@@ -71,13 +72,14 @@ impl GameCard {
                 .content_fit(Cover)
                 .height(GAME_CARD_IMAGE_HEIGHT)
                 .width(GAME_CARD_IMAGE_ROW_WIDTH)
-                .into()
+                .boxed()
         } else {
             center(
                 text(self.title.chars().next().unwrap_or(' '))
                     .width(Fill)
                     .align_x(Center)
-                    .shaping(Advanced),
+                    .shaping(Auto)
+                    .ellipsis(Ellipsis::End),
             )
             .style(|theme: &Theme| {
                 let palette = theme.palette();
@@ -94,12 +96,12 @@ impl GameCard {
                     )
             })
             .width(GAME_CARD_IMAGE_ROW_WIDTH)
-            .into()
+            .boxed()
         };
         element
     }
 
-    fn create_os_part(&self) -> Row<'_, MinusGamesGuiMessage> {
+    fn create_os_part(&self) -> Row<svg::Svg<'static>> {
         let mut items = Row::with_capacity(2);
 
         let mut items_count = 0;
@@ -117,7 +119,7 @@ impl GameCard {
         items.width(width)
     }
 
-    fn create_installed_part(&self) -> Row<'_, MinusGamesGuiMessage> {
+    fn create_installed_part(&self) -> Row<svg::Svg<'static>> {
         let mut items = Row::with_capacity(2);
 
         let mut items_count = 0;
@@ -136,16 +138,17 @@ impl GameCard {
         items.width(width)
     }
 
-    fn create_row(&self) -> Row<'_, MinusGamesGuiMessage> {
+    fn create_row(&self) -> Row<Element<'_, MinusGamesGuiMessage>> {
         let mut row = row![
             horizontal().width(TINY_MARGIN_DEFAULT),
             self.create_image(),
             row![
                 text(&self.title)
+                    .ellipsis(Ellipsis::End)
                     .width(Fill)
                     .align_x(Left)
-                    .shaping(Advanced)
-                    .height(TEXT * 2),
+                    .shaping(Auto)
+                    .height((TEXT * 2) - 8),
                 column![self.create_installed_part(), self.create_os_part(),]
                     .width(Shrink)
                     .align_x(Right)
@@ -162,37 +165,34 @@ impl GameCard {
             .on_press(MinusGamesGuiMessage::Play(self.game.clone())),
         ];
 
-        row = if self.is_installed {
-            row.push(
-                // More
-                button(
-                    text("󰍜") // More
-                        .font(DEFAULT_FONT)
-                        .height(READY_BUTTON_HEIGHT)
-                        .width(Fill)
-                        .center(),
-                )
-                .width(READY_BUTTON_WIDTH)
-                .on_press(MinusGamesGuiMessage::OpenGameModal(
-                    self.game.clone(),
-                    self.is_on_server,
-                )),
+        let action_button = if self.is_installed {
+            // More
+            button(
+                text("󰍜") // More
+                    .font(DEFAULT_FONT)
+                    .height(READY_BUTTON_HEIGHT)
+                    .width(Fill)
+                    .center(),
             )
+            .width(READY_BUTTON_WIDTH)
+            .on_press(MinusGamesGuiMessage::OpenGameModal(
+                self.game.clone(),
+                self.is_on_server,
+            ))
         } else {
-            row.push(
-                // Download
-                button(
-                    text("") // Download
-                        .font(DEFAULT_FONT)
-                        .height(READY_BUTTON_HEIGHT)
-                        .width(Fill)
-                        .center(),
-                )
-                .width(READY_BUTTON_WIDTH)
-                .on_press(MinusGamesGuiMessage::Repair(self.game.clone())),
+            // Download
+            button(
+                text("") // Download
+                    .font(DEFAULT_FONT)
+                    .height(READY_BUTTON_HEIGHT)
+                    .width(Fill)
+                    .center(),
             )
+            .width(READY_BUTTON_WIDTH)
+            .on_press(MinusGamesGuiMessage::Repair(self.game.clone()))
         };
-        row = row.push(horizontal().width(TINY_MARGIN_DEFAULT));
+        row = row.push(action_button.boxed());
+        row = row.push(horizontal().width(TINY_MARGIN_DEFAULT).boxed());
         row.spacing(SMALL_MARGIN_DEFAULT).align_y(Center)
     }
 }

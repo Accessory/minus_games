@@ -4,7 +4,7 @@ use crate::minus_games_gui::views::icons::{
     ARROW_LEFT, ARROW_ROTATE_RIGHT, FLOPPY_DISK, ON_OFF, SLIDERS,
 };
 use iced::widget::svg::Status;
-use iced::widget::{Button, button, svg};
+use iced::widget::{Button, Widget, button, svg};
 use iced::{Fill, Theme};
 
 pub(crate) fn create_svg_config_button<'a>(
@@ -15,7 +15,8 @@ pub(crate) fn create_svg_config_button<'a>(
         svg(value)
             .style(set_button_svg_style)
             .width(Fill)
-            .height(Fill),
+            .height(Fill)
+            .boxed(),
     )
     .width(GAME_CARD_ROW_HEIGHT)
     .height(TOP_BUTTON_HEIGHT)

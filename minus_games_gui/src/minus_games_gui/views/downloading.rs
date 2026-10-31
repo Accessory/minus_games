@@ -5,9 +5,9 @@ use crate::minus_games_gui::views::components_helper::create_info_part;
 use crate::minus_games_gui::views::game_helper::create_info_game_line;
 use iced::widget::space::{horizontal, vertical};
 use iced::widget::{Row, column, progress_bar, row, stack, text};
-use iced::{Center, Color, Fill, Theme};
+use iced::{Center, Color, Element, Fill, Theme};
 
-pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMessage> {
+pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<Element<'_, MinusGamesGuiMessage>> {
     if let Some(cgi) = minus_games_gui.current_game.as_ref() {
         row![
             horizontal().width(MARGIN_DEFAULT),

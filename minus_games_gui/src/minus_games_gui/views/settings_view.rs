@@ -15,7 +15,7 @@ use iced::widget::space::vertical;
 use iced::widget::{
     Column, Row, button, checkbox, column, pick_list, row, slider, text, text_input,
 };
-use iced::{Bottom, Center, Fill, Theme};
+use iced::{Bottom, Center, Element, Fill, Theme, Widget};
 use minus_games_client::runtime::OFFLINE;
 use std::collections::HashSet;
 use std::ops::Deref;
@@ -69,7 +69,7 @@ pub enum SettingInput {
 
 macro_rules! add_setting_input {
     ($g:ident,$i:ident, $n1:literal, $n2:tt, $n3:tt) => {
-        $i.push(text(concat!($n1, ":")))
+        $i.push(text(concat!($n1, ":")).boxed())
             .push(row![
                 text_input("", $g.$i.as_ref().unwrap().$n2.as_str())
                     .on_input(|i| MinusGamesGuiMessage::ChangeSetting(SettingInput::$n3(i))),
@@ -78,8 +78,8 @@ macro_rules! add_setting_input {
                 button(text("").font(DEFAULT_FONT)).on_press(MinusGamesGuiMessage::ChangeSetting(
                     SettingInput::$n3("".to_string())
                 )),
-            ])
-            .push(vertical().height(MARGIN_DEFAULT))
+            ].boxed())
+            .push(vertical().height(MARGIN_DEFAULT).boxed())
     };
 }
 
@@ -91,8 +91,8 @@ macro_rules! add_checkbox_input {
     };
 }
 
-pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMessage> {
-    let mut settings = Column::with_capacity(3 * 9 + 4);
+pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<Element<'_, MinusGamesGuiMessage>> {
+    let mut settings = Column::<Element<'_, MinusGamesGuiMessage>>::with_capacity(3 * 9 + 4);
     settings = add_setting_input!(minus_games_gui, settings, "Username", username, Username);
     settings = add_setting_input!(minus_games_gui, settings, "Password", password, Password);
     settings = add_setting_input!(
@@ -127,39 +127,26 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
             WinePrefix
         );
     }
-    let row = Row::with_capacity(5)
-        .push(add_checkbox_input!(
-            minus_games_gui,
-            settings,
-            "Verbose",
-            verbose,
-            Verbose
-        ))
-        .push(horizontal().width(MARGIN_DEFAULT))
-        .push(add_checkbox_input!(
-            minus_games_gui,
-            settings,
-            "Offline",
-            offline,
-            Offline
-        ))
-        .push(horizontal().width(MARGIN_DEFAULT))
-        .push(add_checkbox_input!(
-            minus_games_gui,
-            settings,
-            "Sync Game Files",
-            sync,
-            Sync
-        ))
-        .push(horizontal().width(MARGIN_DEFAULT))
-        .push(add_checkbox_input!(
-            minus_games_gui,
-            settings,
-            "Fullscreen",
-            fullscreen,
-            Fullscreen
-        ));
-    settings = settings.push(row).push(vertical().height(MARGIN_DEFAULT));
+    let row = Row::<Element<'_, MinusGamesGuiMessage>>::with_capacity(5)
+        .push(add_checkbox_input!(minus_games_gui, settings, "Verbose", verbose, Verbose).boxed())
+        .push(horizontal().width(MARGIN_DEFAULT).boxed())
+        .push(add_checkbox_input!(minus_games_gui, settings, "Offline", offline, Offline).boxed())
+        .push(horizontal().width(MARGIN_DEFAULT).boxed())
+        .push(add_checkbox_input!(minus_games_gui, settings, "Sync Game Files", sync, Sync).boxed())
+        .push(horizontal().width(MARGIN_DEFAULT).boxed())
+        .push(
+            add_checkbox_input!(
+                minus_games_gui,
+                settings,
+                "Fullscreen",
+                fullscreen,
+                Fullscreen
+            )
+            .boxed(),
+        );
+    settings = settings
+        .push(row.boxed())
+        .push(vertical().height(MARGIN_DEFAULT).boxed());
     settings = settings
         .push(
             row![
@@ -175,9 +162,10 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
                     minus_games_gui.settings.as_ref().unwrap().scale
                 )),
             ]
-            .spacing(MARGIN_DEFAULT),
+            .spacing(MARGIN_DEFAULT)
+            .boxed(),
         )
-        .push(vertical().height(MARGIN_DEFAULT));
+        .push(vertical().height(MARGIN_DEFAULT).boxed());
 
     settings = settings.push(
         row![
@@ -210,10 +198,11 @@ pub(crate) fn view(minus_games_gui: &MinusGamesGui) -> Row<'_, MinusGamesGuiMess
                 MinusGamesGuiMessage::ChangeSetting(SettingInput::Theme(None))
             })
         ]
-        .align_y(Center),
+        .align_y(Center)
+        .boxed(),
     );
 
-    settings = settings.push(vertical().height(MARGIN_DEFAULT));
+    settings = settings.push(vertical().height(MARGIN_DEFAULT).boxed());
 
     let mut action_row = Row::new().spacing(HALF_MARGIN_DEFAULT);
     if !OFFLINE.load(Relaxed) {

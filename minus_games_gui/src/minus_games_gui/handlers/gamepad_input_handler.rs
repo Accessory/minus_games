@@ -161,7 +161,7 @@ pub(crate) fn gamepad_input_handler() -> impl Stream<Item = MinusGamesGuiMessage
                                     .unwrap();
                             }
                             Button::West => {
-                                debug!("Pressed Select");
+                                debug!("Pressed West");
                                 output
                                     .send(MinusGamesGuiMessage::AlternativeAction)
                                     .await

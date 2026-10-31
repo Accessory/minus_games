@@ -34,7 +34,9 @@ use iced::widget::scrollable::{AbsoluteOffset, Direction, RelativeOffset, Scroll
 use iced::widget::space::{horizontal, vertical};
 use iced::widget::{Column, button, column, operation, row, scrollable, stack, text, text_input};
 use iced::{Bottom, system};
-use iced::{Center, Element, Fill, Length, Size, Subscription, Task, Theme, event, stream, window};
+use iced::{
+    Center, Element, Fill, Length, Size, Subscription, Task, Theme, Widget, event, stream, window,
+};
 use minus_games_client::actions::delete::delete_game;
 use minus_games_client::actions::other::move_additions_header_to_tmp;
 use minus_games_client::actions::repair::{repair_all_games, repair_game};
@@ -686,6 +688,7 @@ impl MinusGamesGui {
             }
             MinusGamesGuiMessage::StartCurrentPosition => {
                 if self.state == MinusGamesState::Ready
+                    && self.modal.is_none()
                     && let Some(game_card_position) =
                         self.highlight_map.get(self.current_highlight_position)
                     && let Some(game_card) = self.game_cards.get(*game_card_position)
@@ -707,7 +710,7 @@ impl MinusGamesGui {
 
                 self.block_highlighting = false;
                 if !self.went_up && ok_area < bottom {
-                    return operation::scroll_by(
+                    return operation::scrollable::scroll_by(
                         SCROLLABLE_ID,
                         AbsoluteOffset {
                             x: 0.0,
@@ -718,12 +721,16 @@ impl MinusGamesGui {
                 }
             }
             MinusGamesGuiMessage::ScrollToTop => {
-                return operation::snap_to(SCROLLABLE_ID, RelativeOffset::START, Animation::Auto);
+                return operation::scrollable::snap_to(
+                    SCROLLABLE_ID,
+                    RelativeOffset::START,
+                    Animation::Auto,
+                );
             }
             MinusGamesGuiMessage::ScrollUp(step) => {
                 self.block_highlighting = false;
                 if self.current_highlight_position == 0 {
-                    return operation::snap_to(
+                    return operation::scrollable::snap_to(
                         SCROLLABLE_ID,
                         RelativeOffset::START,
                         Animation::Auto,
@@ -740,7 +747,7 @@ impl MinusGamesGui {
                 // trace!("not_ok_area: {}, top: {}, screen_height: {}", not_ok_area, top, screen_height);
 
                 if self.went_up && not_ok_area > top {
-                    return operation::scroll_by(
+                    return operation::scrollable::scroll_by(
                         SCROLLABLE_ID,
                         AbsoluteOffset {
                             x: 0.0,
@@ -813,12 +820,10 @@ impl MinusGamesGui {
         //         .center();
 
         match &self.modal {
-            None => stack!(content).into(),
-            Some((game, is_on_server)) => stack!(
-                content,
-                create_modal(game, *is_on_server, self.size.width).into()
-            )
-            .into(),
+            None => stack!(content).boxed(),
+            Some((game, is_on_server)) => {
+                stack!(content, create_modal(game, *is_on_server, self.size.width)).boxed()
+            }
         }
     }
 
@@ -842,6 +847,11 @@ impl MinusGamesGui {
                         get_config().get_game_path(current_game_name),
                     ))),
                 ),
+                views::game_info_modal::MODAL_OPEN_GAME_INFOS => Task::done(
+                    MinusGamesGuiMessage::ModalCallback(Some(ModalCallback::OpenGameFolder(
+                        get_config().get_game_infos_path_from_game(current_game_name),
+                    ))),
+                ),
                 views::game_info_modal::MODAL_CLOSE_BUTTON_ID => {
                     self.modal = None;
                     Task::none()
@@ -852,7 +862,7 @@ impl MinusGamesGui {
         Task::none()
     }
 
-    fn create_ready_view(&self) -> Column<'_, MinusGamesGuiMessage> {
+    fn create_ready_view(&self) -> Column<Element<'_, MinusGamesGuiMessage>> {
         if self.game_cards.is_empty() {
             return column![
                 row![
@@ -871,7 +881,8 @@ impl MinusGamesGui {
                 ]
             ];
         }
-        let mut rtn = Column::with_capacity(self.game_cards.len() + 1);
+        let mut rtn =
+            Column::<Element<'_, MinusGamesGuiMessage>>::with_capacity(self.game_cards.len() + 1);
         rtn = rtn.push(
             row![column![
                 row![
@@ -895,19 +906,23 @@ impl MinusGamesGui {
                             .on_press_with(|| MinusGamesGuiMessage::FilterChanged("".to_string()))
                     ]
             ],]
-            .align_y(Center),
+            .align_y(Center)
+            .boxed(),
         );
-        rtn = rtn.push(vertical().height(HALF_MARGIN_DEFAULT));
+        rtn = rtn.push(vertical().height(HALF_MARGIN_DEFAULT).boxed());
         let position = self.current_highlight_position;
 
         for (idx, game_card_position) in self.highlight_map.iter().enumerate() {
             if let Some(game_card) = self.game_cards.get(*game_card_position) {
                 if idx == position && !self.block_highlighting {
-                    rtn = rtn.push(AlwaysHighlighter::new(
-                        row![game_card.view()].spacing(SPACING_DEFAULT).into(),
-                    ));
+                    rtn = rtn.push(
+                        AlwaysHighlighter::new(
+                            row![game_card.view()].spacing(SPACING_DEFAULT).boxed(),
+                        )
+                        .boxed(),
+                    );
                 } else {
-                    rtn = rtn.push(row![game_card.view()].spacing(SPACING_DEFAULT));
+                    rtn = rtn.push(row![game_card.view()].spacing(SPACING_DEFAULT).boxed());
                 }
             }
         }

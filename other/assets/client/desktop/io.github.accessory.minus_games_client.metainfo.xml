@@ -51,6 +51,11 @@
     </provides>
 
     <releases>
+        <release version="0.9.21" date="2026-09-30">
+            <description>
+                <p>Improved Finder</p>
+            </description>
+        </release>
         <release version="0.9.20" date="2026-09-26">
             <description>
                 <p>Bugfixes</p>

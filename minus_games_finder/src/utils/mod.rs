@@ -12,6 +12,15 @@ use textdistance::str::damerau_levenshtein;
 use tracing::{trace, warn};
 use walkdir::WalkDir;
 
+const EXCLUDE_EXES: [&str; 6] = [
+    "chrome-sandbox.exe",
+    "crashpad_handler.exe",
+    "chrome_crashpad_handler.exe",
+    "UnityCrashHandler64.exe",
+    "uninstall.exe",
+    "unins000.exe",
+];
+
 pub(crate) fn is_elf(path: &Path) -> bool {
     // First 7 Bytes of a ELF 64 executable
     const ELF_64: [u8; 7] = [0x7f, 0x45, 0x4c, 0x46, 0x02, 0x01, 0x01];
@@ -110,7 +119,7 @@ pub fn find_all_possible_game_exe_files(game_folder: &Path) -> Vec<String> {
         if file_path_is_windows_exe(&file_path) {
             let file_name = file.file_name().to_str().unwrap().to_lowercase();
 
-            if !["uninstall.exe", "unins000.exe"].contains(&file_name.as_str()) {
+            if !EXCLUDE_EXES.contains(&file_name.as_str()) {
                 files.push(file_path.file_name().unwrap().to_str().unwrap().to_string());
             }
         }
@@ -253,14 +262,7 @@ pub fn glob_for_possible_exe(root: &Path) -> Option<String> {
         let res = entry.unwrap();
         let file_name = res.file_name().unwrap().to_str().unwrap();
 
-        if [
-            "chrome-sandbox.exe",
-            "crashpad_handler.exe",
-            "chrome_crashpad_handler.exe",
-            "UnityCrashHandler64.exe",
-        ]
-        .contains(&file_name)
-        {
+        if EXCLUDE_EXES.contains(&file_name) {
             continue;
         }
 

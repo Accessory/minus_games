@@ -3,7 +3,7 @@ use std::{fs::File, io::BufReader, path::Path};
 use convert_case::{Case, Casing};
 use minus_games_models::rpgm_package::RPGMPackage;
 
-use crate::utils::{find_closest_string, find_name_in_folder_name};
+use crate::utils::{find_closest_string, find_name_in_folder_name, is_elf};
 
 use super::EngineInfoFunctions;
 
@@ -18,6 +18,7 @@ pub(crate) fn get_linux_exe(eif: &impl EngineInfoFunctions, game_root: &Path) ->
 
     let name = eif.get_game_name(game_root)?;
     let mut files: Vec<String> = Vec::new();
+    let mut exes: Vec<String> = Vec::new();
     for file_result in game_root.read_dir().unwrap() {
         let file = file_result.unwrap();
         let file_path = file.path();
@@ -33,13 +34,22 @@ pub(crate) fn get_linux_exe(eif: &impl EngineInfoFunctions, game_root: &Path) ->
             && file.file_name() != "LICENSE"
         {
             files.push(file_path.file_name().unwrap().to_str().unwrap().to_string());
+
+            if is_elf(&file.path()) {
+                exes.push(files.last().unwrap().to_string());
+            }
         }
     }
     if files.is_empty() {
         None
     } else {
-        let idx = find_closest_string(name.as_str(), &files);
-        Some(files.remove(idx))
+        let to_check = if exes.is_empty() {
+            &mut files
+        } else {
+            &mut exes
+        };
+        let idx = find_closest_string(name.as_str(), to_check);
+        Some(to_check.remove(idx))
     }
 }
 

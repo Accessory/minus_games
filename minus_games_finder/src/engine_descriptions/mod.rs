@@ -26,7 +26,7 @@ static REN_PY: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescription 
 static RPGM: LazyLock<EngineDescription> = LazyLock::new(|| EngineDescription {
     engine_type: GameEngine::RPGMaker,
     main_files: vec!["package.json".into()],
-    main_folders: vec!["www".into()],
+    main_folders: vec![],
     platform_windows: Some(PlatformDescription {
         platform: Platform::Windows,
         look_for_files: vec!["*.exe".into()],

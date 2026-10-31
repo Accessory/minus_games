@@ -16,16 +16,16 @@ impl<'a, Message, Theme, Renderer> AlwaysHighlighter<'a, Message, Theme, Rendere
     }
 }
 
-impl<'a, Message: 'a, Theme: 'a, Renderer> From<AlwaysHighlighter<'a, Message, Theme, Renderer>>
-    for Element<'a, Message, Theme, Renderer>
-where
-    Renderer: renderer::Renderer + 'a,
-    Theme: Catalog,
-{
-    fn from(item: AlwaysHighlighter<'a, Message, Theme, Renderer>) -> Self {
-        Self::new(item)
-    }
-}
+// impl<'a, Message: 'a, Theme: 'a, Renderer> From<AlwaysHighlighter<'a, Message, Theme, Renderer>>
+//     for Element<'a, Message, Theme, Renderer>
+// where
+//     Renderer: renderer::Renderer + 'a,
+//     Theme: Catalog,
+// {
+//     fn from(item: AlwaysHighlighter<'a, Message, Theme, Renderer>) -> Self {
+//         Self::new(item)
+//     }
+// }
 
 trait Catalog {
     fn get_background_color(&self) -> Color;
@@ -42,6 +42,11 @@ impl Catalog for iced::Theme {
 //     pub background: Background,
 // }
 
+impl<'a, Message, Theme, Renderer> iced::advanced::widget::Meta
+    for AlwaysHighlighter<'a, Message, Theme, Renderer>
+{
+}
+
 impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
     for AlwaysHighlighter<'_, Message, Theme, Renderer>
 where
@@ -49,12 +54,24 @@ where
     Theme: Catalog,
 {
     fn size(&self) -> Size<Length> {
-        self.base.as_widget().size()
+        self.base.size()
+    }
+
+    fn tag(&self) -> tree::Tag {
+        self.base.tag()
+    }
+    fn state(&self) -> tree::State {
+        self.base.state()
+    }
+
+    fn diff(&mut self, tree: &mut Tree) {
+        self.base.diff(tree);
     }
 
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) {
-        self.base.as_widget_mut().layout(tree, renderer, limits)
+        self.base.layout(tree, renderer, limits)
     }
+
     fn draw(
         &self,
         tree: &Tree,
@@ -74,20 +91,7 @@ where
             color,
         );
         self.base
-            .as_widget()
             .draw(tree, renderer, theme, style, layout, cursor, viewport);
-    }
-
-    fn tag(&self) -> tree::Tag {
-        self.base.as_widget().tag()
-    }
-
-    fn state(&self) -> tree::State {
-        self.base.as_widget().state()
-    }
-
-    fn diff(&mut self, tree: &mut Tree) {
-        self.base.as_widget_mut().diff(tree);
     }
 
     fn operate(
@@ -99,7 +103,6 @@ where
         operation: &mut dyn Operation,
     ) {
         self.base
-            .as_widget_mut()
             .operate(tree, layout, viewport, renderer, operation);
     }
 
@@ -114,7 +117,6 @@ where
         viewport: &Rectangle,
     ) {
         self.base
-            .as_widget_mut()
             .update(tree, event, layout, cursor, renderer, shell, viewport)
     }
 
@@ -127,7 +129,6 @@ where
         renderer: &Renderer,
     ) -> mouse::Interaction {
         self.base
-            .as_widget()
             .mouse_interaction(tree, layout, cursor, viewport, renderer)
     }
 
@@ -141,7 +142,6 @@ where
         size: Size,
     ) -> Vec<overlay::Element<'a, Message, Theme, Renderer>> {
         self.base
-            .as_widget_mut()
             .overlay(tree, layout, renderer, viewport, translation, size)
     }
 }

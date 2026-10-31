@@ -1,12 +1,12 @@
 use crate::minus_games_gui::MinusGamesGui;
 use crate::minus_games_gui::messages::minus_games_gui_message::MinusGamesGuiMessage;
 use crate::minus_games_gui::style_constants::{
-    BIG_IMAGE_HEIGHT, LONG_BUTTON_WIDTH, MARGIN_DEFAULT, TEXT,
+    BIG_IMAGE_HEIGHT, HALF_MARGIN_DEFAULT, LONG_BUTTON_WIDTH, MARGIN_DEFAULT, TEXT,
 };
 use iced::widget::space::{horizontal, vertical};
-use iced::widget::text::Wrapping;
-use iced::widget::{Column, button, row, text};
-use iced::{Center, Fill, Left};
+use iced::widget::text::{Ellipsis, Wrapping};
+use iced::widget::{Column, Widget, button, row, text};
+use iced::{Center, Element, Fill, Left};
 use minus_games_models::game_infos::GameInfos;
 
 pub fn create_info_part<'a>(
@@ -14,7 +14,7 @@ pub fn create_info_part<'a>(
     minus_games_gui: &'a MinusGamesGui,
     button_text: &'a str,
     button_message: MinusGamesGuiMessage,
-) -> Column<'a, MinusGamesGuiMessage> {
+) -> Column<Element<'a, MinusGamesGuiMessage>> {
     let current_game_card = minus_games_gui
         .game_cards
         .iter()
@@ -23,11 +23,14 @@ pub fn create_info_part<'a>(
 
     let mut rtn = create_top_part(&game_infos.folder_name, button_text, button_message);
     if let Some(handle) = current_game_card.image.as_ref() {
-        rtn = rtn.push(row![
-            horizontal().height(MARGIN_DEFAULT),
-            iced::widget::image(handle.clone()).height(BIG_IMAGE_HEIGHT),
-            horizontal().height(MARGIN_DEFAULT)
-        ]);
+        rtn = rtn.push(
+            row![
+                horizontal().height(MARGIN_DEFAULT),
+                iced::widget::image(handle.clone()).height(BIG_IMAGE_HEIGHT),
+                horizontal().height(MARGIN_DEFAULT)
+            ]
+            .boxed(),
+        );
     }
     rtn.width(Fill).padding(MARGIN_DEFAULT as u16)
 }
@@ -36,21 +39,22 @@ fn create_top_part<'a>(
     game_name: &'a str,
     button_text: &'a str,
     button_message: MinusGamesGuiMessage,
-) -> Column<'a, MinusGamesGuiMessage> {
+) -> Column<Element<'a, MinusGamesGuiMessage>> {
     iced::widget::column![
         row![
             text("Downloading:").size(TEXT).align_x(Left).width(Fill),
             horizontal().width(MARGIN_DEFAULT),
-            button(text(button_text).width(Fill).align_x(Center))
+            button(text(button_text).width(Fill).align_x(Center).boxed())
                 .width(LONG_BUTTON_WIDTH)
                 .on_press(button_message)
         ],
         text(game_name)
+            .ellipsis(Ellipsis::End)
             .size(TEXT)
             .align_x(Left)
             .width(Fill)
             .wrapping(Wrapping::None)
-            .height(TEXT),
+            .height(TEXT * 2 + HALF_MARGIN_DEFAULT),
         vertical().height(MARGIN_DEFAULT),
     ]
     .align_x(Center)
